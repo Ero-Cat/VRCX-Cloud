@@ -15,6 +15,7 @@ const DEFAULT_LISTEN_ADDR: &str = "0.0.0.0:8800";
 pub struct ServerConfigFile {
     pub server: Option<ServerSection>,
     pub sync: Option<SyncSection>,
+    pub web: Option<WebSection>,
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
@@ -26,6 +27,20 @@ pub struct ServerSection {
     pub data_dir: Option<String>,
     /// HTTP listen address for the web server.
     pub listen_addr: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, serde::Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct WebSection {
+    /// Password for the web UI (single account). Also settable via
+    /// `VRCX_CLOUD_WEB_PASSWORD`. When neither is set the web layer is
+    /// open — only acceptable on a trusted LAN.
+    pub password: Option<String>,
+    /// Explicitly disable web authentication (trusted LAN only).
+    pub auth_disabled: Option<bool>,
+    /// Directory with the built frontend (index.html + assets).
+    /// Also settable via `VRCX_CLOUD_DIST_DIR`; defaults to `./dist`.
+    pub dist_dir: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
@@ -48,6 +63,7 @@ pub struct ServerConfig {
     pub data_dir: PathBuf,
     pub listen_addr: String,
     pub sync: SyncSettings,
+    pub web: WebSettings,
 }
 
 /// Sync settings resolved from file+env; `None` fields are not seeded.
@@ -115,12 +131,37 @@ impl ServerConfig {
             interval_sec: env_i64("VRCX_CLOUD_SYNC_INTERVAL_SEC").or(sync_file.interval_sec),
         };
 
+        let web_file = file.web.unwrap_or_default();
+        let auth_disabled = env_bool("VRCX_CLOUD_WEB_AUTH_DISABLED")
+            .or(web_file.auth_disabled)
+            .unwrap_or(false);
+        let password = env_non_empty("VRCX_CLOUD_WEB_PASSWORD").or(web_file.password);
+        let web = WebSettings {
+            // Auth is enabled when a password exists unless explicitly
+            // disabled; with no password at all the UI is open (LAN trust).
+            auth_enabled: !auth_disabled && password.is_some(),
+            password,
+            dist_dir: env_non_empty("VRCX_CLOUD_DIST_DIR")
+                .or(web_file.dist_dir)
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("dist")),
+        };
+
         Ok(Self {
             data_dir,
             listen_addr,
             sync,
+            web,
         })
     }
+}
+
+/// Web UI access settings.
+#[derive(Clone, Debug)]
+pub struct WebSettings {
+    pub auth_enabled: bool,
+    pub password: Option<String>,
+    pub dist_dir: PathBuf,
 }
 
 fn default_data_dir() -> PathBuf {

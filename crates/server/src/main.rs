@@ -7,7 +7,9 @@
 //! seeding, non-interactive VRChat auth, health endpoint and graceful
 //! shutdown.
 
+mod commands;
 mod config;
+mod transport;
 
 use std::net::SocketAddr;
 use std::path::Path;
@@ -17,8 +19,8 @@ use std::time::Duration;
 
 use serde_json::{json, Value};
 use vrcx_0_application_core::{
-    recommended_tokio_max_blocking_threads, recommended_tokio_worker_threads, RuntimeEventSink,
-    RuntimeTask, RuntimeTaskExecutor, RuntimeTaskHandle,
+    recommended_tokio_max_blocking_threads, recommended_tokio_worker_threads, RuntimeTask,
+    RuntimeTaskExecutor, RuntimeTaskHandle,
 };
 use vrcx_0_application_sync::{
     CONFIG_ALLOW_PLAINTEXT, CONFIG_DATABASE, CONFIG_ENABLED, CONFIG_HOST, CONFIG_INTERVAL_SEC,
@@ -81,7 +83,21 @@ async fn async_main() -> ExitCode {
         tracing::warn!(error = %error, "failed to seed remote sync settings");
     }
 
-    state.set_runtime_event_sink(LoggingEventSink);
+    // Web transport context: auth, realtime broadcast and the command
+    // registry installed as the runtime event sink.
+    let (event_tx, _) = tokio::sync::broadcast::channel::<(String, Value)>(1024);
+    state.set_runtime_event_sink(transport::events::WebEventSink::new(event_tx.clone()));
+    let ctx = Arc::new(transport::auth::AuthContext {
+        auth: transport::auth::WebAuth::new(config.web.password.clone()),
+        state: Arc::clone(&state),
+        events: event_tx,
+        registry: commands::build_registry(),
+    });
+    if !config.web.auth_enabled {
+        tracing::warn!(
+            "web authentication is DISABLED (no password configured) - trusted LAN use only"
+        );
+    }
 
     if let Err(error) = state.start_headless_backend_runtime().await {
         let reason = error.to_string();
@@ -106,9 +122,39 @@ async fn async_main() -> ExitCode {
             return ExitCode::from(1);
         }
     };
+    let registry_len = ctx.registry.len();
     let app = axum::Router::new()
         .route("/healthz", axum::routing::get(healthz))
-        .with_state(Arc::clone(&state));
+        .with_state(Arc::clone(&state))
+        .route(
+            "/api/auth/status",
+            axum::routing::get(transport::auth::auth_status),
+        )
+        .route(
+            "/api/auth/login",
+            axum::routing::post(transport::auth::auth_login),
+        )
+        .route(
+            "/api/auth/logout",
+            axum::routing::post(transport::auth::auth_logout),
+        )
+        .route(
+            "/api/invoke",
+            axum::routing::post(transport::invoke::invoke_endpoint),
+        )
+        .route(
+            "/api/events",
+            axum::routing::get(transport::events::events_endpoint),
+        )
+        .route(
+            "/api/img/{file_id}/{version}",
+            axum::routing::get(transport::img::img_endpoint),
+        )
+        .with_state(Arc::clone(&ctx))
+        .fallback(transport::static_files::static_endpoint)
+        .with_state(transport::static_files::StaticFiles::new(
+            config.web.dist_dir.clone(),
+        ));
     let listener = match tokio::net::TcpListener::bind(listen_addr).await {
         Ok(listener) => listener,
         Err(error) => {
@@ -117,7 +163,11 @@ async fn async_main() -> ExitCode {
             return ExitCode::from(1);
         }
     };
-    tracing::info!(addr = %listen_addr, "HTTP server listening");
+    tracing::info!(
+        addr = %listen_addr,
+        commands = registry_len,
+        "HTTP server listening"
+    );
 
     let serve = axum::serve(listener, app);
     tokio::select! {
@@ -249,17 +299,6 @@ async fn shutdown_signal() {
     tokio::select! {
         _ = ctrl_c => {}
         _ = terminate => {}
-    }
-}
-
-/// Runtime event sink for the server: structured logs only for now; the
-/// web transport installs a WebSocket-broadcasting sink in its place.
-#[derive(Clone)]
-struct LoggingEventSink;
-
-impl RuntimeEventSink for LoggingEventSink {
-    fn emit(&self, event: &str, payload: Value) {
-        tracing::debug!(event, payload = %payload, "runtime event");
     }
 }
 

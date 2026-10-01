@@ -10,8 +10,16 @@ name = "vrcx-0-server"
 path = "src/main.rs"
 
 [dependencies]
-axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
+axum = { version = "0.8", default-features = false, features = [
+    "http1",
+    "tokio",
+    "json",
+    "ws",
+] }
 dirs = "7"
+futures-util = "0.3"
+thiserror = { workspace = true }
+uuid = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = [
@@ -24,6 +32,7 @@ tokio = { workspace = true, features = [
 toml = "0.9"
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+vrcx-0-application = { path = "../application" }
 vrcx-0-application-core = { path = "../application-core" }
 vrcx-0-application-sync = { path = "../application-sync" }
 vrcx-0-composition = { path = "../composition" }
