@@ -1,11 +1,9 @@
-import {
-    BaseDirectory,
-    mkdir,
-    readTextFile,
-    writeTextFile
-} from '@tauri-apps/plugin-fs';
 import { create } from 'zustand';
 
+import {
+    readLocalTextFile,
+    writeLocalTextFile
+} from '@/platform/tauri/localFile';
 import { isRecord } from '@/shared/utils/record';
 
 const CACHE_FILE = 'navigation-state.json';
@@ -45,13 +43,7 @@ function persistNavigation(): void {
     });
     writeQueue = writeQueue
         .then(async () => {
-            await mkdir('', {
-                baseDir: BaseDirectory.AppCache,
-                recursive: true
-            });
-            await writeTextFile(CACHE_FILE, contents, {
-                baseDir: BaseDirectory.AppCache
-            });
+            await writeLocalTextFile(CACHE_FILE, contents);
         })
         .catch((error: unknown) => {
             console.warn('Failed to save navigation cache:', error);
@@ -69,9 +61,7 @@ export const useNavigationCacheStore = create<NavigationCacheStore>(
             hydration ??= (async () => {
                 try {
                     const value: unknown = JSON.parse(
-                        await readTextFile(CACHE_FILE, {
-                            baseDir: BaseDirectory.AppCache
-                        })
+                        await readLocalTextFile(CACHE_FILE)
                     );
                     if (isRecord(value)) {
                         set({

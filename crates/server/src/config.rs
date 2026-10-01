@@ -16,6 +16,7 @@ pub struct ServerConfigFile {
     pub server: Option<ServerSection>,
     pub sync: Option<SyncSection>,
     pub web: Option<WebSection>,
+    pub realtime: Option<RealtimeSection>,
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
@@ -64,6 +65,8 @@ pub struct ServerConfig {
     pub listen_addr: String,
     pub sync: SyncSettings,
     pub web: WebSettings,
+    /// None = default (feed logging on).
+    pub feed_logging: Option<bool>,
 }
 
 /// Sync settings resolved from file+env; `None` fields are not seeded.
@@ -147,13 +150,29 @@ impl ServerConfig {
                 .unwrap_or_else(|| PathBuf::from("dist")),
         };
 
+        let feed_logging = file
+            .realtime
+            .and_then(|section| section.feed_logging)
+            .or(env_bool("VRCX_CLOUD_FEED_LOGGING"));
+
         Ok(Self {
             data_dir,
             listen_addr,
             sync,
             web,
+            feed_logging,
         })
     }
+}
+
+#[derive(Clone, Debug, Default, serde::Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct RealtimeSection {
+    /// Whether the server records realtime feed rows itself. When the
+    /// desktop is the primary device, disabling this avoids duplicate
+    /// feed rows from two simultaneous realtime sessions (the desktop's
+    /// rows still arrive via remote sync).
+    pub feed_logging: Option<bool>,
 }
 
 /// Web UI access settings.

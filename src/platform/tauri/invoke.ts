@@ -1,8 +1,12 @@
-import { invoke, type InvokeArgs } from '@tauri-apps/api/core';
+import { isWebPlatform, webInvoke } from './webTransport';
 
 export async function invokeTauri<TReturn = unknown>(
     command: string,
-    args?: InvokeArgs
+    args?: Record<string, unknown>
 ): Promise<TReturn> {
-    return invoke<TReturn>(command, args);
+    if (isWebPlatform()) {
+        return webInvoke<TReturn>(command, args);
+    }
+    const core = await import('@tauri-apps/api/core');
+    return core.invoke<TReturn>(command, args);
 }

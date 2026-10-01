@@ -1,6 +1,7 @@
 import type { Window as TauriWindow } from '@tauri-apps/api/window';
 
 import { normalizePlatformError } from './errors';
+import { isWebPlatform } from './webTransport';
 
 type WindowSizeInput = Parameters<TauriWindow['setSize']>[0];
 type WindowPositionInput = Parameters<TauriWindow['setPosition']>[0];
@@ -111,12 +112,50 @@ async function loadCurrentWindow() {
     return module.getCurrentWindow;
 }
 
+function createWebWindowStub(): WindowLike {
+    const noop = async () => undefined;
+    return {
+        startDragging: noop,
+        startResizeDragging: noop,
+        minimize: noop,
+        maximize: noop,
+        unmaximize: noop,
+        toggleMaximize: noop,
+        close: noop,
+        isMaximized: async () => false,
+        innerSize: async () => ({
+            width: window.innerWidth,
+            height: window.innerHeight
+        }),
+        outerSize: async () => ({
+            width: window.outerWidth,
+            height: window.outerHeight
+        }),
+        outerPosition: async () => ({ x: window.screenX, y: window.screenY }),
+        scaleFactor: () => window.devicePixelRatio,
+        setSize: noop,
+        setPosition: noop,
+        setSizeConstraints: noop,
+        setMaximizable: noop,
+        setAlwaysOnTop: noop,
+        setFocus: noop,
+        requestUserAttention: noop,
+        setTheme: noop
+    } satisfies WindowLike;
+}
+
 export async function getCurrentWebviewWindow(): Promise<WebviewWindowLike> {
+    if (isWebPlatform()) {
+        return createWebWindowStub();
+    }
     const getWindow = await loadCurrentWebviewWindow();
     return getWindow();
 }
 
 export async function getCurrentWindow(): Promise<WindowLike> {
+    if (isWebPlatform()) {
+        return createWebWindowStub();
+    }
     const getWindow = await loadCurrentWindow();
     return getWindow();
 }

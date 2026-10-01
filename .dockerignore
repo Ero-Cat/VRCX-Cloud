@@ -1,0 +1,12 @@
+.git
+.github
+.zcode
+.DS_Store
+node_modules
+dist
+target
+crates/*/target
+data
+*.md
+images
+signatures

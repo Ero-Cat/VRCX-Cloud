@@ -1,0 +1,45 @@
+services:
+    postgres:
+        image: postgres:17-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: vrcx
+            POSTGRES_PASSWORD: ${VRCX_PG_PASSWORD:-vrcx}
+            POSTGRES_DB: vrcx
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U vrcx -d vrcx']
+            interval: 10s
+            timeout: 5s
+            retries: 10
+        # LAN only: keep PostgreSQL off the host's public interface.
+        ports:
+            - '127.0.0.1:5432:5432'
+
+    app:
+        build: .
+        restart: unless-stopped
+        depends_on:
+            postgres:
+                condition: service_healthy
+        environment:
+            VRCX_CLOUD_LISTEN: '0.0.0.0:8800'
+            VRCX_CLOUD_WEB_PASSWORD: ${VRCX_WEB_PASSWORD:?set VRCX_WEB_PASSWORD in .env}
+            # Sync target: the bundled PostgreSQL. The desktop VRCX-0 sync
+            # settings must point at this server over the LAN instead.
+            VRCX_CLOUD_SYNC_HOST: postgres
+            VRCX_CLOUD_SYNC_PORT: '5432'
+            VRCX_CLOUD_SYNC_USER: vrcx
+            VRCX_CLOUD_SYNC_PASSWORD: ${VRCX_PG_PASSWORD:-vrcx}
+            VRCX_CLOUD_SYNC_DATABASE: vrcx
+            VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT: 'true'
+            VRCX_CLOUD_SYNC_INTERVAL_SEC: '15'
+        volumes:
+            - app-data:/data
+        ports:
+            - '8800:8800'
+
+volumes:
+    postgres-data:
+    app-data:

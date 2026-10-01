@@ -89,6 +89,25 @@ pub fn register(registry: &mut CommandRegistry) {
         |state: Arc<ServerRuntimeHostState>, _args| async move { ok(state.storage_snapshot()) },
     );
 
+    // Legacy VRCX (desktop) migration never applies on a server: there is
+    // no local VRCX install to import from.
+    registry.register(
+        "app__get_legacy_vrcx_migration_status",
+        |_state, _args| async move {
+            ok(serde_json::json!({
+                "detected": false,
+                "available": false,
+                "version": null,
+                "dbPath": null,
+                "configPath": null,
+                "reason": null
+            }))
+        },
+    );
+    registry.register("app__is_legacy_vrcx_running", |_state, _args| async move {
+        ok(false)
+    });
+
     registry.register(
         "sync__status",
         |state: Arc<ServerRuntimeHostState>, _args| async move {

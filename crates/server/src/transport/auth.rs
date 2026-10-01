@@ -134,6 +134,12 @@ pub async fn auth_status(State(ctx): State<Arc<AuthContext>>) -> Response {
     Json(json!({ "authEnabled": enabled })).into_response()
 }
 
+/// Whether the caller holds a valid session (always true when auth is off).
+pub async fn auth_session(State(ctx): State<Arc<AuthContext>>, headers: HeaderMap) -> Response {
+    let valid = ctx.auth.session_from_headers(&headers);
+    Json(json!({ "valid": valid })).into_response()
+}
+
 pub async fn auth_login(State(ctx): State<Arc<AuthContext>>, Json(body): Json<Value>) -> Response {
     let password = body
         .get("password")

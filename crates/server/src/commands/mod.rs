@@ -6,9 +6,15 @@
 //! `unsupportedOnWeb`. Blocking SQLite work goes through
 //! `spawn_blocking`, matching the desktop wrapper behaviour.
 
+pub mod application_misc;
+pub mod application_social;
 pub mod auth;
 pub mod core;
 pub mod local;
+pub mod local_data_queries;
+pub mod local_game_log;
+pub mod vrchat_mutations;
+pub mod vrchat_proxy;
 
 use crate::transport::error::ApiError;
 use crate::transport::invoke::CommandRegistry;
@@ -34,6 +40,13 @@ where
 
 pub fn build_registry() -> CommandRegistry {
     let mut registry = CommandRegistry::new();
+    vrchat_proxy::register(&mut registry);
+    vrchat_mutations::register(&mut registry);
+    local_data_queries::register(&mut registry);
+    local_game_log::register(&mut registry);
+    local_game_log::register_restored(&mut registry);
+    application_social::register(&mut registry);
+    application_misc::register(&mut registry);
     auth::register(&mut registry);
     core::register(&mut registry);
     local::register(&mut registry);

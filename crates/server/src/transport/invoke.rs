@@ -78,10 +78,17 @@ pub async fn invoke_endpoint(
         .registry
         .dispatch(Arc::clone(&ctx.state), &request.cmd, request.args)
     else {
+        tracing::warn!(cmd = %request.cmd, "invoke: unsupported on web");
         return ApiError::Unsupported(request.cmd).into_response();
     };
     match future.await {
-        Ok(value) => Json(json!({ "ok": true, "result": value })).into_response(),
-        Err(error) => error.into_response(),
+        Ok(value) => {
+            tracing::debug!(cmd = %request.cmd, "invoke: ok");
+            Json(json!({ "ok": true, "result": value })).into_response()
+        }
+        Err(error) => {
+            tracing::warn!(cmd = %request.cmd, code = error.code(), "invoke: failed");
+            error.into_response()
+        }
     }
 }

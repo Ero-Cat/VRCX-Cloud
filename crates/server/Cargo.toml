@@ -32,10 +32,18 @@ tokio = { workspace = true, features = [
 toml = "0.9"
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+chrono = { workspace = true }
 vrcx-0-application = { path = "../application" }
+vrcx-0-application-game = { path = "../application-game" }
+vrcx-0-contracts = { path = "../contracts" }
+vrcx-0-application-activity = { path = "../application-activity" }
 vrcx-0-application-core = { path = "../application-core" }
+vrcx-0-application-realtime = { path = "../application-realtime" }
 vrcx-0-application-sync = { path = "../application-sync" }
+vrcx-0-assistant = { path = "../assistant" }
 vrcx-0-composition = { path = "../composition" }
+vrcx-0-core = { path = "../core" }
+vrcx-0-mcp = { path = "../mcp" }
 vrcx-0-persistence = { path = "../persistence" }
 vrcx-0-platform = { path = "../platform" }
 vrcx-0-runtime-host-server = { path = "../runtime-host-server" }

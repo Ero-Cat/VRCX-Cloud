@@ -1,10 +1,7 @@
 import {
-    BaseDirectory,
-    mkdir,
-    readTextFile,
-    writeTextFile
-} from '@tauri-apps/plugin-fs';
-
+    readLocalTextFile,
+    writeLocalTextFile
+} from '@/platform/tauri/localFile';
 import { isRecord } from '@/shared/utils/record';
 
 import type { QuickSearchEntityType, QuickSearchResult } from '../quickSearch';
@@ -97,9 +94,7 @@ function accountKey(scope: QuickSearchHistoryScope) {
 
 async function readHistoryFile(): Promise<QuickSearchHistoryFile> {
     try {
-        const contents = await readTextFile(HISTORY_FILE_NAME, {
-            baseDir: BaseDirectory.AppCache
-        });
+        const contents = await readLocalTextFile(HISTORY_FILE_NAME);
         return parseHistoryFile(JSON.parse(contents));
     } catch {
         return emptyHistoryFile();
@@ -147,13 +142,7 @@ export function recordQuickSearchHistory(
                     imageUrl: result.imageUrl
                 }
             );
-            await mkdir('', {
-                baseDir: BaseDirectory.AppCache,
-                recursive: true
-            });
-            await writeTextFile(HISTORY_FILE_NAME, JSON.stringify(file), {
-                baseDir: BaseDirectory.AppCache
-            });
+            await writeLocalTextFile(HISTORY_FILE_NAME, JSON.stringify(file));
         });
     return recordQueue;
 }

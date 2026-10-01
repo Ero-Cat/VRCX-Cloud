@@ -114,6 +114,17 @@ async fn async_main() -> ExitCode {
         tracing::info!("backend runtime started from the saved VRChat session");
     }
 
+    // Dual realtime sessions (desktop + server) can double-record feed
+    // rows; users running the desktop as primary can turn the server's
+    // own feed logging off.
+    if config.feed_logging == Some(false) {
+        if let Err(error) = state.local_data().set_feed_persistence_disabled(true) {
+            tracing::warn!(error = %error, "failed to disable server feed logging");
+        } else {
+            tracing::info!("server feed logging disabled (desktop is the feed recorder)");
+        }
+    }
+
     let listen_addr: SocketAddr = match config.listen_addr.parse() {
         Ok(addr) => addr,
         Err(error) => {
@@ -129,6 +140,10 @@ async fn async_main() -> ExitCode {
         .route(
             "/api/auth/status",
             axum::routing::get(transport::auth::auth_status),
+        )
+        .route(
+            "/api/auth/session",
+            axum::routing::get(transport::auth::auth_session),
         )
         .route(
             "/api/auth/login",

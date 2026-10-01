@@ -53,6 +53,9 @@ pub use profile_backup::{ServerProfileBackupRuntime, ServerProfileRestoreRequest
 pub use proxy_connectivity::test_proxy_connectivity;
 pub use social::ServerSocialRuntime;
 pub use startup_bootstrap::{system_culture, system_language, StartupBootstrapSnapshot};
-pub use state::{CurrentUserRefreshOutcome, ServerRuntimeHostOptions, ServerRuntimeHostState};
+pub use state::{
+    CurrentUserRefreshOutcome, RuntimeJobRecordInput, ServerRuntimeHostOptions,
+    ServerRuntimeHostState,
+};
 pub use vrchat_remote::ServerVrchatRemoteFacade;
 pub use vrcx_0_composition::{Error, Result};

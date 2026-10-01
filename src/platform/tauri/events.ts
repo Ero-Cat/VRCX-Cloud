@@ -1,6 +1,7 @@
 import type { Event, UnlistenFn } from '@tauri-apps/api/event';
 
 import { normalizePlatformError } from './errors';
+import { ensureWebEventConnection, isWebPlatform } from './webTransport';
 
 export type TauriEventHandler<TPayload = unknown> = (payload: TPayload) => void;
 
@@ -42,6 +43,10 @@ function dispatch(name: string, payload: unknown): void {
 }
 
 async function ensureTauriSubscription(name: string): Promise<UnlistenFn> {
+    if (isWebPlatform()) {
+        ensureWebEventConnection(dispatch);
+        return () => undefined;
+    }
     const existing = tauriRegistrations.get(name);
     if (existing) {
         return existing.promise;
