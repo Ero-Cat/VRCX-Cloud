@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="VRCX-Cloud logo">
+  <defs>
+    <linearGradient id="cloud" x1="0" y0="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#0b1020"/>
+  <path d="M70 150a30 30 0 0 1 6-59 42 42 0 0 1 80-12 32 32 0 0 1 30 55 26 26 0 0 1-8 5l-38 13a14 14 0 0 1-9 0l-52-18a14 14 0 0 1-9-6z" fill="url(#cloud)"/>
+  <path d="M128 214l-34-58m34 58l34-58" stroke="#e2e8f0" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
