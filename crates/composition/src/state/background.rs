@@ -301,7 +301,9 @@ pub(super) fn background_session_matches_auth(
 
 pub(super) fn gui_maintenance_runtime_mode(backend_runtime: &BackendRuntime) -> &'static str {
     match backend_runtime.profile() {
-        crate::RuntimeHostProfile::HeadlessData => "headless mode",
+        crate::RuntimeHostProfile::HeadlessData | crate::RuntimeHostProfile::Server => {
+            "headless mode"
+        }
         crate::RuntimeHostProfile::Desktop => match backend_runtime.gui_mode() {
             Some(vrcx_0_application_core::GuiRuntimeMode::Foreground) => "normal GUI mode",
             Some(vrcx_0_application_core::GuiRuntimeMode::Background) => "background GUI mode",

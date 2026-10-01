@@ -9,6 +9,7 @@ mod state;
 pub use composition::{RuntimeHostComposition, RuntimeHostProfileExtension};
 pub(crate) use context::RuntimeHostContext;
 pub use context::RuntimeHostDesktopAssemblyDeps;
+pub type RuntimeHostServerAssemblyDeps = RuntimeHostDesktopAssemblyDeps;
 pub use error::{Error, Result};
 pub use event_sink::RuntimeHostEventSink;
 pub use group_order::{GroupOrderSource, UnavailableGroupOrderSource};

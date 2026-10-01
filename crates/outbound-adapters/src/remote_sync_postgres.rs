@@ -86,11 +86,9 @@ impl PostgresSyncStore {
 
     async fn connect(&self) -> SyncStoreResult<Client> {
         let tls = make_tls_connector(self.tls_verify)?;
-        let (client, connection) = self
-            .config
-            .connect(tls)
-            .await
-            .map_err(|error| SyncStoreError::Other(format!("PostgreSQL connect failed: {error}")))?;
+        let (client, connection) = self.config.connect(tls).await.map_err(|error| {
+            SyncStoreError::Other(format!("PostgreSQL connect failed: {error}"))
+        })?;
         tokio::spawn(async move {
             if let Err(error) = connection.await {
                 tracing::debug!(error = %error, "postgres sync connection closed");
@@ -106,9 +104,7 @@ impl PostgresSyncStore {
             )
             .await
             .map_err(|error| {
-                SyncStoreError::Other(format!(
-                    "PostgreSQL session guard setup failed: {error}"
-                ))
+                SyncStoreError::Other(format!("PostgreSQL session guard setup failed: {error}"))
             })?;
         Ok(client)
     }
@@ -182,9 +178,7 @@ impl PostgresSyncStore {
     }
 }
 
-fn make_tls_connector(
-    verify: bool,
-) -> SyncStoreResult<tokio_postgres_rustls::MakeRustlsConnect> {
+fn make_tls_connector(verify: bool) -> SyncStoreResult<tokio_postgres_rustls::MakeRustlsConnect> {
     let provider = Arc::new(rustls::crypto::ring::default_provider());
     let builder = rustls::ClientConfig::builder_with_provider(provider.clone())
         .with_safe_default_protocol_versions()
@@ -192,9 +186,7 @@ fn make_tls_connector(
     let mut roots = rustls::RootCertStore::empty();
     roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     let config = if verify {
-        builder
-            .with_root_certificates(roots)
-            .with_no_client_auth()
+        builder.with_root_certificates(roots).with_no_client_auth()
     } else {
         builder
             .dangerous()
@@ -280,11 +272,9 @@ fn create_table_sql(schema: &RemoteTableSchema) -> String {
         .columns
         .iter()
         .map(|column| {
-            let is_counter = schema
-                .field_semantics
-                .iter()
-                .any(|(field, semantic)| field == &column.name
-                    && matches!(semantic, SyncFieldSemantic::CounterDelta));
+            let is_counter = schema.field_semantics.iter().any(|(field, semantic)| {
+                field == &column.name && matches!(semantic, SyncFieldSemantic::CounterDelta)
+            });
             let default = if is_counter && column.column_type == RemoteColumnType::BigInt {
                 " NOT NULL DEFAULT 0"
             } else {
@@ -340,7 +330,9 @@ fn patch_columns_sql(schema: &RemoteTableSchema) -> Vec<String> {
 fn merge_expression(schema: &RemoteTableSchema, column: &str, table_ref: &str) -> String {
     let t = table_ref;
     let c = quoted(column);
-    let semantic = field_semantic(schema, column).copied().unwrap_or(SyncFieldSemantic::Lww);
+    let semantic = field_semantic(schema, column)
+        .copied()
+        .unwrap_or(SyncFieldSemantic::Lww);
     match semantic {
         SyncFieldSemantic::Lww => format!(
             "CASE WHEN EXCLUDED.sync_hlc > {t}.sync_hlc THEN EXCLUDED.{c} ELSE {t}.{c} END"
@@ -409,7 +401,9 @@ fn set_upsert_sql(schema: &RemoteTableSchema, row_count: usize) -> String {
                 format!("{} = {}", quoted(&column.name), expression)
             })
             .collect();
-        assignments.push(format!("sync_hlc = GREATEST({table}.sync_hlc, EXCLUDED.sync_hlc)"));
+        assignments.push(format!(
+            "sync_hlc = GREATEST({table}.sync_hlc, EXCLUDED.sync_hlc)"
+        ));
         assignments.push(format!(
             "sync_device = CASE WHEN EXCLUDED.sync_hlc > {table}.sync_hlc THEN EXCLUDED.sync_device ELSE {table}.sync_device END"
         ));
@@ -426,11 +420,7 @@ fn key_predicate(schema: &RemoteTableSchema, first_param: usize) -> (String, usi
     let mut predicates = Vec::new();
     let mut next = first_param;
     for key in &schema.key_columns {
-        predicates.push(format!(
-            "{} IS NOT DISTINCT FROM ${}",
-            quoted(key),
-            next
-        ));
+        predicates.push(format!("{} IS NOT DISTINCT FROM ${}", quoted(key), next));
         next += 1;
     }
     (predicates.join(" AND "), next)
@@ -569,9 +559,8 @@ impl RemoteSyncStore for PostgresSyncStore {
                     .query_one("SELECT version()", &[])
                     .await
                     .map_err(|error| SyncStoreError::Other(error.to_string()))?;
-                let server_version: String = row
-                    .try_get(0)
-                    .unwrap_or_else(|_| "PostgreSQL".to_string());
+                let server_version: String =
+                    row.try_get(0).unwrap_or_else(|_| "PostgreSQL".to_string());
                 Ok((
                     SyncConnectionTestResult {
                         ok: true,
@@ -918,7 +907,9 @@ impl<'a> tokio_postgres::types::FromSql<'a> for chrono_ish::Timestamp {
         _ty: &tokio_postgres::types::Type,
         raw: &'a [u8],
     ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        Ok(chrono_ish::Timestamp(String::from_utf8_lossy(raw).to_string()))
+        Ok(chrono_ish::Timestamp(
+            String::from_utf8_lossy(raw).to_string(),
+        ))
     }
 
     fn accepts(ty: &tokio_postgres::types::Type) -> bool {
@@ -947,7 +938,9 @@ const PROTOCOL_TABLE_DDL: [&str; 4] = [
     )",
 ];
 
-async fn ensure_protocol_tables(client: &impl tokio_postgres::GenericClient) -> SyncStoreResult<()> {
+async fn ensure_protocol_tables(
+    client: &impl tokio_postgres::GenericClient,
+) -> SyncStoreResult<()> {
     for sql in PROTOCOL_TABLE_DDL {
         client.execute(sql, &[]).await.map_err(pg_error)?;
     }
@@ -1009,7 +1002,10 @@ async fn materialize_op(
             let Some(payload) = op.payload.as_ref() else {
                 return Ok(());
             };
-            let field = payload.get("field").and_then(Value::as_str).unwrap_or_default();
+            let field = payload
+                .get("field")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
             let delta = payload.get("delta").and_then(Value::as_i64).unwrap_or(0);
             let sql = inc_sql(schema, field)?;
             let mut params = key_params;
@@ -1025,7 +1021,10 @@ async fn materialize_op(
             let Some(payload) = op.payload.as_ref() else {
                 return Ok(());
             };
-            let field = payload.get("field").and_then(Value::as_str).unwrap_or_default();
+            let field = payload
+                .get("field")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
             let element = payload
                 .get("element")
                 .and_then(Value::as_str)
@@ -1073,10 +1072,14 @@ fn pg_row_value(
         tokio_postgres::types::Type::FLOAT8 => row
             .try_get::<_, Option<f64>>(index)
             .map_err(pg_error)?
-            .map(|v| serde_json::Number::from_f64(v).map(Value::Number).unwrap_or(Value::Null)),
-        tokio_postgres::types::Type::JSONB | tokio_postgres::types::Type::JSON => row
-            .try_get::<_, Option<Value>>(index)
-            .map_err(pg_error)?,
+            .map(|v| {
+                serde_json::Number::from_f64(v)
+                    .map(Value::Number)
+                    .unwrap_or(Value::Null)
+            }),
+        tokio_postgres::types::Type::JSONB | tokio_postgres::types::Type::JSON => {
+            row.try_get::<_, Option<Value>>(index).map_err(pg_error)?
+        }
         tokio_postgres::types::Type::BOOL => row
             .try_get::<_, Option<bool>>(index)
             .map_err(pg_error)?
@@ -1134,7 +1137,11 @@ impl PostgresSyncStore {
         // means ops would land in the log without ever being materialized —
         // fail loudly instead of dropping data silently.
         let schemas = self.schemas.read().unwrap().clone();
-        for table in ops.iter().map(|op| op.table.clone()).collect::<HashSet<String>>() {
+        for table in ops
+            .iter()
+            .map(|op| op.table.clone())
+            .collect::<HashSet<String>>()
+        {
             if !schemas.contains_key(&table) {
                 return Err(SyncStoreError::Other(format!(
                     "materialization schema for table {table} was not ensured; refusing to log ops without materializing them"
@@ -1241,8 +1248,8 @@ impl PostgresSyncStore {
 #[cfg(test)]
 mod pg_smoke {
     use super::*;
-    use vrcx_0_application_sync::RemoteColumnDef;
     use std::str::FromStr;
+    use vrcx_0_application_sync::RemoteColumnDef;
 
     /// Full roundtrip against a real server; runs only when
     /// VRCX_PG_TEST_DSN is set, and cleans up everything it created so a
@@ -1271,9 +1278,18 @@ mod pg_smoke {
             let schema = vec![RemoteTableSchema {
                 table: "smoke_test_rows".into(),
                 columns: vec![
-                    RemoteColumnDef { name: "id".into(), column_type: RemoteColumnType::Text },
-                    RemoteColumnDef { name: "name".into(), column_type: RemoteColumnType::Text },
-                    RemoteColumnDef { name: "tally".into(), column_type: RemoteColumnType::BigInt },
+                    RemoteColumnDef {
+                        name: "id".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    RemoteColumnDef {
+                        name: "name".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    RemoteColumnDef {
+                        name: "tally".into(),
+                        column_type: RemoteColumnType::BigInt,
+                    },
                 ],
                 key_columns: vec!["id".into()],
                 row_semantic: SyncRowSemantic::Lww,
@@ -1307,7 +1323,10 @@ mod pg_smoke {
                 hlc: "00000000000000002-00000000-smoketest".into(),
                 device: "smoketest".into(),
             };
-            store.push_ops(&[set_op.clone(), inc_op]).await.expect("push");
+            store
+                .push_ops(&[set_op.clone(), inc_op])
+                .await
+                .expect("push");
 
             // Re-push is idempotent by op id.
             store.push_ops(&[set_op.clone()]).await.expect("repush");
@@ -1326,7 +1345,10 @@ mod pg_smoke {
                 Some(&Value::from(5i64)),
                 "counter merged through Inc facts"
             );
-            assert_eq!(materialized[0].columns.get("name"), Some(&Value::String("alpha".into())));
+            assert_eq!(
+                materialized[0].columns.get("name"),
+                Some(&Value::String("alpha".into()))
+            );
 
             // Cleanup so the app's real bootstrap starts from a clean slate.
             let mut raw_config = tokio_postgres::Config::from_str(&dsn).unwrap();
@@ -1433,9 +1455,18 @@ mod pg_diag {
             let schema = vec![RemoteTableSchema {
                 table: "smoke_concurrency_rows".into(),
                 columns: vec![
-                    RemoteColumnDef { name: "id".into(), column_type: RemoteColumnType::Text },
-                    RemoteColumnDef { name: "val".into(), column_type: RemoteColumnType::Text },
-                    RemoteColumnDef { name: "tally".into(), column_type: RemoteColumnType::BigInt },
+                    RemoteColumnDef {
+                        name: "id".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    RemoteColumnDef {
+                        name: "val".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    RemoteColumnDef {
+                        name: "tally".into(),
+                        column_type: RemoteColumnType::BigInt,
+                    },
                 ],
                 key_columns: vec!["id".into()],
                 row_semantic: SyncRowSemantic::Lww,
@@ -1455,14 +1486,18 @@ mod pg_diag {
                             let id = format!("row-{k}");
                             let mut payload = Map::new();
                             payload.insert("id".to_string(), Value::String(id.clone()));
-                            payload.insert("val".to_string(), Value::String(format!("{prefix}{k}")));
+                            payload
+                                .insert("val".to_string(), Value::String(format!("{prefix}{k}")));
                             SyncOpRecord {
                                 op_id: format!("conc-{round}-{prefix}-{k}"),
                                 table: "smoke_concurrency_rows".into(),
                                 entity_key: vec![Value::String(id)],
                                 kind: SyncOpKind::Set,
                                 payload: Some(payload),
-                                hlc: format!("{:017}-00000000-conc{prefix}{round}", 1_000_000_000u64 + u64::from(round)),
+                                hlc: format!(
+                                    "{:017}-00000000-conc{prefix}{round}",
+                                    1_000_000_000u64 + u64::from(round)
+                                ),
                                 device: format!("conc-{prefix}"),
                             }
                         })
@@ -1488,7 +1523,10 @@ mod pg_diag {
                         ("field".to_string(), Value::String("tally".into())),
                         ("delta".to_string(), Value::from(1i64)),
                     ])),
-                    hlc: format!("{:017}-00000000-conci{device}{round}", 2_000_000_000u64 + u64::from(round)),
+                    hlc: format!(
+                        "{:017}-00000000-conci{device}{round}",
+                        2_000_000_000u64 + u64::from(round)
+                    ),
                     device: format!("conc-{device}"),
                 };
                 let mut ops_a = Vec::new();
@@ -1552,8 +1590,14 @@ mod pg_diag {
             let schema = vec![RemoteTableSchema {
                 table: "smoke_dupkey_rows".into(),
                 columns: vec![
-                    RemoteColumnDef { name: "id".into(), column_type: RemoteColumnType::Text },
-                    RemoteColumnDef { name: "val".into(), column_type: RemoteColumnType::Text },
+                    RemoteColumnDef {
+                        name: "id".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    RemoteColumnDef {
+                        name: "val".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
                 ],
                 key_columns: vec!["id".into()],
                 row_semantic: SyncRowSemantic::Lww,
@@ -1580,7 +1624,10 @@ mod pg_diag {
                 set("k1", "v3", "d3", "00000000000000003-00000000-dupkey"),
                 set("k2", "w1", "d4", "00000000000000004-00000000-dupkey"),
             ];
-            store.push_ops(&ops).await.expect("push with duplicate keys");
+            store
+                .push_ops(&ops)
+                .await
+                .expect("push with duplicate keys");
             let rows = store
                 .fetch_materialized("smoke_dupkey_rows", 10, 0)
                 .await
@@ -1590,7 +1637,11 @@ mod pg_diag {
                     .find(|row| row.columns.get("id") == Some(&Value::String(id.into())))
                     .and_then(|row| row.columns.get("val").cloned())
             };
-            assert_eq!(value_of("k1"), Some(Value::String("v3".into())), "last write wins");
+            assert_eq!(
+                value_of("k1"),
+                Some(Value::String("v3".into())),
+                "last write wins"
+            );
             assert_eq!(value_of("k2"), Some(Value::String("w1".into())));
             println!("duplicate-key push OK");
             let client = diag_client(&dsn).await;
@@ -1629,7 +1680,9 @@ mod pg_diag {
             let names: Vec<String> = tables
                 .into_iter()
                 .map(|row| row.get::<_, String>(0))
-                .filter(|name| !matches!(name.as_str(), "_sync_meta" | "sync_ops" | "_sync_devices"))
+                .filter(|name| {
+                    !matches!(name.as_str(), "_sync_meta" | "sync_ops" | "_sync_devices")
+                })
                 .collect();
             for name in &names {
                 client
@@ -1709,7 +1762,8 @@ mod pg_diag {
         let Ok(dsn) = std::env::var("VRCX_PG_TEST_DSN") else {
             return;
         };
-        let table = std::env::var("VRCX_PG_WATCH_TABLE").unwrap_or_else(|_| "gamelog_location".into());
+        let table =
+            std::env::var("VRCX_PG_WATCH_TABLE").unwrap_or_else(|_| "gamelog_location".into());
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -1798,7 +1852,6 @@ mod pg_diag {
             println!("stuck backends found: {}", rows.len());
         });
     }
-
 }
 
 async fn flush_set_batch(

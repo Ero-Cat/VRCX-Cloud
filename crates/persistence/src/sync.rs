@@ -231,7 +231,11 @@ fn trigger_sqls(table: &str, plan: &TablePlan, device: &str) -> Vec<String> {
         ("ins", "INSERT", &key_expr_new),
         ("upd", "UPDATE", &key_expr_new),
     ] {
-        let when = if is_configs { configs_when_clause(false) } else { String::new() };
+        let when = if is_configs {
+            configs_when_clause(false)
+        } else {
+            String::new()
+        };
         sqls.push(format!(
             "CREATE TRIGGER IF NOT EXISTS \"_sync_{action}_{table}\" AFTER {event} ON \"{table}\" {when} BEGIN
                 INSERT INTO _sync_outbox (op_id, table_name, entity_key, op, payload, hlc, device)
@@ -239,7 +243,11 @@ fn trigger_sqls(table: &str, plan: &TablePlan, device: &str) -> Vec<String> {
             END"
         ));
     }
-    let delete_when = if is_configs { configs_when_clause(true) } else { String::new() };
+    let delete_when = if is_configs {
+        configs_when_clause(true)
+    } else {
+        String::new()
+    };
     sqls.push(format!(
         "CREATE TRIGGER IF NOT EXISTS \"_sync_del_{table}\" AFTER DELETE ON \"{table}\" {delete_when} BEGIN
             INSERT INTO _sync_outbox (op_id, table_name, entity_key, op, payload, hlc, device)
@@ -599,9 +607,7 @@ pub fn refresh_capture(db: &DatabaseService, handle: &SyncCaptureHandle) -> Resu
     let names = tables
         .into_iter()
         .filter_map(|row| row.first().and_then(Value::as_str).map(str::to_string))
-        .filter(|name| {
-            crate::database::schema::safe_identifier(name, "Table name").is_ok()
-        })
+        .filter(|name| crate::database::schema::safe_identifier(name, "Table name").is_ok())
         .collect::<Vec<_>>();
 
     {
@@ -667,14 +673,7 @@ pub fn refresh_capture(db: &DatabaseService, handle: &SyncCaptureHandle) -> Resu
 }
 
 pub fn uninstall_capture(db: &DatabaseService, handle: &SyncCaptureHandle) -> Result<(), Error> {
-    let tables: Vec<String> = handle
-        .inner
-        .plans
-        .read()
-        .unwrap()
-        .keys()
-        .cloned()
-        .collect();
+    let tables: Vec<String> = handle.inner.plans.read().unwrap().keys().cloned().collect();
     for table in tables {
         for sql in drop_trigger_sqls(&table) {
             db.execute_non_query(&sql, &Default::default())?;
@@ -785,8 +784,7 @@ pub fn outbox_take(
                 Ok(())
             };
 
-            let entity_key: Vec<Value> =
-                serde_json::from_str(&entity_text).unwrap_or_default();
+            let entity_key: Vec<Value> = serde_json::from_str(&entity_text).unwrap_or_default();
             let payload: Option<Map<String, Value>> = row[4]
                 .as_str()
                 .and_then(|text| serde_json::from_str(text).ok());
@@ -807,7 +805,16 @@ pub fn outbox_take(
                 if !hlc.is_empty() {
                     advance_watermark(tx, &hlc)?;
                 }
-                derive_set_ops(tx, seq, &table, entity_text.clone(), entity_key, payload, &hlc, &device)?
+                derive_set_ops(
+                    tx,
+                    seq,
+                    &table,
+                    entity_text.clone(),
+                    entity_key,
+                    payload,
+                    &hlc,
+                    &device,
+                )?
             };
 
             staged.push(Staged {
@@ -875,10 +882,12 @@ fn derive_set_ops(
         return Ok(Vec::new());
     };
     let descriptor = sync_table_descriptor(table).expect("checked above");
-    let has_special = descriptor
-        .field_semantics
-        .iter()
-        .any(|(_, s)| matches!(s, SyncFieldSemantic::CounterDelta | SyncFieldSemantic::ElementSet));
+    let has_special = descriptor.field_semantics.iter().any(|(_, s)| {
+        matches!(
+            s,
+            SyncFieldSemantic::CounterDelta | SyncFieldSemantic::ElementSet
+        )
+    });
 
     let base = SyncOpRecord {
         op_id: format!("{hlc}/{seq}"),
@@ -923,7 +932,10 @@ fn derive_set_ops(
                 ("t", Value::String(table.to_string())),
                 ("k", Value::String(entity_text.clone())),
                 ("h", Value::String(hlc.to_string())),
-                ("s", Value::String(serde_json::to_string(snapshot).unwrap_or_default())),
+                (
+                    "s",
+                    Value::String(serde_json::to_string(snapshot).unwrap_or_default()),
+                ),
             ]),
         )?;
         Ok(())
@@ -978,7 +990,12 @@ fn derive_set_ops(
     let special_fields: Vec<&str> = descriptor
         .field_semantics
         .iter()
-        .filter(|(_, s)| matches!(s, SyncFieldSemantic::CounterDelta | SyncFieldSemantic::ElementSet))
+        .filter(|(_, s)| {
+            matches!(
+                s,
+                SyncFieldSemantic::CounterDelta | SyncFieldSemantic::ElementSet
+            )
+        })
         .map(|(f, _)| *f)
         .collect();
 
@@ -1019,10 +1036,7 @@ fn derive_set_ops(
             }
             Some(SyncFieldSemantic::ElementSet) => {
                 let current_list = value.as_array().cloned().unwrap_or_default();
-                let previous_list = old
-                    .and_then(Value::as_array)
-                    .cloned()
-                    .unwrap_or_default();
+                let previous_list = old.and_then(Value::as_array).cloned().unwrap_or_default();
                 for element in &current_list {
                     if !previous_list.contains(element) {
                         special_ops.push(SyncOpRecord {
@@ -1132,7 +1146,10 @@ pub fn apply_pulled_ops(
     }
 
     db.write_transaction(move |tx| {
-        let watermark_rows = tx.execute("SELECT COALESCE(MAX(seq), 0) FROM _sync_outbox", &Default::default())?;
+        let watermark_rows = tx.execute(
+            "SELECT COALESCE(MAX(seq), 0) FROM _sync_outbox",
+            &Default::default(),
+        )?;
         let watermark = watermark_rows
             .first()
             .and_then(|row| row.first())
@@ -1156,9 +1173,15 @@ pub fn apply_pulled_ops(
             let entity_text = entity_key_text(&op.entity_key);
 
             let applied = match op.kind {
-                SyncOpKind::Delete => {
-                    apply_delete(tx, descriptor, &op.table, &columns, &op.entity_key, &entity_text, &op.hlc)?
-                }
+                SyncOpKind::Delete => apply_delete(
+                    tx,
+                    descriptor,
+                    &op.table,
+                    &columns,
+                    &op.entity_key,
+                    &entity_text,
+                    &op.hlc,
+                )?,
                 SyncOpKind::Set => {
                     apply_set(tx, descriptor, &op.table, &columns, op, &entity_text)?
                 }
@@ -1374,8 +1397,7 @@ fn apply_set(
         .collect();
 
     if let Some(rowid) = existing {
-        if descriptor.row_semantic == SyncRowSemantic::GSet
-            && descriptor.field_semantics.is_empty()
+        if descriptor.row_semantic == SyncRowSemantic::GSet && descriptor.field_semantics.is_empty()
         {
             // Pure fact: an identical natural key is the same fact.
             set_row_version(tx, table, entity_text, &op.hlc, Some(payload))?;
@@ -1451,9 +1473,9 @@ fn apply_set(
     }
     let has_special_fields = !descriptor.field_semantics.is_empty();
     if has_special_fields {
-        if let Some(rowid) = existing.or_else(|| {
-            find_rowid(tx, descriptor, table, &op.entity_key).unwrap_or(None)
-        }) {
+        if let Some(rowid) =
+            existing.or_else(|| find_rowid(tx, descriptor, table, &op.entity_key).unwrap_or(None))
+        {
             let col_list = columns
                 .iter()
                 .map(|column| format!("\"{column}\""))
@@ -1573,7 +1595,10 @@ fn apply_element(
     tx.execute_non_query(
         &format!("UPDATE \"{table}\" SET \"{field}\" = @value WHERE rowid = @rowid"),
         &params(&[
-            ("value", Value::String(serde_json::to_string(&list).unwrap_or_default())),
+            (
+                "value",
+                Value::String(serde_json::to_string(&list).unwrap_or_default()),
+            ),
             ("rowid", Value::from(rowid)),
         ]),
     )?;
@@ -1611,7 +1636,10 @@ fn update_snapshot_field(
     tx.execute_non_query(
         "UPDATE _sync_row_version SET snapshot = @s WHERE table_name = @t AND entity_key = @k",
         &params(&[
-            ("s", Value::String(serde_json::to_string(&snapshot).unwrap_or_default())),
+            (
+                "s",
+                Value::String(serde_json::to_string(&snapshot).unwrap_or_default()),
+            ),
             ("t", Value::String(table.to_string())),
             ("k", Value::String(entity_text.to_string())),
         ]),
@@ -1675,14 +1703,15 @@ pub fn read_table_chunk(
             })
             .collect()
     };
-    let total_rows = db.execute(
-        &format!("SELECT COUNT(*) FROM \"{table}\" WHERE 1=1{window_sql}"),
-        &arg_map(&["since"]),
-    )?
-    .first()
-    .and_then(|row| row.first())
-    .and_then(Value::as_i64)
-    .unwrap_or(0);
+    let total_rows = db
+        .execute(
+            &format!("SELECT COUNT(*) FROM \"{table}\" WHERE 1=1{window_sql}"),
+            &arg_map(&["since"]),
+        )?
+        .first()
+        .and_then(|row| row.first())
+        .and_then(Value::as_i64)
+        .unwrap_or(0);
     // rowid leads the select purely for pagination; payload rows drop it.
     let rows = db.execute(
         &format!(
@@ -1775,9 +1804,10 @@ pub fn bootstrap_set_ops(
                     ("t", Value::String(plan.table.clone())),
                     ("k", Value::String(entity_text)),
                     ("h", Value::String(hlc.to_string())),
-                    ("s", Value::String(
-                        serde_json::to_string(&payload).unwrap_or_default(),
-                    )),
+                    (
+                        "s",
+                        Value::String(serde_json::to_string(&payload).unwrap_or_default()),
+                    ),
                 ]),
             )?;
             Ok(())
@@ -1838,7 +1868,8 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let dir = std::env::temp_dir().join(format!("vrcx-0-sync-{name}-{}-{nonce}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("vrcx-0-sync-{name}-{}-{nonce}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         DatabaseService::new(&dir.join("VRCX-0.sqlite3")).unwrap()
     }
@@ -1897,7 +1928,10 @@ mod tests {
         assert_eq!(batch.ops.len(), 2);
         assert!(matches!(batch.ops[0].kind, SyncOpKind::Set));
         assert!(matches!(batch.ops[1].kind, SyncOpKind::Delete));
-        assert!(!batch.ops[1].hlc.is_empty(), "del ops must be stamped at take");
+        assert!(
+            !batch.ops[1].hlc.is_empty(),
+            "del ops must be stamped at take"
+        );
     }
 
     #[test]
@@ -1922,7 +1956,10 @@ mod tests {
         // 3 inserts (2 ignored) + 3 updates = 4 facts, compacted to 1 Set.
         let batch = outbox_take(&db, &handle, 10).unwrap().unwrap();
         assert_eq!(batch.ops.len(), 1);
-        assert_eq!(batch.ops[0].payload.as_ref().unwrap().get("time"), Some(&Value::from(3)));
+        assert_eq!(
+            batch.ops[0].payload.as_ref().unwrap().get("time"),
+            Some(&Value::from(3))
+        );
     }
 
     #[test]
@@ -1942,7 +1979,10 @@ mod tests {
             ],
             kind: SyncOpKind::Set,
             payload: Some(Map::from_iter([
-                ("created_at".to_string(), Value::String("2026-02-01T00:00:00Z".into())),
+                (
+                    "created_at".to_string(),
+                    Value::String("2026-02-01T00:00:00Z".into()),
+                ),
                 ("type".to_string(), Value::String("OnPlayerJoined".into())),
                 ("display_name".to_string(), Value::String("Bob".into())),
                 ("user_id".to_string(), Value::String("usr_bob".into())),
@@ -1963,7 +2003,10 @@ mod tests {
 
         // Newer remote op wins; older local pending op is protected.
         let count = db
-            .execute("SELECT COUNT(*) FROM gamelog_join_leave", &Default::default())
+            .execute(
+                "SELECT COUNT(*) FROM gamelog_join_leave",
+                &Default::default(),
+            )
             .unwrap()
             .first()
             .unwrap()
@@ -2071,7 +2114,8 @@ mod tests {
         let _ = before;
         let derived = vrcx_0_contracts::sync_table_descriptor("playlist_items").unwrap();
         assert_eq!(
-            derived.key_columns, &["id"],
+            derived.key_columns,
+            &["id"],
             "TEXT primary key is the derived natural key"
         );
     }
@@ -2318,13 +2362,7 @@ mod tests {
             hlc: "00000000000000001-00000000-origin".into(),
             device: "origin".into(),
         };
-        apply_pulled_ops(
-            &db2,
-            handle2.device_id(),
-            &[seed.clone(), seed_inc],
-            1,
-        )
-        .unwrap();
+        apply_pulled_ops(&db2, handle2.device_id(), &[seed.clone(), seed_inc], 1).unwrap();
         apply_pulled_ops(&db2, handle2.device_id(), &third.ops, 2).unwrap();
         let count = db2
             .execute("SELECT view_count FROM browse_history", &Default::default())

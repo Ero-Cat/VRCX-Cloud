@@ -1,5 +1,6 @@
 {
     "name": "VRCX-0",
+    "version": "2.30.0",
     "private": true,
     "description": "The fast, lightweight VRCX built with Tauri and Rust.",
     "keywords": [
@@ -16,16 +17,8 @@
     },
     "type": "module",
     "scripts": {
-        "generate:tauri-bindings": "cargo run --manifest-path src-tauri/Cargo.toml --features bindings-export --bin export-bindings && oxfmt src/platform/tauri/bindings.ts",
         "prepare": "husky",
         "dev": "vite",
-        "tauri": "tauri",
-        "tauri:dev": "tauri dev --features devtools",
-        "tauri:dev:react-devtools": "set VITE_REACT_DEVTOOLS=1&& tauri dev --features devtools",
-        "tauri:dev:ws-log": "set VRCX_0_WS_EVENT_LOG=1&& tauri dev --features devtools",
-        "tauri:build": "tauri build",
-        "tauri:build:devtools": "tauri build --features devtools",
-        "tauri:build:devkit": "tauri build --features devkit",
         "format": "oxfmt . \"!**/*.{rs,toml,lock}\" \"!signatures/**\"",
         "format:check": "oxfmt --check . \"!**/*.{rs,toml,lock}\" \"!signatures/**\"",
         "lint": "oxlint . --deny-warnings --ignore-pattern \"**/*.{rs,toml,lock}\"",
@@ -37,12 +30,13 @@
         "rust:fmt": "cargo fmt --all",
         "rust:fmt:check": "cargo fmt --all -- --check",
         "rust:test": "cargo test -p",
-        "rust:test:ci": "cargo test --workspace --exclude vrcx-0 --locked",
+        "rust:test:ci": "cargo test --workspace --locked",
         "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
         "test": "vitest run",
         "test:watch": "vitest",
         "build:licenses": "node ./scripts/generate-third-party-licenses.ts",
-        "build": "vite build && npm run build:licenses"
+        "build": "vite build && npm run build:licenses",
+        "generate:web-bindings": "echo \"web bindings codegen lands in P2\""
     },
     "dependencies": {
         "@base-ui/react": "^1.8.0",
@@ -86,7 +80,6 @@
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.3.3",
-        "@tauri-apps/cli": "^2.12.0",
         "@testing-library/react": "^16.3.3",
         "@testing-library/user-event": "^14.6.7",
         "@types/node": "^26.6.3",

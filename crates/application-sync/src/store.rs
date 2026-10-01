@@ -10,8 +10,7 @@
 use async_trait::async_trait;
 use serde_json::{Map, Value};
 use vrcx_0_contracts::{
-    SyncConnectionTestResult, SyncDeviceRecord, SyncFieldSemantic, SyncOpRecord,
-    SyncRowSemantic,
+    SyncConnectionTestResult, SyncDeviceRecord, SyncFieldSemantic, SyncOpRecord, SyncRowSemantic,
 };
 
 /// Column type on the materialized remote schema.

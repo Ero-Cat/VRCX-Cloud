@@ -25,14 +25,14 @@ use vrcx_0_contracts::{
 use vrcx_0_persistence::sync::{
     apply_pulled_ops, bootstrap_set_ops, bootstrap_state_get, bootstrap_state_set, install_capture,
     outbox_pending_count, outbox_take, outbox_trim_pushed, read_table_chunk, refresh_capture,
-    synced_local_tables, sync_device_id, sync_meta_get, sync_meta_remove, sync_meta_set,
-    uninstall_capture, BootstrapState, SyncCaptureHandle, META_BOOTSTRAP_STATE,
-    META_LAST_OP_GC_AT, META_LAST_PULL_AT, META_LAST_PUSH_AT, META_PULL_CURSOR,
+    sync_device_id, sync_meta_get, sync_meta_remove, sync_meta_set, synced_local_tables,
+    uninstall_capture, BootstrapState, SyncCaptureHandle, META_BOOTSTRAP_STATE, META_LAST_OP_GC_AT,
+    META_LAST_PULL_AT, META_LAST_PUSH_AT, META_PULL_CURSOR,
 };
 use vrcx_0_persistence::DatabaseService;
 
 use crate::store::{
-    MaterializedRow, PulledOp, RemoteColumnType, RemoteColumnDef, RemoteSyncStore,
+    MaterializedRow, PulledOp, RemoteColumnDef, RemoteColumnType, RemoteSyncStore,
     RemoteTableSchema, SyncStoreError,
 };
 
@@ -439,7 +439,11 @@ impl RemoteSyncEngine {
                     .store
                     .ensure_schema(&schema, SYNC_PROTOCOL_SCHEMA_VERSION)
                     .await?;
-                sync_meta_set(&self.db, "sync.remoteSchemaVersion", &remote_version.to_string())?;
+                sync_meta_set(
+                    &self.db,
+                    "sync.remoteSchemaVersion",
+                    &remote_version.to_string(),
+                )?;
                 let tables = synced_local_tables(&self.db)?
                     .into_iter()
                     .map(|plan| plan.table)
@@ -447,8 +451,7 @@ impl RemoteSyncEngine {
                 let table_rows = tables
                     .iter()
                     .map(|table| {
-                        vrcx_0_persistence::sync::table_row_count(&self.db, table)
-                            .unwrap_or(0)
+                        vrcx_0_persistence::sync::table_row_count(&self.db, table).unwrap_or(0)
                     })
                     .collect::<Vec<_>>();
                 let rows_total = table_rows.iter().sum::<i64>();
@@ -487,11 +490,8 @@ impl RemoteSyncEngine {
             progress.tables_total = state.tables.len() as u32;
             progress.tables_done = state.table_index as u32;
             progress.phase = state.phase.clone();
-            progress.current_table_rows_total = state
-                .table_rows
-                .get(tables_before)
-                .copied()
-                .unwrap_or(0);
+            progress.current_table_rows_total =
+                state.table_rows.get(tables_before).copied().unwrap_or(0);
             progress.tables = table_progress;
         });
         match state.phase.as_str() {
@@ -542,10 +542,17 @@ impl RemoteSyncEngine {
         Ok(())
     }
 
-    async fn push_bootstrap_tables(self: &Arc<Self>, state: &mut BootstrapState) -> EngineResult<()> {
+    async fn push_bootstrap_tables(
+        self: &Arc<Self>,
+        state: &mut BootstrapState,
+    ) -> EngineResult<()> {
         while state.table_index < state.tables.len() {
             let table = state.tables[state.table_index].clone();
-            let table_total = state.table_rows.get(state.table_index).copied().unwrap_or(0);
+            let table_total = state
+                .table_rows
+                .get(state.table_index)
+                .copied()
+                .unwrap_or(0);
             self.set_progress(|progress| {
                 progress.current_table = table.clone();
                 progress.phase = "push".into();
@@ -560,7 +567,8 @@ impl RemoteSyncEngine {
                 continue;
             };
             loop {
-                let chunk = read_table_chunk(&self.db, &table, state.last_rowid, BOOTSTRAP_CHUNK, None)?;
+                let chunk =
+                    read_table_chunk(&self.db, &table, state.last_rowid, BOOTSTRAP_CHUNK, None)?;
                 let Some(chunk) = chunk else {
                     break;
                 };
@@ -601,11 +609,7 @@ impl RemoteSyncEngine {
             self.set_progress(|progress| {
                 progress.tables_done += 1;
                 progress.current_table_rows_done = 0;
-                if let Some(entry) = progress
-                    .tables
-                    .iter_mut()
-                    .find(|entry| entry.name == table)
-                {
+                if let Some(entry) = progress.tables.iter_mut().find(|entry| entry.name == table) {
                     entry.done = true;
                     entry.rows_done = entry.rows_total.max(0) as u64;
                 }
@@ -759,15 +763,15 @@ fn materialized_set_op(
     let entity_key: Vec<Value> = descriptor
         .key_columns
         .iter()
-        .map(|column| {
-            row.columns
-                .get(*column)
-                .cloned()
-                .unwrap_or(Value::Null)
-        })
+        .map(|column| row.columns.get(*column).cloned().unwrap_or(Value::Null))
         .collect();
     Some(SyncOpRecord {
-        op_id: format!("mat/{}/{}/{}", table, row.sync_hlc, serde_json::to_string(&entity_key).unwrap_or_default()),
+        op_id: format!(
+            "mat/{}/{}/{}",
+            table,
+            row.sync_hlc,
+            serde_json::to_string(&entity_key).unwrap_or_default()
+        ),
         table: table.to_string(),
         entity_key,
         kind: SyncOpKind::Set,
@@ -804,7 +808,9 @@ fn remote_schema_snapshot(db: &DatabaseService) -> EngineResult<Vec<RemoteTableS
                     RemoteColumnType::Jsonb
                 } else {
                     match declared.to_ascii_uppercase().as_str() {
-                        "INTEGER" | "INT" | "BIGINT" | "BOOLEAN" | "BOOL" => RemoteColumnType::BigInt,
+                        "INTEGER" | "INT" | "BIGINT" | "BOOLEAN" | "BOOL" => {
+                            RemoteColumnType::BigInt
+                        }
                         "REAL" | "FLOAT" | "DOUBLE" => RemoteColumnType::Double,
                         _ => RemoteColumnType::Text,
                     }
@@ -815,7 +821,12 @@ fn remote_schema_snapshot(db: &DatabaseService) -> EngineResult<Vec<RemoteTableS
         schema.push(RemoteTableSchema {
             table: plan.table.clone(),
             columns,
-            key_columns: plan.descriptor.key_columns.iter().map(|k| k.to_string()).collect(),
+            key_columns: plan
+                .descriptor
+                .key_columns
+                .iter()
+                .map(|k| k.to_string())
+                .collect(),
             row_semantic: plan.descriptor.row_semantic,
             field_semantics: plan
                 .descriptor
@@ -854,14 +865,15 @@ fn chrono_now_hours() -> i64 {
 
 /// One-shot connection probe for the settings UI.
 pub async fn test_store_connection(store: &Arc<dyn RemoteSyncStore>) -> SyncConnectionTestResult {
-    store.test_connection().await.unwrap_or_else(|error| {
-        SyncConnectionTestResult {
+    store
+        .test_connection()
+        .await
+        .unwrap_or_else(|error| SyncConnectionTestResult {
             ok: false,
             server_version: String::new(),
             latency_ms: 0,
             error: Some(error.to_string()),
-        }
-    })
+        })
 }
 
 /// Provision the device id without a running engine (status before start).

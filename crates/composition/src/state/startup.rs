@@ -43,7 +43,7 @@ impl RuntimeHostState {
         let current = self.backend_runtime.snapshot();
         match self.profile {
             RuntimeHostProfile::Desktop => {}
-            RuntimeHostProfile::HeadlessData => return current,
+            RuntimeHostProfile::HeadlessData | RuntimeHostProfile::Server => return current,
         }
         let snapshot = self.backend_runtime.set_gui_mode(mode);
         if snapshot.phase == BackendRuntimePhase::Running {
@@ -121,9 +121,12 @@ impl RuntimeHostState {
         &self,
         cli_login_prompt: Option<Arc<dyn CliLoginPrompt>>,
     ) -> Result<BackendRuntimeSnapshot> {
-        if self.profile != RuntimeHostProfile::HeadlessData {
+        if !matches!(
+            self.profile,
+            RuntimeHostProfile::HeadlessData | RuntimeHostProfile::Server
+        ) {
             return Err(crate::Error::Custom(
-                "Headless backend runtime requires the HeadlessData host profile.".into(),
+                "Headless backend runtime requires the HeadlessData or Server host profile.".into(),
             ));
         }
         self.start_backend_runtime_inner(None, cli_login_prompt)

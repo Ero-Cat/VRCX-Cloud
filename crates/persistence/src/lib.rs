@@ -31,9 +31,9 @@ pub mod realtime;
 pub mod saved_group_favorites;
 pub mod screenshot_cache;
 pub mod secrets;
-pub mod sync;
 pub mod social_aggregates;
 pub mod storage;
+pub mod sync;
 pub mod worlds;
 
 pub mod maintenance {

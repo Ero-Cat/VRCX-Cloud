@@ -63,7 +63,11 @@ impl Replica {
 }
 
 fn three_replicas() -> Vec<Replica> {
-    vec![Replica::new("alpha"), Replica::new("beta"), Replica::new("gamma")]
+    vec![
+        Replica::new("alpha"),
+        Replica::new("beta"),
+        Replica::new("gamma"),
+    ]
 }
 
 /// Deliver every replica's pending ops to all others, rotating the delivery
@@ -161,7 +165,11 @@ fn identical_facts_recorded_on_all_devices_dedupe_into_one_row() {
         "created_at, type, display_name, user_id, time",
         "created_at, type, display_name",
     );
-    assert_eq!(dump.lines().count(), 1, "three identical facts collapse into one row");
+    assert_eq!(
+        dump.lines().count(),
+        1,
+        "three identical facts collapse into one row"
+    );
 }
 
 #[test]
@@ -178,12 +186,7 @@ fn concurrent_memo_edits_converge_to_one_deterministic_winner() {
             .unwrap();
     }
     gossip_until_quiet(&mut replicas, 6);
-    let dump = assert_replicas_converged(
-        &replicas,
-        "memos",
-        "user_id, memo",
-        "user_id",
-    );
+    let dump = assert_replicas_converged(&replicas, "memos", "user_id, memo", "user_id");
     // Exactly one winner text; all replicas agree on the same string.
     let winner = dump.lines().next().unwrap_or_default();
     let winner = winner.split('"').nth(3).unwrap_or_default();
@@ -271,15 +274,26 @@ fn deletes_propagate_and_later_reinsertion_revives() {
     // Everyone has it; alpha deletes.
     replicas[0]
         .db
-        .test_execute_non_query("DELETE FROM memos WHERE user_id = 'usr_del'", &Default::default())
+        .test_execute_non_query(
+            "DELETE FROM memos WHERE user_id = 'usr_del'",
+            &Default::default(),
+        )
         .unwrap();
     gossip_until_quiet(&mut replicas, 4);
     for replica in &replicas {
         let rows = replica
             .db
-            .test_execute("SELECT COUNT(*) FROM memos WHERE user_id = 'usr_del'", &Default::default())
+            .test_execute(
+                "SELECT COUNT(*) FROM memos WHERE user_id = 'usr_del'",
+                &Default::default(),
+            )
             .unwrap();
-        assert_eq!(rows[0][0].as_i64(), Some(0), "{} applied the delete", replica.name);
+        assert_eq!(
+            rows[0][0].as_i64(),
+            Some(0),
+            "{} applied the delete",
+            replica.name
+        );
     }
     // Gamma re-adds later (newer fact) — revival wins.
     replicas[2]
@@ -291,7 +305,10 @@ fn deletes_propagate_and_later_reinsertion_revives() {
         .unwrap();
     gossip_until_quiet(&mut replicas, 4);
     let dump = assert_replicas_converged(&replicas, "memos", "user_id, memo", "user_id");
-    assert!(dump.contains("revived"), "reinsertion revives the row: {dump}");
+    assert!(
+        dump.contains("revived"),
+        "reinsertion revives the row: {dump}"
+    );
 }
 
 #[test]
@@ -323,5 +340,9 @@ fn echo_suppression_keeps_gossip_terminating() {
         "created_at, message",
         "created_at, message",
     );
-    assert_eq!(dump.lines().count(), 3, "each device's note is a distinct fact");
+    assert_eq!(
+        dump.lines().count(),
+        3,
+        "each device's note is a distinct fact"
+    );
 }

@@ -36,6 +36,10 @@ impl GuiRuntimeMode {
 pub enum RuntimeHostProfile {
     Desktop,
     HeadlessData,
+    /// Self-hosted web server runtime: full data services and the realtime
+    /// transport like the desktop, but no GUI window and no local game
+    /// integration. Secrets may be encrypted at rest like the desktop.
+    Server,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, specta::Type)]
@@ -338,7 +342,9 @@ impl BackendRuntime {
                     GuiRuntimeMode::Foreground => BackendRuntimeMode::Foreground,
                     GuiRuntimeMode::Background => BackendRuntimeMode::Background,
                 },
-                RuntimeHostProfile::HeadlessData => BackendRuntimeMode::Headless,
+                RuntimeHostProfile::HeadlessData | RuntimeHostProfile::Server => {
+                    BackendRuntimeMode::Headless
+                }
             },
             phase: state.phase,
             auth_status: state.auth_status,

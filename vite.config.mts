@@ -67,13 +67,10 @@ function createReactDevtoolsStandalonePlugin(enabled: boolean): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-    const tauriConf = JSON.parse(
-        fs.readFileSync(
-            new URL('./src-tauri/tauri.conf.json', import.meta.url),
-            'utf-8'
-        )
+    const packageJson = JSON.parse(
+        fs.readFileSync(new URL('./package.json', import.meta.url), 'utf-8')
     );
-    const version = tauriConf.version;
+    const version = packageJson.version;
     const buildTarget = getPlatformBuildTarget();
     const enableReactDevtoolsStandalone =
         mode === 'development' && process.env.VITE_REACT_DEVTOOLS === '1';

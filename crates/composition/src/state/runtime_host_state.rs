@@ -74,6 +74,7 @@ pub(super) fn web_ua_app_version(app_version: &str, profile: RuntimeHostProfile)
     match profile {
         RuntimeHostProfile::Desktop => app_version.to_string(),
         RuntimeHostProfile::HeadlessData => format!("{app_version} (hl)"),
+        RuntimeHostProfile::Server => format!("{app_version} (srv)"),
     }
 }
 
@@ -136,7 +137,7 @@ pub struct RuntimeHostState {
 
 fn prepare_secrets_at_rest(db: &Arc<DatabaseService>, profile: RuntimeHostProfile) {
     let allow_encrypted_writes = match profile {
-        RuntimeHostProfile::Desktop => true,
+        RuntimeHostProfile::Desktop | RuntimeHostProfile::Server => true,
         RuntimeHostProfile::HeadlessData => false,
     };
     let mut startup =
@@ -419,6 +420,13 @@ impl RuntimeHostStateBuilder {
                 if composition.profile_extension.is_none() {
                     return Err(crate::Error::Custom(
                         "Desktop runtime profile requires a profile extension.".into(),
+                    ));
+                }
+            }
+            RuntimeHostProfile::Server => {
+                if composition.profile_extension.is_none() {
+                    return Err(crate::Error::Custom(
+                        "Server runtime profile requires a profile extension.".into(),
                     ));
                 }
             }
@@ -767,6 +775,11 @@ impl RuntimeHostState {
             RuntimeHostProfile::Desktop => {
                 return Err(crate::Error::Custom(
                     "Desktop runtime profile must be constructed by runtime-host-desktop.".into(),
+                ));
+            }
+            RuntimeHostProfile::Server => {
+                return Err(crate::Error::Custom(
+                    "Server runtime profile must be constructed by runtime-host-server.".into(),
                 ));
             }
             RuntimeHostProfile::HeadlessData => {}

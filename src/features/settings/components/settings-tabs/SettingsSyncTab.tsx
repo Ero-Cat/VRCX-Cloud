@@ -51,10 +51,13 @@ export function SettingsSyncTab() {
     const [intervalSec, setIntervalSec] = useState('60');
     const [enabled, setEnabled] = useState(false);
     const [testing, setTesting] = useState(false);
-    const [testResult, setTestResult] = useState<SyncConnectionTestResult | null>(null);
+    const [testResult, setTestResult] =
+        useState<SyncConnectionTestResult | null>(null);
     const [saving, setSaving] = useState(false);
     const [syncingNow, setSyncingNow] = useState(false);
-    const [bootstrap, setBootstrap] = useState<SyncBootstrapProgress | null>(null);
+    const [bootstrap, setBootstrap] = useState<SyncBootstrapProgress | null>(
+        null
+    );
 
     const refreshStatus = useCallback(async () => {
         try {
@@ -124,7 +127,9 @@ export function SettingsSyncTab() {
 
     const parsePort = () => {
         const parsed = Number.parseInt(port, 10);
-        return Number.isFinite(parsed) && parsed > 0 && parsed < 65536 ? parsed : 5432;
+        return Number.isFinite(parsed) && parsed > 0 && parsed < 65536
+            ? parsed
+            : 5432;
     };
 
     const handleTest = async () => {
@@ -251,20 +256,26 @@ export function SettingsSyncTab() {
                         autoComplete="off"
                     />
                 </Field>
-                <Field label={t('view.settings.sync.connection.password_label')}>
+                <Field
+                    label={t('view.settings.sync.connection.password_label')}
+                >
                     <Input
                         type="password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder={
                             hasPassword
-                                ? t('view.settings.sync.connection.password_saved')
+                                ? t(
+                                      'view.settings.sync.connection.password_saved'
+                                  )
                                 : '••••••••'
                         }
                         autoComplete="new-password"
                     />
                 </Field>
-                <Field label={t('view.settings.sync.connection.database_label')}>
+                <Field
+                    label={t('view.settings.sync.connection.database_label')}
+                >
                     <Input
                         value={database}
                         onChange={(event) => setDatabase(event.target.value)}
@@ -274,19 +285,37 @@ export function SettingsSyncTab() {
                 </Field>
                 <Field
                     label={t('view.settings.sync.connection.tls_verify_label')}
-                    description={t('view.settings.sync.connection.tls_verify_hint')}
+                    description={t(
+                        'view.settings.sync.connection.tls_verify_hint'
+                    )}
                 >
-                    <Switch checked={tlsVerify} onCheckedChange={setTlsVerify} />
+                    <Switch
+                        checked={tlsVerify}
+                        onCheckedChange={setTlsVerify}
+                    />
                 </Field>
                 <Field
                     label={t('view.settings.sync.connection.plaintext_label')}
-                    description={t('view.settings.sync.connection.plaintext_hint')}
+                    description={t(
+                        'view.settings.sync.connection.plaintext_hint'
+                    )}
                 >
-                    <Switch checked={allowPlaintext} onCheckedChange={setAllowPlaintext} />
+                    <Switch
+                        checked={allowPlaintext}
+                        onCheckedChange={setAllowPlaintext}
+                    />
                 </Field>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <Button variant="outline" onClick={handleTest} disabled={testing || !canTest}>
-                        {testing ? <Spinner className="size-4" /> : <RefreshCwIcon />}
+                    <Button
+                        variant="outline"
+                        onClick={handleTest}
+                        disabled={testing || !canTest}
+                    >
+                        {testing ? (
+                            <Spinner className="size-4" />
+                        ) : (
+                            <RefreshCwIcon />
+                        )}
                         {testing
                             ? t('view.settings.sync.connection.testing')
                             : t('view.settings.sync.connection.test_button')}
@@ -307,9 +336,12 @@ export function SettingsSyncTab() {
                                           .join(' '),
                                       ms: testResult.latencyMs
                                   })
-                                : t('view.settings.sync.connection.test_failed', {
-                                      error: testResult.error ?? 'unknown'
-                                  })}
+                                : t(
+                                      'view.settings.sync.connection.test_failed',
+                                      {
+                                          error: testResult.error ?? 'unknown'
+                                      }
+                                  )}
                         </span>
                     ) : null}
                 </div>
@@ -318,7 +350,9 @@ export function SettingsSyncTab() {
                         checked={enabled}
                         onCheckedChange={(next) => void handleSave(next)}
                         disabled={saving}
-                        aria-label={t('view.settings.sync.connection.enable_label')}
+                        aria-label={t(
+                            'view.settings.sync.connection.enable_label'
+                        )}
                     />
                     <span className="text-sm">
                         {t('view.settings.sync.connection.enable_label')}
@@ -333,7 +367,9 @@ export function SettingsSyncTab() {
             >
                 <Field
                     label={t('view.settings.sync.connection.interval_label')}
-                    description={t('view.settings.sync.connection.interval_hint')}
+                    description={t(
+                        'view.settings.sync.connection.interval_hint'
+                    )}
                 >
                     <Input
                         value={intervalSec}
@@ -362,7 +398,9 @@ export function SettingsSyncTab() {
                         />
                         <StatusRow
                             label={t('view.settings.sync.status.last_cycle')}
-                            value={formatTime(status.lastCycleAt ?? status.lastPullAt ?? null)}
+                            value={formatTime(
+                                status.lastCycleAt ?? status.lastPullAt ?? null
+                            )}
                         />
                         <StatusRow
                             label={t('view.settings.sync.status.last_moved')}
@@ -394,11 +432,15 @@ export function SettingsSyncTab() {
                             </span>
                         </div>
                         <StatusRow
-                            label={t('view.settings.sync.status.schema_version')}
+                            label={t(
+                                'view.settings.sync.status.schema_version'
+                            )}
                             value={String(status.remoteSchemaVersion)}
                         />
                         {status.lastError ? (
-                            <p className="text-destructive">{status.lastError}</p>
+                            <p className="text-destructive">
+                                {status.lastError}
+                            </p>
                         ) : null}
                         {bootstrap?.running ? (
                             <BootstrapProgressView progress={bootstrap} />
@@ -432,9 +474,15 @@ export function SettingsSyncTab() {
                                         >
                                             <CloudCogIcon className="mr-1 inline size-3.5" />
                                             {device.deviceId === status.deviceId
-                                                ? t('view.settings.sync.status.this_device', {
-                                                      id: device.deviceId.slice(0, 8)
-                                                  })
+                                                ? t(
+                                                      'view.settings.sync.status.this_device',
+                                                      {
+                                                          id: device.deviceId.slice(
+                                                              0,
+                                                              8
+                                                          )
+                                                      }
+                                                  )
                                                 : device.deviceId.slice(0, 8)}
                                             {device.appVersion
                                                 ? ` · ${device.appVersion}`
@@ -457,12 +505,17 @@ export function SettingsSyncTab() {
 
 function PhaseBadge({ phase }: { phase: string }) {
     const { t } = useTranslation();
-    const label = t(`view.settings.sync.phase.${phase}`, { defaultValue: phase });
-    const tone = phase === 'error'
-        ? 'bg-destructive/15 text-destructive'
-        : ['bootstrap', 'reconciling', 'running', 'push', 'merge'].includes(phase)
-          ? 'bg-primary/15 text-primary'
-          : 'bg-muted text-muted-foreground';
+    const label = t(`view.settings.sync.phase.${phase}`, {
+        defaultValue: phase
+    });
+    const tone =
+        phase === 'error'
+            ? 'bg-destructive/15 text-destructive'
+            : ['bootstrap', 'reconciling', 'running', 'push', 'merge'].includes(
+                    phase
+                )
+              ? 'bg-primary/15 text-primary'
+              : 'bg-muted text-muted-foreground';
     return (
         <Badge className={tone} variant="secondary">
             {label}
@@ -470,7 +523,11 @@ function PhaseBadge({ phase }: { phase: string }) {
     );
 }
 
-function BootstrapProgressView({ progress }: { progress: SyncBootstrapProgress }) {
+function BootstrapProgressView({
+    progress
+}: {
+    progress: SyncBootstrapProgress;
+}) {
     const { t } = useTranslation();
     const tablesPercent =
         progress.tablesTotal > 0
@@ -523,10 +580,14 @@ function BootstrapProgressView({ progress }: { progress: SyncBootstrapProgress }
                           })}
                 </span>
             </div>
-            {tableRowsPercent === null ? null : <Progress value={tableRowsPercent} />}
+            {tableRowsPercent === null ? null : (
+                <Progress value={tableRowsPercent} />
+            )}
             <p className="text-muted-foreground text-xs">
                 {rowsPercent === null
-                    ? t('view.settings.sync.progress.rows', { count: progress.rowsDone })
+                    ? t('view.settings.sync.progress.rows', {
+                          count: progress.rowsDone
+                      })
                     : t('view.settings.sync.progress.rows_of', {
                           done: progress.rowsDone,
                           total: rowsTotal,
@@ -546,12 +607,18 @@ function BootstrapProgressView({ progress }: { progress: SyncBootstrapProgress }
                             </span>
                             <span className="text-muted-foreground shrink-0 text-[11px]">
                                 {table.done
-                                    ? t('view.settings.sync.progress.table_done', {
-                                          total: table.rowsTotal
-                                      })
-                                    : t('view.settings.sync.progress.table_done', {
-                                          total: table.rowsTotal
-                                      })}
+                                    ? t(
+                                          'view.settings.sync.progress.table_done',
+                                          {
+                                              total: table.rowsTotal
+                                          }
+                                      )
+                                    : t(
+                                          'view.settings.sync.progress.table_done',
+                                          {
+                                              total: table.rowsTotal
+                                          }
+                                      )}
                             </span>
                         </div>
                     ))}

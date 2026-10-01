@@ -195,10 +195,7 @@ pub fn looks_like_user_prefix(prefix: &str) -> bool {
         return !rest.is_empty() && rest.chars().all(|ch| ch.is_ascii_alphanumeric());
     }
     if let Some(rest) = prefix.strip_prefix('_') {
-        return rest
-            .chars()
-            .next()
-            .is_some_and(|ch| ch.is_ascii_digit())
+        return rest.chars().next().is_some_and(|ch| ch.is_ascii_digit())
             && rest.chars().all(|ch| ch.is_ascii_alphanumeric());
     }
     false
@@ -534,10 +531,9 @@ static REGISTERED_TABLES: std::sync::RwLock<Vec<&'static SyncTableDescriptor>> =
 pub fn register_sync_table(descriptor: SyncTableDescriptor) {
     let leaked: &'static SyncTableDescriptor = Box::leak(Box::new(descriptor));
     let mut registry = REGISTERED_TABLES.write().unwrap();
-    if !registry
-        .iter()
-        .any(|existing| existing.template == leaked.template && existing.per_user == leaked.per_user)
-    {
+    if !registry.iter().any(|existing| {
+        existing.template == leaked.template && existing.per_user == leaked.per_user
+    }) {
         registry.push(leaked);
     }
 }
@@ -580,13 +576,18 @@ pub fn register_sync_table_owned(
 /// Find the descriptor for a physical table name: the curated static catalog
 /// first, then runtime-registered tables (derived or declared).
 pub fn sync_table_descriptor(table: &str) -> Option<&'static SyncTableDescriptor> {
-    if let Some(entry) = SYNC_TABLE_CATALOG.iter().find(|entry| entry.matches_table(table)) {
+    if let Some(entry) = SYNC_TABLE_CATALOG
+        .iter()
+        .find(|entry| entry.matches_table(table))
+    {
         return Some(entry);
     }
-    REGISTERED_TABLES
-        .read()
-        .ok()
-        .and_then(|registry| registry.iter().copied().find(|entry| entry.matches_table(table)))
+    REGISTERED_TABLES.read().ok().and_then(|registry| {
+        registry
+            .iter()
+            .copied()
+            .find(|entry| entry.matches_table(table))
+    })
 }
 
 /// Resolve a physical table name against the catalog.
@@ -759,8 +760,14 @@ mod tests {
         assert!(sync_table_descriptor("gamelog_location").is_some());
         assert!(sync_table_descriptor("cache_avatar").is_none());
         let feed = sync_table_descriptor("usr123_feed_gps").unwrap();
-        assert_eq!(feed.key_columns, &["created_at", "user_id", "previous_location"]);
-        assert!(sync_table_descriptor("_feed_gps").is_none(), "per-user templates must not match bare");
+        assert_eq!(
+            feed.key_columns,
+            &["created_at", "user_id", "previous_location"]
+        );
+        assert!(
+            sync_table_descriptor("_feed_gps").is_none(),
+            "per-user templates must not match bare"
+        );
         assert!(sync_table_descriptor("config").is_none());
     }
 

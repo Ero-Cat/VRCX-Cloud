@@ -139,8 +139,8 @@ fn shutdown_runtime(state: &RuntimeHostState, reason: &str) {
 }
 
 fn product_app_version() -> String {
-    const TAURI_CONFIG: &str = include_str!("../../../src-tauri/tauri.conf.json");
-    serde_json::from_str::<Value>(TAURI_CONFIG)
+    const PACKAGE_JSON: &str = include_str!("../../../package.json");
+    serde_json::from_str::<Value>(PACKAGE_JSON)
         .ok()
         .and_then(|value| {
             value

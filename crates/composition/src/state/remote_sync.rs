@@ -9,8 +9,8 @@ use std::sync::{Arc, RwLock};
 
 use vrcx_0_application_core::{RuntimeBackgroundJobs, TaskSupervisor};
 use vrcx_0_application_sync::{
-    CONFIG_ALLOW_PLAINTEXT, CONFIG_DATABASE, CONFIG_ENABLED, CONFIG_HOST, CONFIG_PASSWORD,
-    CONFIG_PORT, CONFIG_TLS_VERIFY, CONFIG_USER, RemoteSyncEngine,
+    RemoteSyncEngine, CONFIG_ALLOW_PLAINTEXT, CONFIG_DATABASE, CONFIG_ENABLED, CONFIG_HOST,
+    CONFIG_PASSWORD, CONFIG_PORT, CONFIG_TLS_VERIFY, CONFIG_USER,
 };
 use vrcx_0_outbound_adapters::{PostgresSyncStore, PostgresSyncStoreConfig};
 use vrcx_0_persistence::config::{get_bool, get_string};
@@ -148,9 +148,7 @@ impl RemoteSyncHost {
                 ));
             }
         }
-        let engine = self
-            .current()
-            .expect("engine ensured above");
+        let engine = self.current().expect("engine ensured above");
         engine
             .run_cycle_and_status()
             .await
@@ -161,9 +159,9 @@ impl RemoteSyncHost {
     pub fn stop(&self) -> Result<()> {
         if let Ok(mut guard) = self.engine.write() {
             if let Some(existing) = guard.take() {
-                existing
-                    .shutdown()
-                    .map_err(|error| Error::Custom(format!("Failed to stop remote sync: {error}")))?;
+                existing.shutdown().map_err(|error| {
+                    Error::Custom(format!("Failed to stop remote sync: {error}"))
+                })?;
             }
         }
         Ok(())
@@ -229,7 +227,11 @@ impl RemoteSyncHost {
         let stored = self.settings();
         let settings = RemoteSyncSettings {
             host: host.trim().to_string(),
-            port: if (1..65536).contains(&port) { port } else { 5432 },
+            port: if (1..65536).contains(&port) {
+                port
+            } else {
+                5432
+            },
             user: user.trim().to_string(),
             password: match password.map(str::trim) {
                 Some(text) if !text.is_empty() => text.to_string(),
@@ -301,7 +303,11 @@ impl RemoteSyncSettings {
     /// Compose the libpq URL; identity components are percent-encoded.
     /// Plaintext is only possible through the explicit allow flag.
     pub fn dsn(&self) -> String {
-        let ssl_mode = if self.allow_plaintext { "prefer" } else { "require" };
+        let ssl_mode = if self.allow_plaintext {
+            "prefer"
+        } else {
+            "require"
+        };
         format!(
             "postgresql://{}:{}@{}:{}/{}?sslmode={ssl_mode}",
             percent_encode(&self.user),
@@ -361,7 +367,8 @@ mod pg_integration {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let dir = std::env::temp_dir().join(format!("vrcx-0-sync-it-{}-{nonce}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("vrcx-0-sync-it-{}-{nonce}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let db = Arc::new(DatabaseService::new(&dir.join("VRCX-0.sqlite3")).unwrap());
 
@@ -381,7 +388,10 @@ mod pg_integration {
             "integration-test".into(),
         );
         let settings = host_state.settings();
-        assert!(settings.is_configured(), "settings round-trip via config keys");
+        assert!(
+            settings.is_configured(),
+            "settings round-trip via config keys"
+        );
         assert!(settings.dsn().starts_with("postgresql://"));
         assert!(settings.dsn().contains("sslmode=prefer"));
 
@@ -389,11 +399,13 @@ mod pg_integration {
             .enable_all()
             .build()
             .unwrap();
-        let result = runtime.block_on(host_state.test_connection(
-            &host, port, &user, None, &database, false, true,
-        ));
+        let result = runtime
+            .block_on(host_state.test_connection(&host, port, &user, None, &database, false, true));
         assert!(result.ok, "app-path test failed: {:?}", result.error);
-        println!("app-path OK: {} ({} ms)", result.server_version, result.latency_ms);
+        println!(
+            "app-path OK: {} ({} ms)",
+            result.server_version, result.latency_ms
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
