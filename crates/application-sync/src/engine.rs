@@ -444,10 +444,26 @@ impl RemoteSyncEngine {
                     "sync.remoteSchemaVersion",
                     &remote_version.to_string(),
                 )?;
-                let tables = synced_local_tables(&self.db)?
+                let mut tables = synced_local_tables(&self.db)?
                     .into_iter()
                     .map(|plan| plan.table)
                     .collect::<Vec<_>>();
+                // Adopt tables that exist only remotely (e.g. a fresh
+                // device that never created them, or another device's
+                // per-user prefixes): create them locally so the merge
+                // phase pulls their materialized state instead of
+                // silently skipping.
+                for table in self.store.materialized_tables().await? {
+                    if tables.contains(&table) {
+                        continue;
+                    }
+                    if vrcx_0_persistence::sync::ensure_synced_table_exists(&self.db, &table)
+                        .is_ok()
+                        && vrcx_0_contracts::sync_table_descriptor(&table).is_some()
+                    {
+                        tables.push(table);
+                    }
+                }
                 let table_rows = tables
                     .iter()
                     .map(|table| {
@@ -486,7 +502,7 @@ impl RemoteSyncEngine {
         let tables_before = state.table_index;
         self.set_progress(|progress| {
             progress.running = true;
-            progress.rows_total = state.rows_total.max(progress.rows_total as i64);
+            progress.rows_total = state.rows_total.max(progress.rows_total);
             progress.tables_total = state.tables.len() as u32;
             progress.tables_done = state.table_index as u32;
             progress.phase = state.phase.clone();
@@ -500,6 +516,12 @@ impl RemoteSyncEngine {
                 // to the push phase on the next cycle.
                 self.set_progress(|progress| progress.phase = "merge".into());
                 self.merge_materialized_state().await?;
+                // The merge may have created local tables that were absent
+                // from the schema snapshot taken at cycle start; drop the
+                // ensured-schema fingerprint so pushes re-ensure (and the
+                // store learns the new tables' remote schemas).
+                *self.ensured_schema_hash.lock().unwrap() = None;
+                self.ensure_remote_schema_if_changed().await?;
                 let latest = self.store.latest_seq().await?;
                 sync_meta_set(&self.db, META_PULL_CURSOR, &latest.to_string())?;
                 state.phase = "push".into();
@@ -624,10 +646,17 @@ impl RemoteSyncEngine {
     /// locally through the same lattice merge as ops. Used for first-merge on
     /// a non-empty remote and for post-GC reconciliation.
     async fn merge_materialized_state(self: &Arc<Self>) -> EngineResult<()> {
-        let tables = synced_local_tables(&self.db)?
+        let mut tables = synced_local_tables(&self.db)?
             .into_iter()
             .map(|plan| plan.table)
             .collect::<Vec<_>>();
+        for table in self.store.materialized_tables().await? {
+            if !tables.contains(&table)
+                && vrcx_0_persistence::sync::ensure_synced_table_exists(&self.db, &table).is_ok()
+            {
+                tables.push(table);
+            }
+        }
         for table in tables {
             let Some(descriptor) = sync_table_descriptor(&table) else {
                 continue;

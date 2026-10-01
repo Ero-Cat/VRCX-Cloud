@@ -157,8 +157,10 @@ impl PostgresSyncStore {
     }
 
     fn remember_schemas(&self, tables: &[RemoteTableSchema]) {
+        // Merge, never clear: a schema snapshot reflects the *local* table
+        // set and can be stale relative to tables the remote already has;
+        // evicting them would make the next push refuse to materialize.
         let mut schemas = self.schemas.write().unwrap();
-        schemas.clear();
         for table in tables {
             schemas.insert(table.table.clone(), Arc::new(table.clone()));
         }
@@ -512,7 +514,6 @@ impl ToSql for PgValue {
                 <Value as ToSql>::to_sql(value, &tokio_postgres::types::Type::JSONB, out)
             }
         }
-        .map_err(Into::into)
     }
 
     fn accepts(_ty: &tokio_postgres::types::Type) -> bool {
@@ -787,6 +788,9 @@ impl RemoteSyncStore for PostgresSyncStore {
         limit: i64,
         offset: i64,
     ) -> SyncStoreResult<Vec<MaterializedRow>> {
+        if self.schemas.read().unwrap().get(table).is_none() {
+            self.adopt_remote_schemas(&[table.to_string()]).await?;
+        }
         let schema = self.schema_for(table)?;
         let table_name = table.to_string();
         self.with_client(move |client| async move {
@@ -830,6 +834,30 @@ impl RemoteSyncStore for PostgresSyncStore {
                 });
             }
             Ok((materialized, client))
+        })
+        .await
+    }
+
+    async fn materialized_tables(&self) -> SyncStoreResult<Vec<String>> {
+        self.with_client(|client| async move {
+            let rows = client
+                .query(
+                    "SELECT table_name FROM information_schema.tables \
+                     WHERE table_schema = 'public' AND table_type = 'BASE TABLE' \
+                     ORDER BY table_name",
+                    &[],
+                )
+                .await
+                .map_err(pg_error)?;
+            let mut tables = Vec::new();
+            for row in rows {
+                let name: String = row.get("table_name");
+                if matches!(name.as_str(), "_sync_meta" | "sync_ops" | "_sync_devices") {
+                    continue;
+                }
+                tables.push(name);
+            }
+            Ok((tables, client))
         })
         .await
     }
@@ -907,9 +935,19 @@ impl<'a> tokio_postgres::types::FromSql<'a> for chrono_ish::Timestamp {
         _ty: &tokio_postgres::types::Type,
         raw: &'a [u8],
     ) -> Result<Self, Box<dyn std::error::Error + Sync + Send>> {
-        Ok(chrono_ish::Timestamp(
-            String::from_utf8_lossy(raw).to_string(),
-        ))
+        // timestamptz wire format: 8-byte big-endian microseconds since
+        // 2000-01-01. Decode to an RFC3339 string instead of treating the
+        // raw bytes as text.
+        if raw.len() != 8 {
+            return Err("invalid timestamptz payload length".into());
+        }
+        let micros_since_2000 = i64::from_be_bytes(raw.try_into()?);
+        let epoch_micros = 946_684_800_000_000i64 + micros_since_2000;
+        let secs = epoch_micros.div_euclid(1_000_000);
+        let nanos = epoch_micros.rem_euclid(1_000_000) as u32 * 1000;
+        let datetime =
+            chrono::DateTime::from_timestamp(secs, nanos).ok_or("timestamptz out of range")?;
+        Ok(chrono_ish::Timestamp(datetime.to_rfc3339()))
     }
 
     fn accepts(ty: &tokio_postgres::types::Type) -> bool {
@@ -1083,7 +1121,7 @@ fn pg_row_value(
         tokio_postgres::types::Type::BOOL => row
             .try_get::<_, Option<bool>>(index)
             .map_err(pg_error)?
-            .map(|v| Value::from(v)),
+            .map(Value::from),
         _ => row
             .try_get::<_, Option<String>>(index)
             .map_err(pg_error)?
@@ -1113,6 +1151,70 @@ fn parse_kind(code: &str) -> SyncOpKind {
 }
 
 impl PostgresSyncStore {
+    /// Build RemoteTableSchema entries from information_schema for tables
+    /// the remote already materializes; used to self-heal the schema cache
+    /// when local schema snapshots lag behind remote table creation.
+    async fn adopt_remote_schemas(&self, tables: &[String]) -> SyncStoreResult<()> {
+        if tables.is_empty() {
+            return Ok(());
+        }
+        let tables = tables.to_vec();
+        let schemas = self
+            .with_client(move |client| async move {
+                let mut adopted = Vec::new();
+                for table in &tables {
+                    let Some(descriptor) = vrcx_0_contracts::sync_table_descriptor(table) else {
+                        continue;
+                    };
+                    let rows = client
+                        .query(
+                            "SELECT column_name, udt_name FROM information_schema.columns \
+                             WHERE table_schema = 'public' AND table_name = $1",
+                            &[table],
+                        )
+                        .await
+                        .map_err(pg_error)?;
+                    if rows.is_empty() {
+                        continue;
+                    }
+                    let columns = rows
+                        .iter()
+                        .map(|row| {
+                            let name: String = row.get(0);
+                            let udt: String = row.get(1);
+                            vrcx_0_application_sync::RemoteColumnDef {
+                                name,
+                                column_type: match udt.as_str() {
+                                    "int8" | "int4" => RemoteColumnType::BigInt,
+                                    "float8" => RemoteColumnType::Double,
+                                    "jsonb" => RemoteColumnType::Jsonb,
+                                    _ => RemoteColumnType::Text,
+                                },
+                            }
+                        })
+                        .collect::<Vec<_>>();
+                    adopted.push(RemoteTableSchema {
+                        table: table.clone(),
+                        columns,
+                        key_columns: descriptor
+                            .key_columns
+                            .iter()
+                            .map(|key| key.to_string())
+                            .collect(),
+                        row_semantic: descriptor.row_semantic,
+                        field_semantics: descriptor
+                            .field_semantics
+                            .iter()
+                            .map(|(name, semantic)| (name.to_string(), *semantic))
+                            .collect(),
+                    });
+                }
+                Ok((adopted, client))
+            })
+            .await?;
+        self.remember_schemas(&schemas);
+        Ok(())
+    }
     async fn push_ops_once(&self, ops: &[SyncOpRecord]) -> SyncStoreResult<()> {
         // One deterministic order the op-log insert and the
         // materialization: concurrent multi-row inserts into the op log's
@@ -1135,17 +1237,29 @@ impl PostgresSyncStore {
         });
         // Resolve materialization schemas up front. A table missing here
         // means ops would land in the log without ever being materialized —
-        // fail loudly instead of dropping data silently.
+        // fail loudly instead of dropping data silently. Tables the remote
+        // already has are adopted lazily from information_schema (e.g. a
+        // first-merge created them locally after this cycle's ensure).
         let schemas = self.schemas.read().unwrap().clone();
+        let mut missing = Vec::new();
         for table in ops
             .iter()
             .map(|op| op.table.clone())
             .collect::<HashSet<String>>()
         {
             if !schemas.contains_key(&table) {
-                return Err(SyncStoreError::Other(format!(
-                    "materialization schema for table {table} was not ensured; refusing to log ops without materializing them"
-                )));
+                missing.push(table);
+            }
+        }
+        if !missing.is_empty() {
+            self.adopt_remote_schemas(&missing).await?;
+            let schemas = self.schemas.read().unwrap().clone();
+            for table in &missing {
+                if !schemas.contains_key(table) {
+                    return Err(SyncStoreError::Other(format!(
+                        "Remote schema for table {table} has not been ensured yet."
+                    )));
+                }
             }
         }
         self.with_client(move |mut client| async move {
@@ -1249,7 +1363,6 @@ impl PostgresSyncStore {
 mod pg_smoke {
     use super::*;
     use std::str::FromStr;
-    use vrcx_0_application_sync::RemoteColumnDef;
 
     /// Full roundtrip against a real server; runs only when
     /// VRCX_PG_TEST_DSN is set, and cleans up everything it created so a
@@ -1278,15 +1391,15 @@ mod pg_smoke {
             let schema = vec![RemoteTableSchema {
                 table: "smoke_test_rows".into(),
                 columns: vec![
-                    RemoteColumnDef {
+                    vrcx_0_application_sync::RemoteColumnDef {
                         name: "id".into(),
                         column_type: RemoteColumnType::Text,
                     },
-                    RemoteColumnDef {
+                    vrcx_0_application_sync::RemoteColumnDef {
                         name: "name".into(),
                         column_type: RemoteColumnType::Text,
                     },
-                    RemoteColumnDef {
+                    vrcx_0_application_sync::RemoteColumnDef {
                         name: "tally".into(),
                         column_type: RemoteColumnType::BigInt,
                     },
@@ -1329,7 +1442,10 @@ mod pg_smoke {
                 .expect("push");
 
             // Re-push is idempotent by op id.
-            store.push_ops(&[set_op.clone()]).await.expect("repush");
+            store
+                .push_ops(std::slice::from_ref(&set_op))
+                .await
+                .expect("repush");
 
             let pulled = store.fetch_ops(0, 10).await.expect("fetch ops");
             assert_eq!(pulled.len(), 2, "op log contains exactly the two ops");
@@ -1377,7 +1493,6 @@ mod pg_smoke {
 mod pg_diag {
     use super::*;
     use std::str::FromStr;
-    use vrcx_0_application_sync::RemoteColumnDef;
 
     async fn diag_client(dsn: &str) -> Client {
         let mut config = tokio_postgres::Config::from_str(dsn).unwrap();
@@ -1455,15 +1570,15 @@ mod pg_diag {
             let schema = vec![RemoteTableSchema {
                 table: "smoke_concurrency_rows".into(),
                 columns: vec![
-                    RemoteColumnDef {
+                    vrcx_0_application_sync::RemoteColumnDef {
                         name: "id".into(),
                         column_type: RemoteColumnType::Text,
                     },
-                    RemoteColumnDef {
+                    vrcx_0_application_sync::RemoteColumnDef {
                         name: "val".into(),
                         column_type: RemoteColumnType::Text,
                     },
-                    RemoteColumnDef {
+                    vrcx_0_application_sync::RemoteColumnDef {
                         name: "tally".into(),
                         column_type: RemoteColumnType::BigInt,
                     },
@@ -1590,11 +1705,11 @@ mod pg_diag {
             let schema = vec![RemoteTableSchema {
                 table: "smoke_dupkey_rows".into(),
                 columns: vec![
-                    RemoteColumnDef {
+                    vrcx_0_application_sync::RemoteColumnDef {
                         name: "id".into(),
                         column_type: RemoteColumnType::Text,
                     },
-                    RemoteColumnDef {
+                    vrcx_0_application_sync::RemoteColumnDef {
                         name: "val".into(),
                         column_type: RemoteColumnType::Text,
                     },

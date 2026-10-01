@@ -120,7 +120,9 @@ async fn async_main() -> ExitCode {
 
     if let Err(error) = state.start_headless_backend_runtime().await {
         let reason = error.to_string();
-        if reason.contains("No saved account is available") {
+        let awaiting_web_login = reason.contains("No saved account is available")
+            || reason.contains("Saved credentials are not available");
+        if awaiting_web_login {
             // First boot (or logged out): data services and remote sync are
             // already running; the user completes VRChat login from the web.
             tracing::info!("no saved VRChat account yet - awaiting login from the web UI");

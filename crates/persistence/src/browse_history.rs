@@ -108,7 +108,7 @@ pub struct BrowseHistoryPageOutput {
     pub next_cursor: Option<BrowseHistoryCursor>,
 }
 
-fn ensure_browse_history_table(db: &DatabaseService) -> Result<(), Error> {
+pub fn ensure_browse_history_table(db: &DatabaseService) -> Result<(), Error> {
     db.ensure_schema_once("browse-history", || {
         db.execute_non_query(
             "CREATE TABLE IF NOT EXISTS browse_history (

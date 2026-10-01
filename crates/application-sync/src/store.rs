@@ -121,6 +121,12 @@ pub trait RemoteSyncStore: Send + Sync {
         offset: i64,
     ) -> SyncStoreResult<Vec<MaterializedRow>>;
 
+    /// Names of the materialized business tables the remote currently
+    /// holds. Lets a fresh device discover tables it has never created
+    /// locally (e.g. another device's per-user prefixes) so the
+    /// first-merge actually adopts them instead of skipping silently.
+    async fn materialized_tables(&self) -> SyncStoreResult<Vec<String>>;
+
     async fn devices_upsert(&self, record: &SyncDeviceRecord) -> SyncStoreResult<()>;
     async fn devices_list(&self) -> SyncStoreResult<Vec<SyncDeviceRecord>>;
 

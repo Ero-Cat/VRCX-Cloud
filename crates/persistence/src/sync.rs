@@ -385,7 +385,7 @@ pub fn register_sync_table(
 
 /// Per-user tables are created lazily at login; when pulling ops for a table
 /// this device has never instantiated, create it before applying.
-fn ensure_synced_table_exists(db: &DatabaseService, table: &str) -> Result<(), Error> {
+pub fn ensure_synced_table_exists(db: &DatabaseService, table: &str) -> Result<(), Error> {
     if table_exists(db, table)? {
         return Ok(());
     }
@@ -399,7 +399,18 @@ fn ensure_synced_table_exists(db: &DatabaseService, table: &str) -> Result<(), E
             .to_string();
         if !prefix.is_empty() {
             crate::database::schema::ensure_user_store_tables(db, &prefix)?;
+            crate::profile_bio::ensure_profile_bio_table(
+                db,
+                &vrcx_0_core::OwnerId::new(prefix.clone()),
+            )?;
         }
+    } else {
+        // Global catalog tables live across a few idempotent ensure
+        // groups; run them all (each is schema-once cached).
+        crate::database::schema::ensure_global_store_tables(db)?;
+        crate::database::schema::ensure_assistant_tables(db)?;
+        crate::game_log::ensure_game_log_tables(db)?;
+        crate::browse_history::ensure_browse_history_table(db)?;
     }
     Ok(())
 }
@@ -475,7 +486,7 @@ fn derive_key_columns(
             let unique = row.get(2).and_then(Value::as_i64).unwrap_or(0) == 1;
             let name = row.get(1).and_then(Value::as_str).map(str::to_string)?;
             let seq = row.first().and_then(Value::as_i64).unwrap_or(0);
-            Some((seq, name)).filter(|_| unique)
+            unique.then_some((seq, name))
         })
         .collect();
     unique_indexes.sort();
@@ -868,6 +879,7 @@ pub fn outbox_take(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn derive_set_ops(
     tx: &crate::database::DatabaseWriteTransaction<'_>,
     seq: i64,
