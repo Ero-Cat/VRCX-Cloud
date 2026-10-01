@@ -31,26 +31,6 @@ pub trait BackgroundRemoteApi: Send + Sync {
     ) -> Result<vrcx_0_contracts::VrchatResponse>;
 }
 
-#[async_trait::async_trait]
-pub trait InstanceMediaPort: Send + Sync {
-    async fn get_print(&self, print_id: &str) -> Result<Option<Value>>;
-    async fn get_inventory_item(&self, user_id: &str, inventory_id: &str) -> Result<Option<Value>>;
-    async fn save_ugc_image(
-        &self,
-        url: &str,
-        ugc_folder_path: &str,
-        category: vrcx_0_contracts::UgcCategory,
-        month_folder: &str,
-        file_name: &str,
-    ) -> Result<String>;
-    fn crop_print_file(&self, path: &str) -> Result<()>;
-}
-
-#[async_trait::async_trait]
-pub trait VideoMetadataPort: Send + Sync {
-    async fn youtube_metadata(&self, video_id: &str, api_key: &str) -> Result<Option<Value>>;
-}
-
 pub trait GameStateStore: Send + Sync {
     fn get_bool(&self, key: &str, default: bool) -> Result<bool>;
     fn get_string(&self, key: &str, default: &str) -> Result<String>;
@@ -138,61 +118,7 @@ pub(crate) struct TestGameStateStore {
 }
 
 #[cfg(test)]
-impl TestGameStateStore {
-    pub(crate) fn locations(
-        &self,
-        owner: &OwnerId,
-    ) -> Vec<vrcx_0_contracts::game_log::GameLogLocationEntry> {
-        self.state
-            .lock()
-            .expect("test game state lock")
-            .locations
-            .iter()
-            .filter(|row| owner_can_read(&row.owner, owner))
-            .map(|row| row.value.clone())
-            .collect()
-    }
-
-    pub(crate) fn join_leave(
-        &self,
-        owner: &OwnerId,
-    ) -> Vec<vrcx_0_contracts::game_log::GameLogJoinLeaveEntry> {
-        let mut rows = self
-            .state
-            .lock()
-            .expect("test game state lock")
-            .join_leave
-            .iter()
-            .enumerate()
-            .filter(|(_, row)| owner_can_read(&row.owner, owner))
-            .map(|(index, row)| (index, row.value.clone()))
-            .collect::<Vec<_>>();
-        rows.sort_by(|left, right| {
-            left.1
-                .created_at
-                .cmp(&right.1.created_at)
-                .then_with(|| left.0.cmp(&right.0))
-        });
-        rows.into_iter().map(|(_, row)| row).collect()
-    }
-
-    pub(crate) fn tables_exist(&self) -> bool {
-        self.state
-            .lock()
-            .expect("test game state lock")
-            .tables_exist
-    }
-
-    pub(crate) fn set_fail_reads(&self, fail: bool) {
-        self.fail_reads
-            .store(fail, std::sync::atomic::Ordering::Relaxed);
-    }
-
-    pub(crate) fn set_fail_writes(&self, fail: bool) {
-        self.fail_writes
-            .store(fail, std::sync::atomic::Ordering::Relaxed);
-    }
-}
+impl TestGameStateStore {}
 
 #[cfg(test)]
 fn owner_can_read(stored_owner: &str, requested_owner: &OwnerId) -> bool {
@@ -602,45 +528,5 @@ impl GameStateStore for TestGameStateStore {
         _user_ids: &[String],
     ) -> Result<Vec<String>> {
         Ok(Vec::new())
-    }
-}
-
-#[cfg(test)]
-#[derive(Default)]
-pub(crate) struct TestGameMediaPort;
-
-#[cfg(test)]
-#[async_trait::async_trait]
-impl InstanceMediaPort for TestGameMediaPort {
-    async fn get_print(&self, _print_id: &str) -> Result<Option<Value>> {
-        Ok(None)
-    }
-    async fn get_inventory_item(
-        &self,
-        _user_id: &str,
-        _inventory_id: &str,
-    ) -> Result<Option<Value>> {
-        Ok(None)
-    }
-    async fn save_ugc_image(
-        &self,
-        _url: &str,
-        _ugc_folder_path: &str,
-        _category: vrcx_0_contracts::UgcCategory,
-        _month_folder: &str,
-        _file_name: &str,
-    ) -> Result<String> {
-        Ok(String::new())
-    }
-    fn crop_print_file(&self, _path: &str) -> Result<()> {
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-#[async_trait::async_trait]
-impl VideoMetadataPort for TestGameMediaPort {
-    async fn youtube_metadata(&self, _video_id: &str, _api_key: &str) -> Result<Option<Value>> {
-        Ok(None)
     }
 }
