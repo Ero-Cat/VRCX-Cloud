@@ -1,0 +1,345 @@
+//! Self-hosted VRCX web server entry point.
+//!
+//! Boots one full VRCX runtime (VRChat realtime session + persistence +
+//! remote sync) under the Server host profile and serves the web API.
+//! The web transport itself lands with the axum command layer; this
+//! entry point establishes the runtime lifecycle: config load, sync
+//! seeding, non-interactive VRChat auth, health endpoint and graceful
+//! shutdown.
+
+mod config;
+
+use std::net::SocketAddr;
+use std::path::Path;
+use std::process::ExitCode;
+use std::sync::Arc;
+use std::time::Duration;
+
+use serde_json::{json, Value};
+use vrcx_0_application_core::{
+    recommended_tokio_max_blocking_threads, recommended_tokio_worker_threads, RuntimeEventSink,
+    RuntimeTask, RuntimeTaskExecutor, RuntimeTaskHandle,
+};
+use vrcx_0_application_sync::{
+    CONFIG_ALLOW_PLAINTEXT, CONFIG_DATABASE, CONFIG_ENABLED, CONFIG_HOST, CONFIG_INTERVAL_SEC,
+    CONFIG_PASSWORD, CONFIG_PORT, CONFIG_TLS_VERIFY, CONFIG_USER, DEFAULT_INTERVAL_SEC,
+};
+use vrcx_0_persistence::config::{set_bool, set_string};
+use vrcx_0_platform::app_paths::{AppDataDirResolution, AppDataDirSource};
+use vrcx_0_runtime_host_server::{ServerRuntimeHostOptions, ServerRuntimeHostState};
+
+use config::ServerConfig;
+
+fn main() -> ExitCode {
+    build_adaptive_tokio_runtime().block_on(async_main())
+}
+
+fn build_adaptive_tokio_runtime() -> tokio::runtime::Runtime {
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(recommended_tokio_worker_threads())
+        .max_blocking_threads(recommended_tokio_max_blocking_threads())
+        .thread_name("vrcx-0-server")
+        .enable_all()
+        .build()
+        .expect("failed to build server async runtime")
+}
+
+async fn async_main() -> ExitCode {
+    init_tracing();
+
+    let config = match ServerConfig::load() {
+        Ok(config) => config,
+        Err(error) => {
+            eprintln!("failed to load server config: {error}");
+            return ExitCode::from(1);
+        }
+    };
+
+    let app_data_dir = resolve_server_app_data_dir(&config.data_dir);
+    tracing::info!(
+        data_dir = %app_data_dir.current_dir.display(),
+        listen_addr = %config.listen_addr,
+        "starting VRCX server runtime"
+    );
+
+    let state = match ServerRuntimeHostState::new(ServerRuntimeHostOptions {
+        realtime_origin: String::new(),
+        launched_from_autostart: false,
+        app_data_dir,
+        app_version: product_app_version(),
+        database_maintenance_cache_dir: None,
+        task_executor: Arc::new(TokioRuntimeTaskExecutor),
+    }) {
+        Ok(state) => Arc::new(state),
+        Err(error) => {
+            tracing::error!(error = %error, "server runtime construction failed");
+            return ExitCode::from(1);
+        }
+    };
+
+    if let Err(error) = seed_sync_settings(&state, &config.sync) {
+        tracing::warn!(error = %error, "failed to seed remote sync settings");
+    }
+
+    state.set_runtime_event_sink(LoggingEventSink);
+
+    if let Err(error) = state.start_headless_backend_runtime().await {
+        let reason = error.to_string();
+        if reason.contains("No saved account is available") {
+            // First boot (or logged out): data services and remote sync are
+            // already running; the user completes VRChat login from the web.
+            tracing::info!("no saved VRChat account yet - awaiting login from the web UI");
+        } else {
+            tracing::error!(error = %reason, "backend runtime startup failed");
+            shutdown(&state, "startup-failed");
+            return ExitCode::from(1);
+        }
+    } else {
+        tracing::info!("backend runtime started from the saved VRChat session");
+    }
+
+    let listen_addr: SocketAddr = match config.listen_addr.parse() {
+        Ok(addr) => addr,
+        Err(error) => {
+            tracing::error!(error = %error, addr = %config.listen_addr, "invalid listen address");
+            shutdown(&state, "invalid-listen-addr");
+            return ExitCode::from(1);
+        }
+    };
+    let app = axum::Router::new()
+        .route("/healthz", axum::routing::get(healthz))
+        .with_state(Arc::clone(&state));
+    let listener = match tokio::net::TcpListener::bind(listen_addr).await {
+        Ok(listener) => listener,
+        Err(error) => {
+            tracing::error!(error = %error, addr = %listen_addr, "failed to bind listen address");
+            shutdown(&state, "bind-failed");
+            return ExitCode::from(1);
+        }
+    };
+    tracing::info!(addr = %listen_addr, "HTTP server listening");
+
+    let serve = axum::serve(listener, app);
+    tokio::select! {
+        result = serve => {
+            if let Err(error) = result {
+                tracing::error!(error = %error, "HTTP server failed");
+                shutdown(&state, "http-failed");
+                return ExitCode::from(1);
+            }
+        }
+        _ = shutdown_signal() => {
+            tracing::info!("shutdown signal received");
+            shutdown(&state, "signal");
+        }
+    }
+    ExitCode::SUCCESS
+}
+
+async fn healthz(
+    axum::extract::State(state): axum::extract::State<Arc<ServerRuntimeHostState>>,
+) -> axum::response::Json<Value> {
+    let snapshot = state.backend_runtime_snapshot();
+    axum::response::Json(json!({
+        "ok": true,
+        "phase": format!("{:?}", snapshot.phase),
+        "authStatus": format!("{:?}", snapshot.auth_status),
+        "authUserId": snapshot.auth_user_id,
+        "mode": format!("{:?}", snapshot.mode),
+    }))
+}
+
+/// Build the server's data-dir resolution. The server deliberately uses
+/// its own directory namespace so it can run beside a desktop VRCX-0
+/// install on the same machine without sharing profile locks.
+fn resolve_server_app_data_dir(data_dir: &Path) -> AppDataDirResolution {
+    AppDataDirResolution {
+        current_dir: data_dir.to_path_buf(),
+        default_dir: data_dir.to_path_buf(),
+        persisted_dir: None,
+        cli_dir: None,
+        source: AppDataDirSource::Default,
+    }
+}
+
+/// Write the sync connection fields provided by the server config into
+/// the runtime's configs table before the sync engine starts. Only
+/// provided fields are written, so UI-configured values survive boots
+/// with a partial or absent [sync] section.
+fn seed_sync_settings(
+    state: &ServerRuntimeHostState,
+    settings: &config::SyncSettings,
+) -> Result<(), String> {
+    let db = state.runtime().database();
+    let mut wrote_anything = false;
+    fn set_optional(
+        db: &Arc<vrcx_0_persistence::DatabaseService>,
+        key: &str,
+        value: Option<String>,
+    ) -> Result<bool, String> {
+        if let Some(value) = value {
+            if !value.trim().is_empty() {
+                set_string(db, key, &value).map_err(|error| error.to_string())?;
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    wrote_anything |= set_optional(db, CONFIG_HOST, settings.host.clone())?;
+    if let Some(port) = settings.port {
+        if (1..65536).contains(&port) {
+            set_string(db, CONFIG_PORT, &port.to_string()).map_err(|e| e.to_string())?;
+            wrote_anything = true;
+        }
+    }
+    wrote_anything |= set_optional(db, CONFIG_USER, settings.user.clone())?;
+    wrote_anything |= set_optional(db, CONFIG_PASSWORD, settings.password.clone())?;
+    wrote_anything |= set_optional(db, CONFIG_DATABASE, settings.database.clone())?;
+    if let Some(tls_verify) = settings.tls_verify {
+        set_bool(db, CONFIG_TLS_VERIFY, tls_verify).map_err(|e| e.to_string())?;
+        wrote_anything = true;
+    }
+    if let Some(allow_plaintext) = settings.allow_plaintext {
+        set_bool(db, CONFIG_ALLOW_PLAINTEXT, allow_plaintext).map_err(|e| e.to_string())?;
+        wrote_anything = true;
+    }
+    if let Some(interval) = settings.interval_sec {
+        if (5..=3600).contains(&interval) {
+            set_string(db, CONFIG_INTERVAL_SEC, &interval.to_string())
+                .map_err(|e| e.to_string())?;
+            wrote_anything = true;
+        }
+    }
+
+    if settings.is_complete() {
+        set_bool(db, CONFIG_ENABLED, true).map_err(|e| e.to_string())?;
+        wrote_anything = true;
+        tracing::info!(
+            host = settings.host.as_deref().unwrap_or_default(),
+            database = settings.database.as_deref().unwrap_or_default(),
+            interval_sec = settings.interval_sec.unwrap_or(DEFAULT_INTERVAL_SEC as i64),
+            "remote sync enabled from server config"
+        );
+    }
+    if wrote_anything {
+        tracing::debug!("seeded remote sync settings from server config");
+    }
+    Ok(())
+}
+
+fn shutdown(state: &Arc<ServerRuntimeHostState>, reason: &str) {
+    state.stop_for_application_exit(reason);
+    state.release_profile_lock();
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = tokio::signal::ctrl_c();
+    #[cfg(unix)]
+    let terminate = async {
+        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+            Ok(mut signal) => {
+                signal.recv().await;
+            }
+            Err(_) => std::future::pending::<()>().await,
+        }
+    };
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+    tokio::select! {
+        _ = ctrl_c => {}
+        _ = terminate => {}
+    }
+}
+
+/// Runtime event sink for the server: structured logs only for now; the
+/// web transport installs a WebSocket-broadcasting sink in its place.
+#[derive(Clone)]
+struct LoggingEventSink;
+
+impl RuntimeEventSink for LoggingEventSink {
+    fn emit(&self, event: &str, payload: Value) {
+        tracing::debug!(event, payload = %payload, "runtime event");
+    }
+}
+
+struct TokioRuntimeTaskExecutor;
+
+struct TokioRuntimeTaskHandle(tokio::task::JoinHandle<()>);
+
+impl RuntimeTaskExecutor for TokioRuntimeTaskExecutor {
+    fn spawn(&self, task: RuntimeTask) -> Box<dyn RuntimeTaskHandle> {
+        Box::new(TokioRuntimeTaskHandle(tokio::spawn(task)))
+    }
+}
+
+impl RuntimeTaskHandle for TokioRuntimeTaskHandle {
+    fn abort(&self) {
+        self.0.abort();
+    }
+
+    fn is_finished(&self) -> bool {
+        self.0.is_finished()
+    }
+
+    fn join_or_abort(&mut self, timeout: Duration) {
+        if self.is_finished() {
+            let _ = block_on_runtime_task(&mut self.0);
+            return;
+        }
+
+        let Some(joined) =
+            block_on_runtime_task(async { tokio::time::timeout(timeout, &mut self.0).await })
+        else {
+            self.0.abort();
+            return;
+        };
+        if joined.is_ok() {
+            return;
+        }
+
+        self.0.abort();
+        let _ = block_on_runtime_task(async {
+            tokio::time::timeout(Duration::from_millis(50), &mut self.0).await
+        });
+    }
+}
+
+/// Block on a runtime task from async context; safe on the multi-thread
+/// runtime via `block_in_place`, mirroring the headless executor.
+fn block_on_runtime_task<F>(future: F) -> Option<F::Output>
+where
+    F: std::future::Future,
+{
+    match tokio::runtime::Handle::try_current() {
+        Ok(handle) if handle.runtime_flavor() == tokio::runtime::RuntimeFlavor::MultiThread => {
+            Some(tokio::task::block_in_place(|| handle.block_on(future)))
+        }
+        Ok(_) => None,
+        Err(_) => None,
+    }
+}
+
+fn init_tracing() {
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info,vrcx_0_server=debug"));
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_target(false)
+        .init();
+}
+
+fn product_app_version() -> String {
+    const PACKAGE_JSON: &str = include_str!("../../../package.json");
+    serde_json::from_str::<Value>(PACKAGE_JSON)
+        .ok()
+        .and_then(|value| {
+            value
+                .get("version")
+                .and_then(Value::as_str)
+                .map(str::trim)
+                .filter(|version| !version.is_empty())
+                .map(ToOwned::to_owned)
+        })
+        .unwrap_or_else(|| env!("CARGO_PKG_VERSION").into())
+}

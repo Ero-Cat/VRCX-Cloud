@@ -398,6 +398,13 @@ impl ServerRuntimeHostState {
         &self.vrchat_remote
     }
 
+    /// The underlying composition runtime host (persistence, web client,
+    /// realtime runtime, remote sync) for host-level wiring such as the
+    /// server bootstrap.
+    pub fn runtime(&self) -> &RuntimeHostState {
+        &self.runtime
+    }
+
     pub fn remote_sync(&self) -> &std::sync::Arc<vrcx_0_composition::RemoteSyncHost> {
         self.runtime.remote_sync()
     }
