@@ -3,7 +3,6 @@ import { describe, expect, test } from 'vitest';
 import {
     parseChangelog,
     parseReleaseChangelog,
-    resolvePostUpdateChangelogToastState,
     resolvePreferredChangelogLanguage
 } from './changelogService';
 
@@ -129,47 +128,5 @@ English body
         );
         expect(resolvePreferredChangelogLanguage(entries, 'en-US')).toBe('en');
         expect(resolvePreferredChangelogLanguage(entries, 'ja')).toBe('en');
-    });
-
-    test('shows the post-update changelog toast only once for an upgraded version', () => {
-        expect(
-            resolvePostUpdateChangelogToastState({
-                currentVersion: '2026.06.02',
-                lastStartedVersion: '2026.05.30',
-                seenVersion: '',
-                enabled: true
-            })
-        ).toEqual({
-            currentVersion: '2026.06.02',
-            shouldShow: true,
-            shouldRecordStartedVersion: true
-        });
-
-        expect(
-            resolvePostUpdateChangelogToastState({
-                currentVersion: '2026.06.02',
-                lastStartedVersion: '2026.05.30',
-                seenVersion: '2026.06.02',
-                enabled: true
-            }).shouldShow
-        ).toBe(false);
-
-        expect(
-            resolvePostUpdateChangelogToastState({
-                currentVersion: '2026.06.02',
-                lastStartedVersion: '2026.05.30',
-                seenVersion: '',
-                enabled: false
-            }).shouldShow
-        ).toBe(false);
-
-        expect(
-            resolvePostUpdateChangelogToastState({
-                currentVersion: '2026.06.02',
-                lastStartedVersion: '',
-                seenVersion: '',
-                enabled: true
-            }).shouldShow
-        ).toBe(false);
     });
 });

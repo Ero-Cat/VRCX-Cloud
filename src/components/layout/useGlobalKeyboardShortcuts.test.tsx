@@ -5,16 +5,6 @@ import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-    restoreNormalWindowModeForIntent: vi.fn(),
-    runAfterRestoringNormalWindow: vi.fn<(action: () => void) => void>()
-}));
-
-vi.mock('@/services/windowModeService', () => ({
-    restoreNormalWindowModeForIntent: mocks.restoreNormalWindowModeForIntent,
-    runAfterRestoringNormalWindow: mocks.runAfterRestoringNormalWindow
-}));
-
 import { NAV_SHORTCUT_REQUESTED_EVENT } from '@/shared/events/navLayoutEvents';
 import { useRuntimeStore } from '@/state/runtimeStore';
 import { useSessionStore } from '@/state/sessionStore';
@@ -47,10 +37,6 @@ function captureNavShortcutPositions() {
 
 describe('useGlobalKeyboardShortcuts', () => {
     beforeEach(() => {
-        mocks.restoreNormalWindowModeForIntent.mockReset();
-        mocks.runAfterRestoringNormalWindow
-            .mockReset()
-            .mockImplementation((action) => action());
         useRuntimeStore.getState().resetRuntimeState();
         useSessionStore.getState().resetSessionState();
         useShellStore.setState({ shortcutHintsVisible: false });
@@ -73,7 +59,6 @@ describe('useGlobalKeyboardShortcuts', () => {
         act(() => window.dispatchEvent(openShortcut));
 
         expect(openShortcut.defaultPrevented).toBe(true);
-        expect(mocks.restoreNormalWindowModeForIntent).toHaveBeenCalledOnce();
         expect(
             useRuntimeStore.getState().systemHosts.keyboardShortcutsOpen
         ).toBe(true);
@@ -114,7 +99,6 @@ describe('useGlobalKeyboardShortcuts', () => {
         expect(firstShortcut.defaultPrevented).toBe(true);
         expect(ninthShortcut.defaultPrevented).toBe(true);
         expect(captured.positions).toEqual([1, 9]);
-        expect(mocks.runAfterRestoringNormalWindow).toHaveBeenCalledTimes(2);
 
         captured.stop();
     });

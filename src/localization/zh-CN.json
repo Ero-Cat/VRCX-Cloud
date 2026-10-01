@@ -5,7 +5,7 @@
         "theme_catalog_title": "暂时没有可用主题",
         "theme_catalog_description": "主题目录可用后，社区主题会显示在这里。",
         "installed_themes_title": "还没有安装社区主题",
-        "installed_themes_description": "从目录中挑选并安装主题，换一种你喜欢的 VRCX-0 外观。",
+        "installed_themes_description": "从目录中挑选并安装主题，换一种你喜欢的 VRCX-Cloud 外观。",
         "browse_themes": "浏览主题",
         "app_launcher_title": "选择随 VRChat 一起启动的内容",
         "app_launcher_description": "添加应用或快捷方式，并选择希望它在什么时候启动。",
@@ -182,7 +182,7 @@
                 "title": "导入世界合集？",
                 "description": "「{title}」· 作者 {author} · 共 {count} 个世界",
                 "worlds_preview": "包含：{names}",
-                "confirm": "导入到 VRCX-0",
+                "confirm": "导入到 VRCX-Cloud",
                 "cancel": "取消"
             },
             "toast": {
@@ -200,7 +200,7 @@
         "title": "更换数据文件夹",
         "description": "选择在新文件夹中使用哪些数据。",
         "completed_title": "请重启以完成数据文件夹更换",
-        "completed_description": "重启 VRCX-0 后将开始使用新文件夹。",
+        "completed_description": "重启 VRCX-Cloud 后将开始使用新文件夹。",
         "error_short": "更换数据文件夹失败",
         "start": "复制并更换",
         "restart_now": "立即重启",
@@ -217,8 +217,8 @@
         },
         "target": {
             "empty": "所选文件夹为空。",
-            "existingProfile": "这里已有的 VRCX-0 数据会被替换，替换前会保留一份副本。",
-            "foreignContent": "此文件夹中还有其他文件，VRCX-0 只会改动自己的文件。"
+            "existingProfile": "这里已有的 VRCX-Cloud 数据会被替换，替换前会保留一份副本。",
+            "foreignContent": "此文件夹中还有其他文件，VRCX-Cloud 只会改动自己的文件。"
         },
         "phase": {
             "preparing": "正在准备数据…",
@@ -231,15 +231,15 @@
             "operationBusy": "另一个备份、恢复或数据迁移任务正在运行。",
             "databaseUnavailable": "暂时无法复制数据，请稍后重试。",
             "pendingRestore": "请先完成或取消待进行的数据恢复。",
-            "pendingLegacyMigration": "有一项 VRCX 数据迁移尚未完成，请先重启 VRCX-0 完成迁移。",
-            "pendingMigration": "已有待完成的数据文件夹迁移，请重启 VRCX-0 完成。",
+            "pendingLegacyMigration": "有一项 VRCX 数据迁移尚未完成，请先重启 VRCX-Cloud 完成迁移。",
+            "pendingMigration": "已有待完成的数据文件夹迁移，请重启 VRCX-Cloud 完成。",
             "cleanupConflict": "迁回该文件夹前，请先清理旧数据或选择保留且不再提醒。",
             "insufficientSpace": "可用空间不足，无法迁移数据。",
-            "invalidAdoptionTarget": "此文件夹中没有可用的 VRCX-0 数据，请选择其他文件夹。",
-            "invalidFreshStartTarget": "此文件夹中已有 VRCX-0 数据。若要重新开始，请选择其他文件夹。",
-            "copyFailed": "无法复制数据，VRCX-0 仍在使用原文件夹。",
-            "commitFailed": "无法保存复制的数据，VRCX-0 仍在使用原文件夹。",
-            "pointerCommitFailed": "无法启用新数据文件夹，请重启 VRCX-0 后重试。",
+            "invalidAdoptionTarget": "此文件夹中没有可用的 VRCX-Cloud 数据，请选择其他文件夹。",
+            "invalidFreshStartTarget": "此文件夹中已有 VRCX-Cloud 数据。若要重新开始，请选择其他文件夹。",
+            "copyFailed": "无法复制数据，VRCX-Cloud 仍在使用原文件夹。",
+            "commitFailed": "无法保存复制的数据，VRCX-Cloud 仍在使用原文件夹。",
+            "pointerCommitFailed": "无法启用新数据文件夹，请重启 VRCX-Cloud 后重试。",
             "io": "无法读取或写入数据文件夹中的文件。"
         },
         "warning": {
@@ -250,27 +250,27 @@
         "result": {
             "succeeded": "数据文件夹已更换",
             "failed_title": "无法使用新的数据文件夹",
-            "database_open_failed": "VRCX-0 仍在使用原文件夹，你的数据未受影响。",
+            "database_open_failed": "VRCX-Cloud 仍在使用原文件夹，你的数据未受影响。",
             "interrupted_title": "更换文件夹已中断",
-            "interrupted": "VRCX-0 仍在使用原文件夹，你可以重试。"
+            "interrupted": "VRCX-Cloud 仍在使用原文件夹，你可以重试。"
         },
         "cleanup": {
             "ready_title": "数据文件夹已更换",
             "ready_description": "旧数据仍保留在 {path}。",
             "action": "清理旧数据",
             "action_with_size": "清理旧数据（{size}）",
-            "confirm_title": "永久删除旧的 VRCX-0 数据？",
-            "confirm_description": "将从 {path} 删除约 {size} 的已知 VRCX-0 文件，未知文件不会被改动。此操作无法撤销。",
-            "completed": "旧的 VRCX-0 数据已清理",
+            "confirm_title": "永久删除旧的 VRCX-Cloud 数据？",
+            "confirm_description": "将从 {path} 删除约 {size} 的已知 VRCX-Cloud 文件，未知文件不会被改动。此操作无法撤销。",
+            "completed": "旧的 VRCX-Cloud 数据已清理",
             "freed": "已释放 {size}。",
             "completed_with_skipped": "已释放 {size}，另有 {count} 项未能删除。",
             "settings_title": "旧数据可以清理",
-            "settings_description": "旧的 VRCX-0 数据仍位于 {path}（{size}）。",
+            "settings_description": "旧的 VRCX-Cloud 数据仍位于 {path}（{size}）。",
             "dismiss": "保留旧数据，不再提醒",
             "dismissed": "已关闭清理提醒"
         },
         "running_title": "正在更换数据文件夹",
-        "running_description": "请保持 VRCX-0 开启，等待操作完成。",
+        "running_description": "请保持 VRCX-Cloud 开启，等待操作完成。",
         "start_existing": "使用已有数据",
         "start_fresh": "全新开始",
         "new_folder": "新文件夹",
@@ -282,7 +282,7 @@
     },
     "profile_backup": {
         "header": "备份与恢复",
-        "tools_description": "备份与恢复 VRCX-0 数据",
+        "tools_description": "备份与恢复 VRCX-Cloud 数据",
         "automatic": "自动备份",
         "automatic_description": "定期将备份保存到所选文件夹。",
         "automatic_on": "已开启",
@@ -305,9 +305,9 @@
         "backup_now": "立即备份",
         "backup_now_confirm": "创建备份",
         "restore": "恢复数据",
-        "restore_description": "选择要恢复的 VRCX-0 备份文件，VRCX-0 会先检查再重启。",
+        "restore_description": "选择要恢复的 VRCX-Cloud 备份文件，VRCX-Cloud 会先检查再重启。",
         "restore_from_backup": "从备份恢复",
-        "file_filter": "VRCX-0 备份",
+        "file_filter": "VRCX-Cloud 备份",
         "automatic_running": "正在自动备份",
         "manual_running": "正在备份",
         "retryable_short": "备份未保存",
@@ -326,11 +326,11 @@
         "preparing_restore": "正在准备恢复",
         "restore_prepare_description": "正在进行重启前的恢复数据最终校验。",
         "restore_confirm_title": "要从此备份恢复吗？",
-        "restore_confirm_description": "当前数据将替换为备份中的内容，随后 VRCX-0 会重启。恢复前的数据会自动保留，以便出现问题时还原。",
+        "restore_confirm_description": "当前数据将替换为备份中的内容，随后 VRCX-Cloud 会重启。恢复前的数据会自动保留，以便出现问题时还原。",
         "restore_and_restart": "恢复并重启",
-        "restarting_to_restore": "VRCX-0 正在重启以恢复备份",
+        "restarting_to_restore": "VRCX-Cloud 正在重启以恢复备份",
         "created_at": "创建时间",
-        "app_version": "VRCX-0 版本",
+        "app_version": "VRCX-Cloud 版本",
         "database_version": "数据库版本",
         "source_file": "备份文件",
         "backup_verified": "备份已验证",
@@ -354,15 +354,15 @@
         "file_selection_failed": "无法选择备份文件",
         "backup_start_failed": "无法开始备份",
         "restore_validation_failed": "无法检查备份",
-        "restore_request_failed": "无法重启 VRCX-0 以恢复备份",
+        "restore_request_failed": "无法重启 VRCX-Cloud 以恢复备份",
         "action_failed": "无法完成备份操作",
         "error": {
             "busy": "正在进行其他备份或恢复操作，请等待其完成后重试。",
             "delivery_pending": "上一份备份尚未完成写入，请先重试或放弃后再开始新的备份。",
-            "pending_restore": "恢复已准备就绪，重启 VRCX-0 后即可完成。",
+            "pending_restore": "恢复已准备就绪，重启 VRCX-Cloud 后即可完成。",
             "directory_unavailable": "备份位置不可用，请检查磁盘或网络连接。",
-            "permission_denied": "VRCX-0 无权保存到此位置，请选择其他文件夹。",
-            "local_disk_full": "VRCX-0 数据位置的可用空间不足，无法创建备份。",
+            "permission_denied": "VRCX-Cloud 无权保存到此位置，请选择其他文件夹。",
+            "local_disk_full": "VRCX-Cloud 数据位置的可用空间不足，无法创建备份。",
             "target_disk_full": "备份位置的可用空间不足。",
             "device_removed": "备份位置已断开连接，请重新连接磁盘后重试。",
             "already_exists": "已存在同名备份，请稍后重试。",
@@ -371,14 +371,14 @@
             "package_failed": "无法创建备份文件。",
             "io": "无法读取或写入备份文件。",
             "unknown": "备份时发生意外错误。",
-            "invalid_archive": "此文件不是有效的 VRCX-0 备份。",
-            "unsupported_manifest": "当前版本的 VRCX-0 不支持此备份格式。",
+            "invalid_archive": "此文件不是有效的 VRCX-Cloud 备份。",
+            "unsupported_manifest": "当前版本的 VRCX-Cloud 不支持此备份格式。",
             "checksum_mismatch": "备份文件已损坏或被修改。",
             "validation_expired": "本次备份校验已过期，请重新选择备份。",
-            "newer_app_version": "此备份由较新版本的 VRCX-0 创建。请更新 VRCX-0 后重试。",
-            "newer_database_version": "此备份使用较新的数据库格式。请更新 VRCX-0 后重试。",
+            "newer_app_version": "此备份由较新版本的 VRCX-Cloud 创建。请更新 VRCX-Cloud 后重试。",
+            "newer_database_version": "此备份使用较新的数据库格式。请更新 VRCX-Cloud 后重试。",
             "database_corrupt": "备份中的数据库已损坏。",
-            "not_vrcx0_profile": "此文件不包含 VRCX-0 备份数据。"
+            "not_vrcx0_profile": "此文件不包含 VRCX-Cloud 备份数据。"
         },
         "rollback_error": {
             "busy": "正在进行其他备份或恢复操作，请等待完成后重试。",
@@ -500,7 +500,7 @@
     },
     "nativeShell": {
         "tray": {
-            "open": "打开 VRCX-0",
+            "open": "打开 VRCX-Cloud",
             "backgroundMode": "后台模式",
             "lock": "锁定",
             "doNotDisturb": "勿扰模式",
@@ -516,7 +516,7 @@
         "notification": {
             "backgroundModeStarted": {
                 "title": "后台模式已启动",
-                "body": "VRCX-0 正在后台模式中运行。"
+                "body": "VRCX-Cloud 正在后台模式中运行。"
             },
             "authFailure": {
                 "title": "VRChat 登录已失效",
@@ -525,13 +525,13 @@
         },
         "menu": {
             "app": {
-                "about": "关于 VRCX-0",
+                "about": "关于 VRCX-Cloud",
                 "settings": "设置...",
                 "checkUpdates": "检查更新",
-                "restart": "重启 VRCX-0",
+                "restart": "重启 VRCX-Cloud",
                 "startBackgroundMode": "切换到后台模式",
                 "logout": "退出登录",
-                "quit": "退出 VRCX-0"
+                "quit": "退出 VRCX-Cloud"
             },
             "view": {
                 "title": "视图",
@@ -572,7 +572,7 @@
                 "reportIssue": "报告问题",
                 "qqGroup": "QQ群",
                 "openDevtools": "打开 DevTools",
-                "supportVrcx": "支持 VRCX-0"
+                "supportVrcx": "支持 VRCX-Cloud"
             }
         }
     },
@@ -721,10 +721,10 @@
         "devkit_build_badge": "开发版",
         "settings": "设置...",
         "check_updates": "检查更新",
-        "restart": "重启 VRCX-0",
+        "restart": "重启 VRCX-Cloud",
         "start_background_mode": "切换到后台模式",
         "logout": "退出登录",
-        "quit": "退出 VRCX-0",
+        "quit": "退出 VRCX-Cloud",
         "quick_search": "快速搜索",
         "keyboard_shortcuts": "键盘快捷键",
         "show_friends_sidebar": "显示好友侧栏",
@@ -739,11 +739,11 @@
         "report_issue": "报告问题",
         "community": "社区",
         "open_source_licenses": "第三方声明",
-        "about": "关于 VRCX-0",
+        "about": "关于 VRCX-Cloud",
         "messages": {
             "zoom_failed": "应用缩放失败",
-            "logout_failed": "退出 VRCX-0 登录失败",
-            "restart_failed": "重启 VRCX-0 失败",
+            "logout_failed": "退出 VRCX-Cloud 登录失败",
+            "restart_failed": "重启 VRCX-Cloud 失败",
             "open_devtools_failed": "打开 DevTools 失败"
         },
         "label": {
@@ -766,8 +766,8 @@
             "checking": "正在检查快捷键…",
             "background_hint": "隐藏时沿用后台模式和延迟设置。",
             "global": "全局",
-            "title": "显示 / 隐藏 VRCX-0",
-            "description": "在其他应用中也可显示或隐藏 VRCX-0。隐藏后继续在后台运行。",
+            "title": "显示 / 隐藏 VRCX-Cloud",
+            "description": "在其他应用中也可显示或隐藏 VRCX-Cloud。隐藏后继续在后台运行。",
             "configure": "设置全局快捷键",
             "unset": "未设置",
             "inactive": "未生效",
@@ -821,7 +821,7 @@
         },
         "setup": {
             "create_title": "设置锁定密码",
-            "create_description": "锁定后，VRCX-0 的界面会被遮住，需输入这 4 位数字密码才能解锁，期间仍会继续运行。它不是加密，只能防止别人在你的电脑上随手翻看。",
+            "create_description": "锁定后，VRCX-Cloud 的界面会被遮住，需输入这 4 位数字密码才能解锁，期间仍会继续运行。它不是加密，只能防止别人在你的电脑上随手翻看。",
             "change_title": "修改锁定密码",
             "change_description": "输入当前锁定密码，再设置一个新密码。",
             "clear_title": "移除锁定密码",
@@ -832,7 +832,7 @@
         },
         "settings": {
             "label": "隐私锁定",
-            "description": "用锁定密码遮住窗口，同时 VRCX-0 继续记录。可从托盘菜单或侧边栏的账号菜单锁定。",
+            "description": "用锁定密码遮住窗口，同时 VRCX-Cloud 继续记录。可从托盘菜单或侧边栏的账号菜单锁定。",
             "status_set": "已设置密码",
             "status_unset": "未设置密码"
         },
@@ -1001,8 +1001,8 @@
         }
     },
     "support_vrcx": {
-        "title": "支持 VRCX-0",
-        "description": "通过 GitHub Sponsors 或 Ko-fi 支持 VRCX-0 后续开发。"
+        "title": "支持 VRCX-Cloud",
+        "description": "通过 GitHub Sponsors 或 Ko-fi 支持 VRCX-Cloud 后续开发。"
     },
     "view": {
         "login": {
@@ -1522,7 +1522,7 @@
                     "listed_description": "让其他人可以在首页发现这个合集。关闭后，仍可通过分享链接访问。",
                     "include_notes": "带上我的备注",
                     "include_notes_description": "把本地世界备注作为评论复制到分享页面，之后可以在网页上编辑。",
-                    "account_connection": "分享内容与当前在 VRCX-0 中登录的 VRChat 账号关联，无需另外登录网页；分享服务由 VRCX-0 提供，与 VRChat 官方无关。",
+                    "account_connection": "分享内容与当前在 VRCX-Cloud 中登录的 VRChat 账号关联，无需另外登录网页；分享服务由 VRCX-Cloud 提供，与 VRChat 官方无关。",
                     "worlds": "{count}/{total} 个世界可分享",
                     "truncated": "仅上传前 {cap} 个世界。",
                     "share_url": "分享链接",
@@ -1957,7 +1957,7 @@
             "export": {
                 "header": "导出",
                 "export_notes": "将本地备注导出到 VRChat",
-                "export_notes_description": "将 VRCX-0 备注导出到 VRChat 备注",
+                "export_notes_description": "将 VRCX-Cloud 备注导出到 VRChat 备注",
                 "discord_names": "查找好友的 Discord 名称",
                 "export_friend_list": "导出好友列表",
                 "export_own_avatars": "导出自己创建的模型 ID 列表"
@@ -1979,8 +1979,8 @@
             },
             "shortcuts": {
                 "header": "文件夹",
-                "vrcx_data": "VRCX-0 数据",
-                "vrcx_data_description": "打开 VRCX-0 的数据文件夹",
+                "vrcx_data": "VRCX-Cloud 数据",
+                "vrcx_data_description": "打开 VRCX-Cloud 的数据文件夹",
                 "vrchat_data": "VRChat 数据",
                 "vrchat_data_description": "打开 VRChat 的数据文件夹",
                 "crash_dumps": "崩溃转储",
@@ -2215,7 +2215,7 @@
             "llm_endpoints": {
                 "title": "LLM 端点",
                 "description": "供 AI 助手和翻译共用的 OpenAI 兼容连接。",
-                "follow_custom_proxy": "使用 VRCX-0 自定义代理",
+                "follow_custom_proxy": "使用 VRCX-Cloud 自定义代理",
                 "follow_custom_proxy_description": "已配置时，LLM 请求使用该代理；否则跟随系统代理。",
                 "add": "添加端点",
                 "empty_description": "添加一个 OpenAI 兼容端点，供 AI 助手和翻译使用。",
@@ -2363,7 +2363,7 @@
                 },
                 "test_mode": {
                     "header": "叠加界面测试",
-                    "description": "强制手腕叠加界面和头显通知显示一张测试卡片，方便戴着头显调整位置、大小和不透明度。该开关不会保存，重启 VRCX-0 后自动关闭。",
+                    "description": "强制手腕叠加界面和头显通知显示一张测试卡片，方便戴着头显调整位置、大小和不透明度。该开关不会保存，重启 VRCX-Cloud 后自动关闭。",
                     "force_display": "强制显示叠加界面",
                     "requires_steamvr": "需要 SteamVR 正在运行。"
                 }
@@ -2380,7 +2380,7 @@
             "integrations": {
                 "mcp_server": {
                     "header": "MCP 服务器",
-                    "description": "允许可信的 MCP 客户端访问你的 VRCX-0 数据。默认仅限本机访问。",
+                    "description": "允许可信的 MCP 客户端访问你的 VRCX-Cloud 数据。默认仅限本机访问。",
                     "enable": "启用 MCP 服务器",
                     "enable_description": "在本机启动受 Token 保护的 MCP 服务器。",
                     "allow_vrchat_writes": "允许写入到账号",
@@ -2412,7 +2412,7 @@
                 },
                 "integration_api": {
                     "header": "应用集成 API",
-                    "description": "向你信任的其他应用提供选定的 VRCX-0 信息。仅在 VRChat 运行时监听端口。",
+                    "description": "向你信任的其他应用提供选定的 VRCX-Cloud 信息。仅在 VRChat 运行时监听端口。",
                     "enable": "启用应用集成 API",
                     "enable_description": "VRChat 运行时启动由 Token 保护的 WebSocket 数据流。",
                     "information_types": "提供的信息",
@@ -2538,13 +2538,13 @@
                     "header": "首选项",
                     "startup": "在 Windows 启动时自动启动",
                     "startup_system": "随系统启动",
-                    "startup_system_description": "创建桌面环境自启动项，并使用 --autostart 参数启动 VRCX-0。",
+                    "startup_system_description": "创建桌面环境自启动项，并使用 --autostart 参数启动 VRCX-Cloud。",
                     "minimized": "以最小化的形式启动",
                     "tray": "最小化到系统托盘",
                     "tray_description": "关闭窗口时最小化到系统托盘，而不是退出。",
                     "system_window_frame": "窗口兼容模式",
-                    "system_window_frame_description": "切换到系统标准窗口样式。如果窗口闪烁或透出桌面背景，请开启此项。重启 VRCX-0 后生效。",
-                    "system_window_frame_saved": "已保存，重启 VRCX-0 后生效。",
+                    "system_window_frame_description": "切换到系统标准窗口样式。如果窗口闪烁或透出桌面背景，请开启此项。重启 VRCX-Cloud 后生效。",
+                    "system_window_frame_saved": "已保存，重启 VRCX-Cloud 后生效。",
                     "system_window_frame_restart_now": "立即重启",
                     "background_mode": "最小化到托盘时切换到后台模式",
                     "background_mode_description": "最小化到系统托盘时切换到后台模式，内存占用可降至约十分之一；恢复后部分页面状态可能重置。",
@@ -2552,10 +2552,10 @@
                     "background_mode_delay_description": "关闭到系统托盘后，只有在设定分钟数内未重新打开窗口时才切换到后台模式；每次打开窗口都会重置计时。",
                     "background_mode_delay_button": "设置延迟（分钟）",
                     "auto_install_updates_on_startup": "启动时自动更新",
-                    "auto_install_updates_on_startup_description": "VRCX-0 启动时自动下载并安装更新。",
+                    "auto_install_updates_on_startup_description": "VRCX-Cloud 启动时自动下载并安装更新。",
                     "check_for_updates_and_update": "检查更新并安装",
                     "update_check_disabled": "已禁用",
-                    "update_check_disabled_build_description": "这是已禁用更新检测的特殊版本。请通过软件包管理器或联系维护者更新 VRCX-0。",
+                    "update_check_disabled_build_description": "这是已禁用更新检测的特殊版本。请通过软件包管理器或联系维护者更新 VRCX-Cloud。",
                     "proxy": "代理服务器设置"
                 },
                 "favorites": {
@@ -2594,7 +2594,7 @@
                     "font_family_custom_secondary": "回退字体（可选）",
                     "font_family_custom_secondary_description": "应用字体缺少某个字符时使用。",
                     "font_family_custom_detection_unavailable_title": "无法读取已安装字体",
-                    "font_family_custom_detection_unavailable": "VRCX-0 无法读取此设备上已安装的字体，请改为输入 CSS 字体栈。",
+                    "font_family_custom_detection_unavailable": "VRCX-Cloud 无法读取此设备上已安装的字体，请改为输入 CSS 字体栈。",
                     "font_family_custom_detection_unavailable_toast": "无法读取已安装字体，请改用 CSS 字体栈。",
                     "font_family_custom_mode_label": "字体来源",
                     "font_family_custom_mode_installed": "已安装字体",
@@ -2631,7 +2631,7 @@
                     "table_page_sizes_error": "页面尺寸必须是 1 到 1000 之间的数字",
                     "show_notification_icon_dot": "显示托盘通知",
                     "show_taskbar_icon_dot": "显示任务栏通知红点",
-                    "show_taskbar_icon_dot_description": "有未读通知时，在任务栏的 VRCX-0 按钮上显示红点。",
+                    "show_taskbar_icon_dot_description": "有未读通知时，在任务栏的 VRCX-Cloud 按钮上显示红点。",
                     "striped_data_table_mode": "斑马纹表格模式",
                     "reduced_motion_and_blur": "减少特效",
                     "reduced_motion_and_blur_description": "关闭动画、过渡和背景模糊效果，改善低配置设备的性能。",
@@ -2696,7 +2696,7 @@
                     "vrchat_notes": "显示线上备注",
                     "vrchat_notes_description": "显示 VRChat 服务器上保存的备注",
                     "vrcx_memos": "显示本地备注",
-                    "vrcx_memos_description": "显示在 VRCX-0 中本地保存的备注",
+                    "vrcx_memos_description": "显示在 VRCX-Cloud 中本地保存的备注",
                     "recent_action_cooldown": "显示“最近操作”图标",
                     "recent_action_cooldown_description": "在最近的邀请和加入申请操作上显示一个时钟图标。"
                 },
@@ -2732,7 +2732,7 @@
                     "post_update_changelog_prompt_description": "升级后首次启动新版本时，在右下角查看更新内容。",
                     "do_not_disturb": {
                         "header": "勿扰模式",
-                        "description": "临时暂停桌面通知、TTS、XSOverlay、OVR Toolkit 和 VRCX-0 头显弹窗。Webhook、手腕叠加界面动态和通知历史仍会继续。",
+                        "description": "临时暂停桌面通知、TTS、XSOverlay、OVR Toolkit 和 VRCX-Cloud 头显弹窗。Webhook、手腕叠加界面动态和通知历史仍会继续。",
                         "end_on_game_start": "启动 VRChat 时关闭勿扰模式",
                         "end_on_game_start_description": "仅在 VRChat 从未运行变为运行时触发。进入游戏后仍可再次开启勿扰模式。"
                     },
@@ -2766,7 +2766,7 @@
                         "header": "Webhook 通知",
                         "enabled": "启用 Webhook 投递",
                         "auth_events_enabled": "自动登录失败时发送通知",
-                        "auth_events_description": "当 VRCX-0 后台掉线后无法自动重新登录时发送通知。",
+                        "auth_events_description": "当 VRCX-Cloud 后台掉线后无法自动重新登录时发送通知。",
                         "url": "Webhook URL",
                         "url_placeholder": "https://example.com/webhook",
                         "format": "载荷格式",
@@ -2786,10 +2786,10 @@
                         "delivery_contract_title": "投递说明",
                         "delivery_contract_http": "仅 HTTP 2xx 响应视为成功。每次尝试会在 10 秒后超时，响应体上限为 64 KiB，临时故障最多重试两次。",
                         "delivery_contract_auth": "字段选择和活动过滤器仅作用于活动通知。自动登录失败提醒始终使用固定的最少字段，并由独立开关控制。",
-                        "delivery_contract_queue": "待投递的事件只保存在内存中。积压过多时部分事件可能被丢弃，VRCX-0 重启后也不会重试。投递状态同样会在重启后重置。",
-                        "delivery_contract_secret": "Webhook URL 通常包含凭据。请将此 URL 视为机密，并保护本地 VRCX-0 配置目录及其备份。",
+                        "delivery_contract_queue": "待投递的事件只保存在内存中。积压过多时部分事件可能被丢弃，VRCX-Cloud 重启后也不会重试。投递状态同样会在重启后重置。",
+                        "delivery_contract_secret": "Webhook URL 通常包含凭据。请将此 URL 视为机密，并保护本地 VRCX-Cloud 配置目录及其备份。",
                         "examples_title": "Webhook 载荷字段与示例",
-                        "examples_description": "选择通用 JSON 字段，并查看 VRCX-0 在不同 Webhook 载荷格式下发送的请求体。",
+                        "examples_description": "选择通用 JSON 字段，并查看 VRCX-Cloud 在不同 Webhook 载荷格式下发送的请求体。",
                         "comments_note": "示例展示的是请求体结构；这里的字段说明只是注释，不会随请求发送。",
                         "generic_example": "通用 JSON 示例",
                         "discord_example": "Discord 示例",
@@ -2866,9 +2866,9 @@
                         "quit_description": "VRChat 退出后，关闭仍在运行的 VRChat 进程。",
                         "focus_on_join_header": "在游戏内打开房间时切换至 VRChat",
                         "focus_on_join_description": "加入房间时自动切换到 VRChat 窗口。仅在桌面模式下生效。",
-                        "deep_link_registration": "打开 VRCX-0 分享链接",
-                        "deep_link_registered": "当前用户已设置为使用 VRCX-0 打开分享链接。",
-                        "deep_link_not_registered": "当前系统缺少使用 VRCX-0 打开分享链接的设置，或该设置无效。",
+                        "deep_link_registration": "打开 VRCX-Cloud 分享链接",
+                        "deep_link_registered": "当前用户已设置为使用 VRCX-Cloud 打开分享链接。",
+                        "deep_link_not_registered": "当前系统缺少使用 VRCX-Cloud 打开分享链接的设置，或该设置无效。",
                         "deep_link_repair": "修复",
                         "deep_link_repair_success": "已修复分享链接的打开设置",
                         "deep_link_repair_failed": "无法修复分享链接的打开设置"
@@ -2882,7 +2882,7 @@
                         "cache_header": "自动清理 VRChat 缓存",
                         "cache_description": "VRChat 关闭时清理旧的资源缓存数据。",
                         "keep_avatar_data": "模型历史保留时长",
-                        "avatar_cleanup_description": "VRCX-0 启动时每周检查一次。"
+                        "avatar_cleanup_description": "VRCX-Cloud 启动时每周检查一次。"
                     },
                     "troubleshooting": {
                         "header": "故障排查",
@@ -2903,13 +2903,13 @@
                     "import_recovery": {
                         "header": "导入与恢复",
                         "import_from_vrcx": "从 VRCX 导入",
-                        "description": "使用默认 VRCX 数据文件夹中的数据替换当前 VRCX-0 配置和数据库。",
+                        "description": "使用默认 VRCX 数据文件夹中的数据替换当前 VRCX-Cloud 配置和数据库。",
                         "review": "检查导入内容…"
                     },
                     "usage_data": {
                         "header": "使用数据",
                         "share": "共享匿名使用数据",
-                        "description": "仅共享改进 VRCX-0 所需的匿名信息。"
+                        "description": "仅共享改进 VRCX-Cloud 所需的匿名信息。"
                     },
                     "danger": {
                         "avatar_history": "模型历史记录",
@@ -2932,11 +2932,11 @@
                         "description": "退出游戏时自动从缓存中删除过期数据"
                     },
                     "improvement": {
-                        "header": "帮助改进 VRCX-0"
+                        "header": "帮助改进 VRCX-Cloud"
                     },
                     "anonymous_usage_telemetry": {
                         "header": "启用诊断数据收集（匿名）",
-                        "description": "仅收集用于改进 VRCX-0 所必需的匿名信息（如应用性能）。"
+                        "description": "仅收集用于改进 VRCX-Cloud 所必需的匿名信息（如应用性能）。"
                     },
                     "save_instance_prints_to_file": {
                         "header": "“拍立得”照片保存选项",
@@ -2954,7 +2954,7 @@
                     },
                     "delete_all_screenshot_metadata": {
                         "button": "删除截图元数据",
-                        "ask": "你确定要从 VRChat 图片文件夹中删除所有由 VRChat 和 VRCX-0 添加的截图元数据吗？",
+                        "ask": "你确定要从 VRChat 图片文件夹中删除所有由 VRChat 和 VRCX-Cloud 添加的截图元数据吗？",
                         "confirm": "此操作会永久删除所有截图元数据，且无法撤销，范围包括 VRChat 图片文件夹中的所有拍立得、子文件夹和其他文件。继续前请先备份重要内容。",
                         "confirm_yes": "是，确认删除",
                         "confirm_no": "否，我再想想"
@@ -2994,13 +2994,13 @@
                         "choose": "选择目录",
                         "reset": "重置为默认",
                         "restart": "重启",
-                        "restart_hint": "更改会在重启 VRCX-0 后生效。",
+                        "restart_hint": "更改会在重启 VRCX-Cloud 后生效。",
                         "source_cli": "命令行参数指定的目录",
                         "source_persisted": "自定义文件夹",
                         "source_default": "默认文件夹",
                         "cli_override": "本次启动正在使用 --data-dir 进行命令行目录覆盖。要修改持久化目录，请不要携带命令行启动。",
-                        "saved_restart_required": "数据目录已保存，请重启 VRCX-0 以生效。",
-                        "reset_saved": "数据目录已重置，请重启 VRCX-0 以生效。",
+                        "saved_restart_required": "数据目录已保存，请重启 VRCX-Cloud 以生效。",
+                        "reset_saved": "数据目录已重置，请重启 VRCX-Cloud 以生效。",
                         "failed_to_load": "读取数据目录设置失败。"
                     },
                     "cache_debug": {
@@ -3046,19 +3046,19 @@
                         "purge_confirm_title": "清理模型变动记录",
                         "purge_confirm_description_1": "这将永久删除数据库中的模型变动记录并回收磁盘空间。",
                         "purge_confirm_description_2": "此操作无法撤销！",
-                        "purge_confirm_description_3": "VRCX-0 将在操作完成后重启。",
+                        "purge_confirm_description_3": "VRCX-Cloud 将在操作完成后重启。",
                         "purge_confirm_alert": "强烈建议在继续之前备份你的数据库文件！",
                         "purge_confirm_button": "清理 & 重启",
                         "purge_complete": "模型历史已清理，正在重启…",
                         "purge_failed": "清理失败: {error}",
                         "purge_optimization_failed": "模型历史已清理，但数据库压缩失败：{error}",
                         "legacy_migration": "迁移 VRCX 数据",
-                        "legacy_migration_description": "用固定的 VRCX 数据文件夹中的数据替换当前 VRCX-0 配置和数据库。",
-                        "legacy_migration_confirm_title": "用 VRCX 数据替换 VRCX-0 数据？",
-                        "legacy_migration_confirm_description": "这会删除当前 VRCX-0 设置和本地数据库，并替换为在 {path} 找到的数据。VRCX-0 将重启以完成迁移。原始 VRCX 数据不会被修改。",
+                        "legacy_migration_description": "用固定的 VRCX 数据文件夹中的数据替换当前 VRCX-Cloud 配置和数据库。",
+                        "legacy_migration_confirm_title": "用 VRCX 数据替换 VRCX-Cloud 数据？",
+                        "legacy_migration_confirm_description": "这会删除当前 VRCX-Cloud 设置和本地数据库，并替换为在 {path} 找到的数据。VRCX-Cloud 将重启以完成迁移。原始 VRCX 数据不会被修改。",
                         "legacy_migration_confirm": "迁移并重启",
                         "legacy_migration_not_available": "未找到支持的 VRCX 数据库。",
-                        "legacy_migration_restart_manually": "已准备好迁移，重启 VRCX-0 以完成迁移。",
+                        "legacy_migration_restart_manually": "已准备好迁移，重启 VRCX-Cloud 以完成迁移。",
                         "legacy_migration_failed": "启动 VRCX 迁移失败：{error}"
                     },
                     "user_content": {
@@ -3216,7 +3216,7 @@
                 "enable_game_log_ingestion_in_settings_before_current_players_can_be_reconstructed": "在设置中启用游戏日志后即可查看当前玩家。",
                 "start_vrchat_and_let_vrcx_receive_game_log_events_before_this_page_can_rebuild_the_current_instance": "启动 VRChat 并进入一个房间后，这里会显示同一房间的玩家；有人加入或离开时，列表也会自动更新。",
                 "stay_in_the_instance_until_local_join_leave_events_are_recorded": "请在房间中停留，直到本地加入/离开事件被记录完毕，之后此列表会自动填充。",
-                "current_players_follow_live_instance_locations": "VRCX-0 检测到你的下一个位置后，这里会显示当前玩家。",
+                "current_players_follow_live_instance_locations": "VRCX-Cloud 检测到你的下一个位置后，这里会显示当前玩家。",
                 "local_join_leave_history_has_no_current_players": "本地加入/离开历史中还没有当前房间的玩家。"
             },
             "label": {
@@ -3506,7 +3506,7 @@
             },
             "source": {
                 "built_in": "默认主题",
-                "built_in_description": "使用 VRCX-0 默认亮色/暗色主题。",
+                "built_in_description": "使用 VRCX-Cloud 默认亮色/暗色主题。",
                 "background": "背景图片",
                 "community": "社区主题"
             },
@@ -3630,7 +3630,7 @@
                 "failed_to_load": "无法加载你的活动数据"
             },
             "caveat": {
-                "recorded_since": "仅在 VRCX-0 运行时记录（自 {date} 起）。"
+                "recorded_since": "仅在 VRCX-Cloud 运行时记录（自 {date} 起）。"
             },
             "worlds": {
                 "visit_count": "{count} 次",
@@ -3736,8 +3736,8 @@
             "run_error_elevation_required": "需要管理员权限（Windows 错误 {code}）。请打开「以管理员身份运行」。",
             "run_error_elevation_cancelled": "已取消管理员授权（Windows 错误 {code}）。",
             "run_error_failed": "应用启动失败。",
-            "stop_locked_steam": "由 Steam 启动，VRCX-0 无法关闭。",
-            "stop_locked_admin": "以管理员身份运行，VRCX-0 无法关闭。",
+            "stop_locked_steam": "由 Steam 启动，VRCX-Cloud 无法关闭。",
+            "stop_locked_admin": "以管理员身份运行，VRCX-Cloud 无法关闭。",
             "remove_app": "移除应用",
             "remove_confirm": "从应用启动器中移除 {name}？",
             "name_required": "名称不能为空",
@@ -3765,7 +3765,7 @@
                 "hidden": "隐藏",
                 "visible": "显示",
                 "visibility": "显示状态",
-                "developer": "VRCX-0 开发者"
+                "developer": "VRCX-Cloud 开发者"
             },
             "actions": {
                 "invite": "发送邀请",
@@ -4214,8 +4214,8 @@
                 "copy_url": "复制链接",
                 "url": "VRChat 链接",
                 "vrcx_url": "分享链接",
-                "vrcx_url_description": "打开此链接可直接唤起 VRCX-0 客户端",
-                "vrcx_share_text": "在 VRCX-0 中打开世界“{name}”：{url}",
+                "vrcx_url_description": "打开此链接可直接唤起 VRCX-Cloud 客户端",
+                "vrcx_share_text": "在 VRCX-Cloud 中打开世界“{name}”：{url}",
                 "copy_vrcx_url": "复制分享链接",
                 "youtube_preview": "YouTube 预览链接",
                 "author_tags": "作者添加的标签",
@@ -4326,7 +4326,7 @@
             },
             "description": {
                 "edit_world_details": "编辑世界详情",
-                "world_snapshot_unavailable_description": "VRCX-0 无法获取此世界的信息"
+                "world_snapshot_unavailable_description": "VRCX-Cloud 无法获取此世界的信息"
             },
             "empty": {
                 "no_world_id_was_provided_for_this_dialog": "没有提供世界 ID",
@@ -4422,8 +4422,8 @@
                 "url": "VRChat 链接",
                 "copy_url": "复制链接",
                 "vrcx_url": "分享链接",
-                "vrcx_url_description": "打开此链接可直接唤起 VRCX-0 客户端",
-                "vrcx_share_text": "在 VRCX-0 中打开模型“{name}”：{url}",
+                "vrcx_url_description": "打开此链接可直接唤起 VRCX-Cloud 客户端",
+                "vrcx_share_text": "在 VRCX-Cloud 中打开模型“{name}”：{url}",
                 "copy_vrcx_url": "复制分享链接",
                 "created_at": "创建时间",
                 "last_updated": "最后更新时间",
@@ -4539,7 +4539,7 @@
             },
             "description": {
                 "edit_avatar_details_description": "编辑模型名称、描述、样式和作者标签。",
-                "avatar_snapshot_unavailable_description": "VRCX-0 无法获取此模型的信息"
+                "avatar_snapshot_unavailable_description": "VRCX-Cloud 无法获取此模型的信息"
             },
             "toast": {
                 "failed_to_refresh_avatar": "刷新模型失败",
@@ -4711,7 +4711,7 @@
                 "no_gallery_images": "没有相册图片"
             },
             "description": {
-                "group_snapshot_unavailable_description": "VRCX-0 无法获取此群组的信息"
+                "group_snapshot_unavailable_description": "VRCX-Cloud 无法获取此群组的信息"
             },
             "label": {
                 "group_left": "已退出群组",
@@ -4854,7 +4854,7 @@
             "header": "启动",
             "short_url": "短链接",
             "share": "分享",
-            "share_description": "复制 VRCX-0 分享链接，对方打开即可预览并在客户端中打开",
+            "share_description": "复制 VRCX-Cloud 分享链接，对方打开即可预览并在客户端中打开",
             "more_copy_options": "更多复制选项",
             "invite": "邀请",
             "open_ingame": "在 VRChat 中打开",
@@ -4981,7 +4981,7 @@
             "description5": "- 有脏话过滤器（对中文没什么用，但还是非常扫兴）。",
             "description6": "- 不能换行（换行符将会被替换成空格）。",
             "description7": "- 这将会覆盖这些玩家现有的任何 VRChat 线上备注。",
-            "description8": "- 此处的修改不会影响 VRCX-0 本地备注，但导出后会影响 VRChat 上的线上备注。",
+            "description8": "- 此处的修改不会影响 VRCX-Cloud 本地备注，但导出后会影响 VRChat 上的线上备注。",
             "refresh": "刷新",
             "export": "导出",
             "cancel": "取消",
@@ -5521,13 +5521,13 @@
             "failed_to_load_emojis": "加载表情失败"
         },
         "vrcx_updater": {
-            "latest_version": "VRCX-0 已是最新版本",
+            "latest_version": "VRCX-Cloud 已是最新版本",
             "ready_for_update": "新版本 {value} 已就绪",
             "channel": {
                 "label": "更新通道",
                 "stable": "正式版",
                 "beta": "测试版",
-                "description": "VRCX-0 只会检查当前安装通道中的更新。",
+                "description": "VRCX-Cloud 只会检查当前安装通道中的更新。",
                 "switch_description": "切换到{channel}需要下载并安装该通道的最新版本。",
                 "download_stable": "下载最新正式版",
                 "download_beta": "下载最新测试版",
@@ -5536,7 +5536,7 @@
         },
         "change_log": {
             "header": "更新日志",
-            "support_title": "如果 VRCX-0 对你有帮助",
+            "support_title": "如果 VRCX-Cloud 对你有帮助",
             "support_description": "给项目点个 Star 就是最直接的支持。",
             "star_on_github": "给项目点 Star",
             "support_development": "支持开发",
@@ -5644,7 +5644,7 @@
         },
         "system": {
             "label": {
-                "vrcx_0_update": "VRCX-0 更新",
+                "vrcx_0_update": "VRCX-Cloud 更新",
                 "fps_144": "--fps=144"
             },
             "action": {
@@ -5786,13 +5786,13 @@
             "description": "输入代理地址和端口。支持 Socks5 和 http(s)协议",
             "restart": "保存并重启",
             "enabled": "启用代理",
-            "enabled_description": "启用但未填写地址时，VRCX-0 会直连，代理开关保持开启。",
+            "enabled_description": "启用但未填写地址时，VRCX-Cloud 会直连，代理开关保持开启。",
             "address": "代理地址",
             "address_description": "留空时将直接连接，代理开关仍保持开启。",
             "test": "测试",
             "configure": "配置",
             "configure_empty": "配置地址",
-            "saved_restart_required": "代理设置已保存，重启 VRCX-0 后网络代理变更生效。",
+            "saved_restart_required": "代理设置已保存，重启 VRCX-Cloud 后网络代理变更生效。",
             "test_success": "代理测试成功（HTTP {status}）。",
             "test_failed": "代理测试失败：{message}"
         },
@@ -5825,7 +5825,7 @@
             "auto_login_success": "自动登录成功",
             "auto_login_failed": "自动登录失败",
             "session_expired": "VRChat 会话已过期，正在返回登录界面。",
-            "session_restore_available": "如果有已保存的账号，VRCX-0 会尝试自动重新登录。",
+            "session_restore_available": "如果有已保存的账号，VRCX-Cloud 会尝试自动重新登录。",
             "offline": "你现在处于离线状态"
         },
         "vrcx_updater": {
@@ -5852,14 +5852,14 @@
         },
         "database": {
             "migration_found_title": "检测到现存的 VRCX 数据库",
-            "migration_found_description": "在此计算机上发现了现存的 VRCX 数据库。是否要将其迁移到 VRCX-0？原始 VRCX 数据库的数据不会被修改。",
+            "migration_found_description": "在此计算机上发现了现存的 VRCX 数据库。是否要将其迁移到 VRCX-Cloud？原始 VRCX 数据库的数据不会被修改。",
             "legacy_vrcx_running_title": "检测到 VRCX 正在运行",
-            "legacy_vrcx_running_description": "VRCX-0 检测到 VRCX 仍在运行。请先将其关闭，然后点击“重试”。强行迁移可能失败。",
+            "legacy_vrcx_running_description": "VRCX-Cloud 检测到 VRCX 仍在运行。请先将其关闭，然后点击“重试”。强行迁移可能失败。",
             "legacy_vrcx_check_again": "重试",
             "legacy_vrcx_force_migration": "强行迁移",
             "migration_skip": "跳过",
             "migration_restarting_title": "正在迁移数据",
-            "migration_restarting": "VRCX-0 将重新启动以完成迁移工作",
+            "migration_restarting": "VRCX-Cloud 将重新启动以完成迁移工作",
             "upgrade_in_progress_title": "数据库升级进行中",
             "maintenance_in_progress_title": "数据库维护中",
             "maintenance_in_progress_description": "正在回收磁盘空间，期间数据库访问会暂停。",
@@ -5889,12 +5889,12 @@
             "database_upload_warning": "此数据库可能包含账号及活动等隐私数据，请勿上传到 GitHub。",
             "use_new_database": "改用新数据库",
             "fresh_start_confirm_title": "要改用新的数据库吗？",
-            "fresh_start_confirm_description": "VRCX-0 会将当前数据库和升级失败文件保留在恢复文件夹中，然后使用新的空数据库重启。新数据库中不会保留设置、本地历史和已保存的账号数据。",
-            "fresh_start_restarting": "正在归档当前数据库并重启 VRCX-0...",
+            "fresh_start_confirm_description": "VRCX-Cloud 会将当前数据库和升级失败文件保留在恢复文件夹中，然后使用新的空数据库重启。新数据库中不会保留设置、本地历史和已保存的账号数据。",
+            "fresh_start_restarting": "正在归档当前数据库并重启 VRCX-Cloud...",
             "fresh_start_failed": "无法创建新数据库。",
-            "upgrade_keep_open": "请保持 VRCX-0 打开，直到更新完成。",
+            "upgrade_keep_open": "请保持 VRCX-Cloud 打开，直到更新完成。",
             "failure_reason": "原因",
-            "restart_app": "重启 VRCX-0"
+            "restart_app": "重启 VRCX-Cloud"
         },
         "file": {
             "not_image": "文件不是有效的图片格式",
@@ -6366,7 +6366,7 @@
             "modal": {
                 "launch_vrchat": "启动 VRChat",
                 "launch": "启动",
-                "vrchat_is_already_running_continue_launching_this_instance": "VRChat 已在运行。VRCX-0 会向运行中的客户端再次发送启动请求。如果已经打开多个客户端，游戏日志、当前位置追踪、玩家列表以及部分后台服务可能变得不可靠。确定要继续吗？"
+                "vrchat_is_already_running_continue_launching_this_instance": "VRChat 已在运行。VRCX-Cloud 会向运行中的客户端再次发送启动请求。如果已经打开多个客户端，游戏日志、当前位置追踪、玩家列表以及部分后台服务可能变得不可靠。确定要继续吗？"
             },
             "dynamic": {
                 "value_copied": "已复制{value}"
@@ -6451,15 +6451,15 @@
             },
             "error": {
                 "failed_upgrade_description": "上一次数据库升级失败，在手动修复前，此数据库将无法使用。",
-                "apply_upgrade_failed": "VRCX-0 应用本地数据库升级失败",
-                "legacy_migration_restart_failed": "VRCX-0 未能重启以迁移已有的 VRCX 数据。你可以重试，或跳过并继续使用当前数据库。",
-                "newer_schema_requires_newer_app": "此数据库使用结构版本 {value}，但当前 VRCX-0 最高仅支持 {value2}。请安装最新版 VRCX-0 后再打开。"
+                "apply_upgrade_failed": "VRCX-Cloud 应用本地数据库升级失败",
+                "legacy_migration_restart_failed": "VRCX-Cloud 未能重启以迁移已有的 VRCX 数据。你可以重试，或跳过并继续使用当前数据库。",
+                "newer_schema_requires_newer_app": "此数据库使用结构版本 {value}，但当前 VRCX-Cloud 最高仅支持 {value2}。请安装最新版 VRCX-Cloud 后再打开。"
             },
             "success": {
                 "database_update_complete": "数据库更新完成"
             },
             "action": {
-                "refresh_config_failed_after_upgrade": "VRCX-0 已成功升级数据库，但刷新本地配置失败，请重启程序。",
+                "refresh_config_failed_after_upgrade": "VRCX-Cloud 已成功升级数据库，但刷新本地配置失败，请重启程序。",
                 "requesting_legacy_migration": "正在准备迁移已有的 VRCX 数据……",
                 "skipping_legacy_migration": "正在跳过迁移并初始化数据库……"
             }
@@ -6484,7 +6484,7 @@
         "background_maintenance": {
             "label": {
                 "vrchat_registry_backup": "VRChat 设置数据备份工具",
-                "vrcx_update_available": "VRCX-0 有可用更新"
+                "vrcx_update_available": "VRCX-Cloud 有可用更新"
             },
             "description": {
                 "registry_backup_restore_description": "VRChat 设置数据缺失，但存在已保存的备份。启动 VRChat 前请先恢复备份。"
@@ -6494,7 +6494,7 @@
     "repository": {
         "sqlite_repository": {
             "modal": {
-                "please_repair_or_delete_your_database_file_by_fo": "请按照 VRCX-0 数据库修复说明修复或删除数据库文件",
+                "please_repair_or_delete_your_database_file_by_fo": "请按照 VRCX-Cloud 数据库修复说明修复或删除数据库文件",
                 "your_database_is_corrupted": "你的数据库已损坏",
                 "disk_full_description": "数据库所在磁盘已满",
                 "disk_full_title": "数据库所在磁盘已满",
@@ -6593,11 +6593,11 @@
     },
     "linux_rendering": {
         "title": "硬件加速（实验性）",
-        "description": "重启 VRCX-0 后生效。开启后请在启动后的 30 秒内确认显示正常，否则将自动关闭硬件加速并重启。",
-        "saved": "已保存，重启 VRCX-0 后生效。",
+        "description": "重启 VRCX-Cloud 后生效。开启后请在启动后的 30 秒内确认显示正常，否则将自动关闭硬件加速并重启。",
+        "saved": "已保存，重启 VRCX-Cloud 后生效。",
         "restart_now": "立即重启",
         "confirm_title": "界面显示正常吗？",
-        "confirm_description": "启动后 30 秒内未确认，VRCX-0 将关闭硬件加速并重启。",
+        "confirm_description": "启动后 30 秒内未确认，VRCX-Cloud 将关闭硬件加速并重启。",
         "restore": "恢复兼容模式并重启",
         "keep": "显示正常，保留",
         "failed": "无法更改渲染设置，请重试。"

@@ -443,6 +443,7 @@ impl RuntimeHostStateBuilder {
             group_order_source,
             friend_projection_observer,
             profile_extension,
+            realtime_transport_wrapper,
         } = composition;
         let authenticated_session_projection =
             Arc::new(Mutex::new(AuthenticatedSessionProjection::default()));
@@ -483,6 +484,10 @@ impl RuntimeHostStateBuilder {
                 Arc::clone(&self.runtime_context.web),
                 backend_status.clone(),
             ));
+        let realtime_transport = match realtime_transport_wrapper {
+            Some(wrapper) => wrapper(realtime_transport),
+            None => realtime_transport,
+        };
         let realtime_runtime = Arc::new(RealtimeHostRuntime::new(RealtimeHostRuntimeDeps::new(
             realtime_store,
             realtime_transport,
@@ -789,6 +794,7 @@ impl RuntimeHostState {
             group_order_source: Arc::new(UnavailableGroupOrderSource),
             friend_projection_observer: None,
             profile_extension: None,
+            realtime_transport_wrapper: None,
         })
     }
 

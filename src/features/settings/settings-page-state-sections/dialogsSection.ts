@@ -1,28 +1,6 @@
-import { translationProviderOptions } from '../settingsOptions';
 import type { SettingsSectionInput } from '../settingsPageStateSectionTypes';
 
 type DialogsSectionInput = SettingsSectionInput<
-    | 'customFontDialogOpen'
-    | 'setCustomFontDialogOpen'
-    | 'customFontDraft'
-    | 'setCustomFontDraft'
-    | 'customFontOptions'
-    | 'customFontOptionsLoading'
-    | 'saveCustomFontFamily'
-    | 'youtubeApiDialogOpen'
-    | 'setYoutubeApiDialogOpen'
-    | 'youtubeApiKeyDraft'
-    | 'setYoutubeApiKeyDraft'
-    | 'integrationStatus'
-    | 'saveYoutubeApiKey'
-    | 'translationApiDialogOpen'
-    | 'setTranslationApiDialogOpen'
-    | 'translationDraft'
-    | 'setTranslationDraftValue'
-    | 'llmEndpoints'
-    | 'fetchTranslationModels'
-    | 'testTranslationApiConfig'
-    | 'saveTranslationApiConfig'
     | 'tablePageSizesDialogOpen'
     | 'setTablePageSizesDialogOpen'
     | 'setPrefs'
@@ -34,62 +12,19 @@ type DialogsSectionInput = SettingsSectionInput<
     | 'searchLimitError'
     | 'tableLimitsSaveDisabled'
     | 'saveTableLimitsDialog'
-    | 'avatarProviderDialogOpen'
-    | 'setAvatarProviderDialogOpen'
-    | 'avatarProviderConfig'
-    | 'updateAvatarProvider'
-    | 'saveAvatarProviderField'
-    | 'removeAvatarProvider'
-    | 'addAvatarProvider'
     | 'purgeDialogOpen'
     | 'setPurgeDialogOpen'
     | 'purgePeriod'
     | 'setPurgePeriod'
     | 'purgeInProgress'
     | 'purgeAvatarFeedData'
-    | 'wristFeedNotificationsDialogOpen'
-    | 'setWristFeedNotificationsDialogOpen'
-    | 'vrNotificationsDialogOpen'
-    | 'setVrNotificationsDialogOpen'
-    | 'hmdNotificationsDialogOpen'
-    | 'setHmdNotificationsDialogOpen'
-    | 'desktopNotificationsDialogOpen'
-    | 'setDesktopNotificationsDialogOpen'
     | 'webhookNotificationsDialogOpen'
     | 'setWebhookNotificationsDialogOpen'
-    | 'ttsNotificationsDialogOpen'
-    | 'setTtsNotificationsDialogOpen'
     | 'prefs'
-    | 'saveOverlayActivityFilters'
-    | 'saveVrNotificationActivityFilters'
-    | 'saveHmdNotificationActivityFilters'
-    | 'saveDesktopNotificationActivityFilters'
     | 'saveWebhookActivityFilters'
-    | 'saveTtsNotificationActivityFilters'
 >;
 
 export function buildDialogsSection({
-    customFontDialogOpen,
-    setCustomFontDialogOpen,
-    customFontDraft,
-    setCustomFontDraft,
-    customFontOptions,
-    customFontOptionsLoading,
-    saveCustomFontFamily,
-    youtubeApiDialogOpen,
-    setYoutubeApiDialogOpen,
-    youtubeApiKeyDraft,
-    setYoutubeApiKeyDraft,
-    integrationStatus,
-    saveYoutubeApiKey,
-    translationApiDialogOpen,
-    setTranslationApiDialogOpen,
-    translationDraft,
-    setTranslationDraftValue,
-    llmEndpoints,
-    fetchTranslationModels,
-    testTranslationApiConfig,
-    saveTranslationApiConfig,
     tablePageSizesDialogOpen,
     setTablePageSizesDialogOpen,
     setPrefs,
@@ -101,62 +36,18 @@ export function buildDialogsSection({
     searchLimitError,
     tableLimitsSaveDisabled,
     saveTableLimitsDialog,
-    avatarProviderDialogOpen,
-    setAvatarProviderDialogOpen,
-    avatarProviderConfig,
-    updateAvatarProvider,
-    saveAvatarProviderField,
-    removeAvatarProvider,
-    addAvatarProvider,
     purgeDialogOpen,
     setPurgeDialogOpen,
     purgePeriod,
     setPurgePeriod,
     purgeInProgress,
     purgeAvatarFeedData,
-    wristFeedNotificationsDialogOpen,
-    setWristFeedNotificationsDialogOpen,
-    vrNotificationsDialogOpen,
-    setVrNotificationsDialogOpen,
-    hmdNotificationsDialogOpen,
-    setHmdNotificationsDialogOpen,
-    desktopNotificationsDialogOpen,
-    setDesktopNotificationsDialogOpen,
     webhookNotificationsDialogOpen,
     setWebhookNotificationsDialogOpen,
-    ttsNotificationsDialogOpen,
-    setTtsNotificationsDialogOpen,
     prefs,
-    saveOverlayActivityFilters,
-    saveVrNotificationActivityFilters,
-    saveHmdNotificationActivityFilters,
-    saveDesktopNotificationActivityFilters,
-    saveWebhookActivityFilters,
-    saveTtsNotificationActivityFilters
+    saveWebhookActivityFilters
 }: DialogsSectionInput) {
     return {
-        customFontDialogOpen,
-        setCustomFontDialogOpen,
-        customFontDraft,
-        setCustomFontDraft,
-        customFontOptions,
-        customFontOptionsLoading,
-        saveCustomFontFamily,
-        youtubeApiDialogOpen,
-        setYoutubeApiDialogOpen,
-        youtubeApiKeyDraft,
-        setYoutubeApiKeyDraft,
-        integrationStatus,
-        saveYoutubeApiKey,
-        translationApiDialogOpen,
-        setTranslationApiDialogOpen,
-        translationDraft,
-        setTranslationDraftValue,
-        translationProviderOptions,
-        llmEndpoints,
-        fetchTranslationModels,
-        testTranslationApiConfig,
-        saveTranslationApiConfig,
         tablePageSizesDialogOpen,
         setTablePageSizesDialogOpen,
         setPrefs,
@@ -168,43 +59,15 @@ export function buildDialogsSection({
         searchLimitError,
         tableLimitsSaveDisabled,
         saveTableLimitsDialog,
-        avatarProviderDialogOpen,
-        setAvatarProviderDialogOpen,
-        avatarProviderConfig,
-        updateAvatarProvider,
-        saveAvatarProviderField,
-        removeAvatarProvider,
-        addAvatarProvider,
         purgeDialogOpen,
         setPurgeDialogOpen,
         purgePeriod,
         setPurgePeriod,
         purgeInProgress,
         purgeAvatarFeedData,
-        wristFeedNotificationsDialogOpen,
-        setWristFeedNotificationsDialogOpen,
-        vrNotificationsDialogOpen,
-        setVrNotificationsDialogOpen,
-        hmdNotificationsDialogOpen,
-        setHmdNotificationsDialogOpen,
-        desktopNotificationsDialogOpen,
-        setDesktopNotificationsDialogOpen,
         webhookNotificationsDialogOpen,
         setWebhookNotificationsDialogOpen,
-        ttsNotificationsDialogOpen,
-        setTtsNotificationsDialogOpen,
-        overlayActivityFilters: prefs.overlayActivityFilters,
-        vrNotificationActivityFilters: prefs.vrNotificationActivityFilters,
-        hmdNotificationActivityFilters: prefs.hmdNotificationActivityFilters,
-        desktopNotificationActivityFilters:
-            prefs.desktopNotificationActivityFilters,
         webhookActivityFilters: prefs.webhookActivityFilters,
-        ttsNotificationActivityFilters: prefs.ttsNotificationActivityFilters,
-        saveOverlayActivityFilters,
-        saveVrNotificationActivityFilters,
-        saveHmdNotificationActivityFilters,
-        saveDesktopNotificationActivityFilters,
-        saveWebhookActivityFilters,
-        saveTtsNotificationActivityFilters
+        saveWebhookActivityFilters
     };
 }

@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 import configRepository from '@/repositories/configRepository';
 import { refreshFriendAndFavoriteSnapshots } from '@/services/backgroundMaintenanceService';
 import { toast } from '@/services/toastService';
-import { restoreNormalWindowModeForIntent } from '@/services/windowModeService';
 import { SECOND_MS } from '@/shared/constants/time';
 import {
     sidebarTabFallbackIcon,
@@ -137,7 +136,6 @@ export const SidePanel = forwardRef<HTMLElement, SidePanelProps>(
         }
 
         function openCustomTabsDialog() {
-            restoreNormalWindowModeForIntent();
             setCustomTabsDialogOpen(true);
         }
 
@@ -618,7 +616,6 @@ export const SidePanel = forwardRef<HTMLElement, SidePanelProps>(
                                     orderedFavoriteGroupItems.length
                                 }
                                 onOpenFavoriteGroupOrderDialog={() => {
-                                    restoreNormalWindowModeForIntent();
                                     setFavoriteGroupOrderDialogOpen(true);
                                 }}
                                 onOpenCustomTabsDialog={() =>

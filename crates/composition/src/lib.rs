@@ -6,7 +6,9 @@ mod group_order;
 mod profile;
 mod state;
 
-pub use composition::{RuntimeHostComposition, RuntimeHostProfileExtension};
+pub use composition::{
+    RealtimeTransportWrapper, RuntimeHostComposition, RuntimeHostProfileExtension,
+};
 pub(crate) use context::RuntimeHostContext;
 pub use context::RuntimeHostDesktopAssemblyDeps;
 pub type RuntimeHostServerAssemblyDeps = RuntimeHostDesktopAssemblyDeps;

@@ -12,7 +12,6 @@ type InterfaceSectionInput = SettingsSectionInput<
     | 'zoomLevel'
     | 'commit'
     | 'setAppLanguagePreference'
-    | 'openCustomFontDialog'
     | 'saveFontFamilyPreference'
     | 'selectCjkFontPack'
     | 'setZoomInput'
@@ -41,7 +40,6 @@ export function buildInterfaceSection({
     zoomLevel,
     commit,
     setAppLanguagePreference,
-    openCustomFontDialog,
     saveFontFamilyPreference,
     selectCjkFontPack,
     setZoomInput,
@@ -69,7 +67,6 @@ export function buildInterfaceSection({
         notificationLayoutOptions,
         commit,
         setAppLanguagePreference,
-        openCustomFontDialog,
         saveFontFamilyPreference,
         selectCjkFontPack,
         setZoomInput,
@@ -89,10 +86,6 @@ export function buildInterfaceSection({
             setAppLanguagePreference(value);
         },
         onFontFamilyChange: (value: string) => {
-            if (value === 'custom') {
-                openCustomFontDialog();
-                return;
-            }
             saveFontFamilyPreference(value);
         },
         onCjkFontPackChange: (value: string) => {

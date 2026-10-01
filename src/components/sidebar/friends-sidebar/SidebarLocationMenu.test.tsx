@@ -20,7 +20,6 @@ vi.mock('@/services/directAccessService', () => ({
 import { openWorldDialog } from '@/services/dialogService';
 import { tryOpenLaunchLocation } from '@/services/directAccessService';
 import { selfInviteToInstance } from '@/services/launchService';
-import { isSidebarAutoHideInteractionBlocked } from '@/services/sidebarAutoHideService';
 import { toast } from '@/services/toastService';
 import { useShellStore } from '@/state/shellStore';
 
@@ -60,7 +59,6 @@ describe('sidebar location menus', () => {
             title: undefined
         });
         await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
-        expect(isSidebarAutoHideInteractionBlocked()).toBe(false);
         await user.click(screen.getByRole('button', { name: /^Test room/ }));
         expect(await screen.findAllByRole('menu')).toHaveLength(1);
         expect(openWorldDialog).toHaveBeenCalledOnce();
@@ -134,7 +132,6 @@ describe('sidebar location menus', () => {
             expect(await screen.findAllByRole('menu')).toHaveLength(1);
             expect(openWorldDialog).not.toHaveBeenCalled();
             expect(useShellStore.getState().windowDisplayMode).toBe('sidebar');
-            expect(isSidebarAutoHideInteractionBlocked()).toBe(true);
             await user.click(
                 screen.getByRole('menuitem', {
                     name: 'common.actions.view_details'

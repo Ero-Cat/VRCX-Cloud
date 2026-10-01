@@ -9,6 +9,8 @@
 
 mod commands;
 mod config;
+mod realtime_gate;
+mod realtime_supervisor;
 mod transport;
 
 use std::net::SocketAddr;
@@ -64,6 +66,22 @@ async fn async_main() -> ExitCode {
         "starting VRCX server runtime"
     );
 
+    // Desktop-activity gating: while the user's desktop VRCX-0 is
+    // actively syncing, the server keeps its own VRChat websocket off.
+    let pause_gate = config
+        .realtime_auto_gate
+        .then(realtime_gate::PauseGate::new);
+    let transport_wrapper = pause_gate.as_ref().map(|gate| {
+        let gate = gate.clone();
+        Arc::new(
+            move |transport: Arc<dyn vrcx_0_application_realtime::RealtimeTransport>| {
+                Arc::new(realtime_gate::GatedRealtimeTransport::new(
+                    transport,
+                    gate.clone(),
+                )) as Arc<dyn vrcx_0_application_realtime::RealtimeTransport>
+            },
+        ) as vrcx_0_composition::RealtimeTransportWrapper
+    });
     let state = match ServerRuntimeHostState::new(ServerRuntimeHostOptions {
         realtime_origin: String::new(),
         launched_from_autostart: false,
@@ -71,6 +89,7 @@ async fn async_main() -> ExitCode {
         app_version: product_app_version(),
         database_maintenance_cache_dir: None,
         task_executor: Arc::new(TokioRuntimeTaskExecutor),
+        realtime_transport_wrapper: transport_wrapper,
     }) {
         Ok(state) => Arc::new(state),
         Err(error) => {
@@ -117,6 +136,13 @@ async fn async_main() -> ExitCode {
     // Dual realtime sessions (desktop + server) can double-record feed
     // rows; users running the desktop as primary can turn the server's
     // own feed logging off.
+    if let Some(gate) = pause_gate.clone() {
+        realtime_supervisor::spawn(Arc::clone(&state), gate);
+        tracing::info!(
+            "realtime mode: auto (server pauses its VRChat session while a desktop device is active)"
+        );
+    }
+
     if config.feed_logging == Some(false) {
         if let Err(error) = state.local_data().set_feed_persistence_disabled(true) {
             tracing::warn!(error = %error, "failed to disable server feed logging");

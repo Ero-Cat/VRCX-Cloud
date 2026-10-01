@@ -581,7 +581,6 @@ const initialState: RuntimeStoreState = {
     groupInstances: createGroupInstancesState(),
     systemHosts: {
         databaseUpgradeOpen: false,
-        updaterOpen: false,
         changelogOpen: false,
         keyboardShortcutsOpen: false,
         proxySettingsOpen: false,

@@ -6,23 +6,16 @@ import vrchatAuthRepository from '@/repositories/vrchatAuthRepository';
 import {
     addFeedHiddenUserPreference,
     setBoolConfigPreference,
-    setGameLogPersistenceDisabledPreference,
     setFeedPersistenceDisabledPreference,
     setCropInstancePrintsPreference,
     setIntConfigPreference,
     setLocalFavoriteFriendsGroupsPreference,
-    setOverlayActivityFiltersPreference,
     setProxyEnabledPreference,
     setStringConfigPreference,
-    setHmdNotificationActivityFiltersPreference,
     setTableLimitsPreference,
     setTrustColorPreference,
     setUserGeneratedContentPathPreference,
-    setVrNotificationActivityFiltersPreference,
-    setDesktopNotificationActivityFiltersPreference,
     setWebhookActivityFiltersPreference,
-    setTtsNotificationActivityFiltersPreference,
-    setWristOverlayEnabledPreference,
     loadTrustColorPreference,
     removeFeedHiddenUserPreference,
     resetTrustColorsPreference
@@ -50,7 +43,7 @@ import {
 import { useRuntimeStore } from '@/state/runtimeStore';
 
 import type { createDefaultSettingsPrefs } from './settingsDefaultPrefs';
-import { isValidFontFamilyList, parseIntegerInput } from './settingsValues';
+import { parseIntegerInput } from './settingsValues';
 import { createSettingsMaintenanceActions } from './useSettingsMaintenanceActions';
 import { useSettingsPreferenceActions } from './useSettingsPreferenceActions';
 
@@ -69,14 +62,8 @@ type SettingsPagePrefsSetter = (
 type SettingsActionsDeps = Pick<
     SettingsPreferenceActionDeps,
     | 'commit'
-    | 'customFontDraft'
     | 'localFavoriteFriendsGroups'
     | 'prefs'
-    | 'setConfigTreeData'
-    | 'setCustomFontDialogOpen'
-    | 'setCustomFontDraft'
-    | 'setCustomFontOptions'
-    | 'setCustomFontOptionsLoading'
     | 'setLocalFavoriteFriendsGroups'
     | 'setOnlineVisitCount'
     | 'setSqliteTableSizes'
@@ -87,30 +74,19 @@ type SettingsActionsDeps = Pick<
 > &
     Pick<
         SettingsMaintenanceActionDeps,
-        | 'purgePeriod'
-        | 'setAppDataDirState'
-        | 'setPurgeDialogOpen'
-        | 'setPurgeInProgress'
+        'purgePeriod' | 'setPurgeDialogOpen' | 'setPurgeInProgress'
     > & { setPrefs: SettingsPagePrefsSetter };
 
 export function useSettingsActions(deps: SettingsActionsDeps) {
-    const { t, i18n } = useTranslation();
-    const alert = useModalStore((state) => state.alert);
+    const { t } = useTranslation();
     const confirm = useModalStore((state) => state.confirm);
-    const prompt = useModalStore((state) => state.prompt);
     const currentUserId = useRuntimeStore((state) => state.auth.currentUserId);
     const currentUserEndpoint = useRuntimeStore(
         (state) => state.auth.currentUserEndpoint
     );
-    const isGameRunning = useRuntimeStore(
-        (state) => state.gameState.isGameRunning
-    );
     const auth = {
         currentUserId,
         currentUserEndpoint
-    };
-    const gameState = {
-        isGameRunning
     };
     const tableMaxSizeValue = Number.parseInt(
         deps.tableLimitsDraft.maxTableSize,
@@ -149,39 +125,27 @@ export function useSettingsActions(deps: SettingsActionsDeps) {
         applyAppFontPreferences,
         auth,
         cleanupAvatarFeedHistory: commands.appAvatarFeedHistoryCleanup,
-        alert,
         configRepository,
         confirm,
-        gameState,
-        isValidFontFamilyList,
-        language: i18n.language,
-        loadTrustColorPreference,
         cropAllPrints: commands.appCropAllPrints,
         getUgcPhotoLocation: commands.appGetUgcPhotoLocation,
         normalizeAppCjkFontPack,
         normalizeAppFontFamily,
         normalizePreferenceSnapshot,
         parseIntegerInput,
-        prompt,
+        loadTrustColorPreference,
         resetTrustColorsPreference,
         setBoolConfigPreference,
-        setGameLogPersistenceDisabledPreference,
         setFeedPersistenceDisabledPreference,
         setCropInstancePrintsPreference,
         setIntConfigPreference,
         setLocalFavoriteFriendsGroupsPreference,
-        setOverlayActivityFiltersPreference,
         setProxyEnabledPreference,
         setStringConfigPreference,
-        setHmdNotificationActivityFiltersPreference,
         setTableLimitsPreference,
         setTrustColorPreference,
         setUserGeneratedContentPathPreference,
-        setVrNotificationActivityFiltersPreference,
-        setDesktopNotificationActivityFiltersPreference,
         setWebhookActivityFiltersPreference,
-        setTtsNotificationActivityFiltersPreference,
-        setWristOverlayEnabledPreference,
         t,
         tableLimitsSaveDisabled,
         toast,

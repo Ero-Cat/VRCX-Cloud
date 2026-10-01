@@ -1,4 +1,4 @@
-import { CoffeeIcon, HeartIcon, type LucideIcon } from 'lucide-react';
+import { HeartIcon, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -25,7 +25,7 @@ import {
 
 const WORDMARK_FONT_LINK_ID = 'vrcx-0-about-wordmark-font';
 const WORDMARK_FONT_URL =
-    'https://fonts.googleapis.com/css2?family=Jost:wght@500&text=VRCX-0&display=swap';
+    'https://fonts.googleapis.com/css2?family=Jost:wght@500&text=VRCX-Cloud&display=swap';
 
 const PLATFORM_LABELS: Record<string, string> = {
     windows: 'Windows',
@@ -42,21 +42,9 @@ type AboutActionLink = {
 
 const SUPPORT_LINKS: AboutActionLink[] = [
     {
-        key: 'github-sponsors',
-        label: 'GitHub Sponsors',
-        href: links.githubSponsors,
-        icon: HeartIcon
-    },
-    {
-        key: 'kofi',
-        label: 'Ko-fi',
-        href: links.kofi,
-        icon: CoffeeIcon
-    },
-    {
-        key: 'afdian',
-        label: '爱发电',
-        href: links.afdian,
+        key: 'github-issues',
+        label: 'GitHub Issues',
+        href: links.issues,
         icon: HeartIcon
     }
 ];
@@ -220,7 +208,7 @@ export function AboutVrcxDialog({
                         className="text-4xl leading-none font-medium tracking-normal select-none"
                         style={{ fontFamily: "'Jost', var(--font-sans)" }}
                     >
-                        VRCX-0
+                        VRCX-Cloud
                     </DialogTitle>
                     <DialogDescription className="mt-3 text-[13px]">
                         {t('view.about.tagline')}

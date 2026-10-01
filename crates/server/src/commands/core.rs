@@ -126,4 +126,105 @@ pub fn register(registry: &mut CommandRegistry) {
             ok(state.remote_sync().run_cycle_now().await?)
         },
     );
+    registry.register(
+        "sync__bootstrap_progress",
+        |state: Arc<ServerRuntimeHostState>, _args| async move {
+            ok(state
+                .remote_sync()
+                .current()
+                .map(|engine| engine.bootstrap_progress())
+                .unwrap_or_default())
+        },
+    );
+    registry.register(
+        "sync__test_connection",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let input: vrcx_0_contracts::SyncConnectionInput = arg(&args, "connection")?;
+            let result = state
+                .remote_sync()
+                .test_connection(
+                    &input.host,
+                    input.port,
+                    &input.user,
+                    input.password.as_deref(),
+                    &input.database,
+                    input.tls_verify,
+                    input.allow_plaintext,
+                )
+                .await;
+            ok(result)
+        },
+    );
+    registry.register(
+        "sync__configure",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let enabled: Option<bool> = serde_json::from_value(
+                args.get("enabled")
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null),
+            )
+            .map_err(|e| ApiError::BadRequest(format!("invalid `enabled`: {e}")))?;
+            let interval_sec: Option<i64> = serde_json::from_value(
+                args.get("intervalSec")
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null),
+            )
+            .map_err(|e| ApiError::BadRequest(format!("invalid `intervalSec`: {e}")))?;
+            let connection: Option<vrcx_0_contracts::SyncConnectionInput> = serde_json::from_value(
+                args.get("connection")
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null),
+            )
+            .map_err(|e| ApiError::BadRequest(format!("invalid `connection`: {e}")))?;
+
+            let mut entries: Vec<vrcx_0_runtime_host_server::local_data::ConfigWriteEntry> =
+                Vec::new();
+            let mut entry = |key: &str, value: serde_json::Value| {
+                entries.push(vrcx_0_runtime_host_server::local_data::ConfigWriteEntry {
+                    key: key.to_string(),
+                    value: value.to_string(),
+                });
+            };
+            if let Some(enabled) = enabled {
+                entry("remoteSync.enabled", serde_json::json!(enabled));
+            }
+            if let Some(fields) = connection {
+                entry("remoteSync.host", serde_json::json!(fields.host.trim()));
+                if (1..65536).contains(&fields.port) {
+                    entry("remoteSync.port", serde_json::json!(fields.port));
+                }
+                entry("remoteSync.user", serde_json::json!(fields.user.trim()));
+                if let Some(password) = fields.password {
+                    if !password.trim().is_empty() {
+                        entry("remoteSync.password", serde_json::json!(password.trim()));
+                    }
+                }
+                entry(
+                    "remoteSync.database",
+                    serde_json::json!(fields.database.trim()),
+                );
+                entry("remoteSync.tlsVerify", serde_json::json!(fields.tls_verify));
+                entry(
+                    "remoteSync.allowPlaintext",
+                    serde_json::json!(fields.allow_plaintext),
+                );
+            }
+            if let Some(interval) = interval_sec {
+                entry("remoteSync.intervalSec", serde_json::json!(interval.max(5)));
+            }
+            if !entries.is_empty() {
+                let state_for_write = Arc::clone(&state);
+                run_blocking("sync configure", move || {
+                    state_for_write.config_set_values(entries)
+                })
+                .await?;
+            }
+            let host = state.remote_sync();
+            let engine_running = host.current().is_some();
+            if enabled.is_some() || engine_running {
+                host.restart_from_config().await?;
+            }
+            ok(host.status().await)
+        },
+    );
 }

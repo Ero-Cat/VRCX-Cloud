@@ -5,17 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { buildFeedFavoriteGroupOptions } from '@/domain/feed/feedFavoriteGroups';
 import { commands, type SavedGroupCollection } from '@/platform/tauri/bindings';
 import {
-    DEFAULT_HMD_NOTIFICATION_ACTIVITY_FILTERS,
     DEFAULT_OVERLAY_ACTIVITY_FILTER_PROFILE,
-    DEFAULT_TTS_NOTIFICATION_ACTIVITY_FILTERS,
     DEFAULT_WEBHOOK_ACTIVITY_FILTERS,
     defaultOverlayActivityFilterProfileFromDefinitions,
     disabledOverlayActivityFilterProfileFromDefinitions,
-    hmdDefaultOverlayActivityFilterProfileFromDefinitions,
     normalizeOverlayActivityFilterProfile,
     normalizeOverlayActivityFilterProfileWithDefinitions,
-    normalizeOverlayActivityFilters,
-    normalizeOverlayActivityFiltersWithDefinitions,
     overlayActivityCategoriesFromDefinitions,
     overlayActivityDefinitionByKeyFromDefinitions,
     overlayActivityRawTypesByCategoryFromDefinitions,
@@ -23,7 +18,6 @@ import {
     type OverlayActivityCategory,
     type OverlayActivityFilterProfilePreference,
     type OverlayActivityFavoriteGroupKeys,
-    type OverlayActivityFiltersPreference,
     type OverlayActivityRule,
     type OverlayActivityScope,
     type OverlayActivityTypeDefinition
@@ -68,16 +62,6 @@ function selectedGroupKeys(groupKeys: OverlayActivityFavoriteGroupKeys) {
     return Array.isArray(groupKeys) ? groupKeys : [];
 }
 
-type WristFeedNotificationsDialogProps = {
-    open: boolean;
-    onOpenChange(open: boolean): void;
-    value: OverlayActivityFiltersPreference;
-    onSave(
-        value: OverlayActivityFiltersPreference,
-        definitions: OverlayActivityTypeDefinition[]
-    ): Promise<OverlayActivityFiltersPreference | null | undefined>;
-};
-
 type NotificationProfileDialogProps = {
     open: boolean;
     onOpenChange(open: boolean): void;
@@ -95,12 +79,7 @@ type OverlayActivityFilterDialogProps = Omit<
     onSave(
         value: OverlayActivityFilterProfilePreference,
         definitions: OverlayActivityTypeDefinition[]
-    ): Promise<
-        | OverlayActivityFiltersPreference
-        | OverlayActivityFilterProfilePreference
-        | null
-        | undefined
-    >;
+    ): Promise<OverlayActivityFilterProfilePreference | null | undefined>;
     titleKey: string;
     descriptionKey: string;
     defaultProfileFromDefinitions?: (
@@ -121,96 +100,6 @@ function normalizeDraft(
         : normalizeOverlayActivityFilterProfile(value);
 }
 
-export function WristFeedNotificationsDialog({
-    open,
-    onOpenChange,
-    value,
-    onSave
-}: WristFeedNotificationsDialogProps) {
-    const wristProfile = normalizeOverlayActivityFilters(value).wrist;
-    return (
-        <OverlayActivityFilterDialog
-            open={open}
-            onOpenChange={onOpenChange}
-            titleKey="dialog.wrist_feed_notifications.title"
-            descriptionKey="dialog.wrist_feed_notifications.description"
-            value={{ version: 1, types: wristProfile.types }}
-            onSave={async (profile, definitions) =>
-                onSave(
-                    normalizeOverlayActivityFiltersWithDefinitions(
-                        {
-                            version: 1,
-                            wrist: {
-                                types: profile.types
-                            }
-                        },
-                        definitions
-                    ),
-                    definitions
-                )
-            }
-        />
-    );
-}
-
-export function VrNotificationsDialog({
-    open,
-    onOpenChange,
-    value,
-    onSave
-}: NotificationProfileDialogProps) {
-    return (
-        <OverlayActivityFilterDialog
-            open={open}
-            onOpenChange={onOpenChange}
-            titleKey="dialog.vr_notifications.title"
-            descriptionKey="dialog.vr_notifications.description"
-            value={value}
-            onSave={onSave}
-        />
-    );
-}
-
-export function DesktopNotificationsDialog({
-    open,
-    onOpenChange,
-    value,
-    onSave
-}: NotificationProfileDialogProps) {
-    return (
-        <OverlayActivityFilterDialog
-            open={open}
-            onOpenChange={onOpenChange}
-            titleKey="dialog.desktop_notifications.title"
-            descriptionKey="dialog.desktop_notifications.description"
-            value={value}
-            onSave={onSave}
-        />
-    );
-}
-
-export function HmdNotificationsDialog({
-    open,
-    onOpenChange,
-    value,
-    onSave
-}: NotificationProfileDialogProps) {
-    return (
-        <OverlayActivityFilterDialog
-            open={open}
-            onOpenChange={onOpenChange}
-            titleKey="dialog.hmd_notifications.title"
-            descriptionKey="dialog.hmd_notifications.description"
-            value={value}
-            defaultProfileFromDefinitions={
-                hmdDefaultOverlayActivityFilterProfileFromDefinitions
-            }
-            fallbackDefaultProfile={DEFAULT_HMD_NOTIFICATION_ACTIVITY_FILTERS}
-            onSave={onSave}
-        />
-    );
-}
-
 export function WebhookNotificationsDialog({
     open,
     onOpenChange,
@@ -228,25 +117,6 @@ export function WebhookNotificationsDialog({
                 disabledOverlayActivityFilterProfileFromDefinitions
             }
             fallbackDefaultProfile={DEFAULT_WEBHOOK_ACTIVITY_FILTERS}
-            onSave={onSave}
-        />
-    );
-}
-
-export function TtsNotificationsDialog({
-    open,
-    onOpenChange,
-    value,
-    onSave
-}: NotificationProfileDialogProps) {
-    return (
-        <OverlayActivityFilterDialog
-            open={open}
-            onOpenChange={onOpenChange}
-            titleKey="dialog.tts_notifications.title"
-            descriptionKey="dialog.tts_notifications.description"
-            value={value}
-            fallbackDefaultProfile={DEFAULT_TTS_NOTIFICATION_ACTIVITY_FILTERS}
             onSave={onSave}
         />
     );

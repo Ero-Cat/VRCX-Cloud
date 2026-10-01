@@ -121,7 +121,6 @@ type StatusBarFooterModel = {
     onProxyTest: () => Promise<void>;
     onSetClockPopoverValue: (index: number, open: boolean) => void;
     onSetZoomLevel: (nextZoom: number) => void;
-    onStartBackgroundMode: () => void;
     onStepZoomLevel: (delta: number) => void;
     onUpdateClockTimezone: (index: number, offsetValue: string | null) => void;
     proxyEditor: StatusBarProxyEditorState;

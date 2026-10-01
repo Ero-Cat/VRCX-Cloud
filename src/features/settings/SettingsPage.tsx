@@ -4,11 +4,8 @@ import {
     CloudCogIcon,
     ImageIcon,
     type LucideIcon,
-    MessageSquareIcon,
     MonitorIcon,
     PaletteIcon,
-    PlugIcon,
-    RectangleGogglesIcon,
     TerminalIcon,
     UsersIcon
 } from 'lucide-react';
@@ -24,15 +21,12 @@ import { Tabs, TabsList, TabsTrigger } from '@/ui/shadcn/tabs';
 
 import { SettingsAdvancedTab } from './components/settings-tabs/SettingsAdvancedTab';
 import { SettingsAiTab } from './components/settings-tabs/SettingsAiTab';
-import { SettingsFeedbackTab } from './components/settings-tabs/SettingsFeedbackTab';
-import { SettingsIntegrationsTab } from './components/settings-tabs/SettingsIntegrationsTab';
 import { SettingsInterfaceTab } from './components/settings-tabs/SettingsInterfaceTab';
 import { SettingsMediaTab } from './components/settings-tabs/SettingsMediaTab';
 import { SettingsNotificationsTab } from './components/settings-tabs/SettingsNotificationsTab';
 import { SettingsSocialTab } from './components/settings-tabs/SettingsSocialTab';
 import { SettingsSyncTab } from './components/settings-tabs/SettingsSyncTab';
 import { SettingsSystemTab } from './components/settings-tabs/SettingsSystemTab';
-import { SettingsVrTab } from './components/settings-tabs/SettingsVrTab';
 import { SettingsDialogs } from './components/SettingsDialogs';
 import {
     SettingsPageStateProvider,
@@ -45,12 +39,9 @@ const SETTINGS_TAB_ICONS: Record<string, LucideIcon> = {
     social: UsersIcon,
     ai: BotIcon,
     notifications: BellIcon,
-    vr: RectangleGogglesIcon,
     media: ImageIcon,
-    integrations: PlugIcon,
     sync: CloudCogIcon,
-    advanced: TerminalIcon,
-    feedback: MessageSquareIcon
+    advanced: TerminalIcon
 };
 
 export function SettingsPage() {
@@ -97,13 +88,10 @@ function SettingsPageContent() {
                     <SettingsInterfaceTab />
                     <SettingsSocialTab />
                     <SettingsNotificationsTab />
-                    <SettingsVrTab />
                     <SettingsMediaTab />
                     <SettingsAiTab active={shell.activeSettingsTab === 'ai'} />
-                    <SettingsIntegrationsTab />
                     <SettingsSyncTab />
                     <SettingsAdvancedTab />
-                    <SettingsFeedbackTab />
                 </div>
             </Tabs>
             <SettingsDialogs />

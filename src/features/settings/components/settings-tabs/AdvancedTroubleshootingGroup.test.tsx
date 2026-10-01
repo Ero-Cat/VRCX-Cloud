@@ -37,10 +37,6 @@ const labels: Record<string, string> = {
         'Online users',
     'view.settings.advanced.advanced_ui.troubleshooting.refresh_online_users':
         'Refresh online users',
-    'view.settings.advanced.advanced_ui.troubleshooting.vrchat_config':
-        'VRChat config',
-    'view.settings.advanced.advanced_ui.troubleshooting.view_config': 'View…',
-    'view.settings.advanced.advanced_ui.troubleshooting.hide_config': 'Hide',
     'view.settings.general.logging.header': 'Logging',
     'view.settings.general.logging.resource_load': 'Resource load logging',
     'view.settings.advanced.advanced.cache_debug.udon_exception_logging':
@@ -63,16 +59,12 @@ function createProps(
     overrides: Partial<TroubleshootingProps> = {}
 ): TroubleshootingProps {
     return {
-        configTreeData: {},
-        onClearConfigTreeData: vi.fn(),
         onLogResourceLoadChange: vi.fn(),
-        onRefreshConfigTreeData: vi.fn(),
         onRefreshOnlineVisits: vi.fn(),
         onRefreshSqliteTableSizes: vi.fn(),
         onUdonExceptionLoggingChange: vi.fn(),
         onlineVisitCount: null,
         prefs: {
-            gameLogDisabled: false,
             feedPersistenceDisabled: false,
             logResourceLoad: false,
             udonExceptionLogging: false
@@ -159,46 +151,5 @@ describe('AdvancedTroubleshootingGroup', () => {
         await waitFor(() =>
             expect((button as HTMLButtonElement).disabled).toBe(false)
         );
-    });
-
-    it('loads VRChat config once and switches between View and Hide', async () => {
-        const user = userEvent.setup();
-        let resolveAction: (() => void) | undefined;
-        const onRefreshConfigTreeData = vi.fn(
-            () =>
-                new Promise<void>((resolve) => {
-                    resolveAction = resolve;
-                })
-        );
-        const onClearConfigTreeData = vi.fn();
-        const props = createProps({
-            onClearConfigTreeData,
-            onRefreshConfigTreeData
-        });
-        const view = renderGroup(props);
-        await openTools(user);
-
-        const viewButton = screen.getByRole('button', { name: 'View…' });
-        await user.click(viewButton);
-        fireEvent.click(viewButton);
-
-        expect(onRefreshConfigTreeData).toHaveBeenCalledOnce();
-        expect((viewButton as HTMLButtonElement).disabled).toBe(true);
-
-        resolveAction?.();
-        await waitFor(() =>
-            expect((viewButton as HTMLButtonElement).disabled).toBe(false)
-        );
-        view.rerender(
-            <TooltipProvider>
-                <AdvancedTroubleshootingGroup
-                    {...props}
-                    configTreeData={{ feature: true }}
-                />
-            </TooltipProvider>
-        );
-
-        await user.click(screen.getByRole('button', { name: 'Hide' }));
-        expect(onClearConfigTreeData).toHaveBeenCalledOnce();
     });
 });

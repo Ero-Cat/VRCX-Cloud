@@ -1,6 +1,13 @@
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
+import {
+    commands,
+    type NotificationWebhookFormat,
+    type WebhookDeliverySnapshot
+} from '@/platform/tauri/bindings';
+import { toast } from '@/services/toastService';
 import { usePreferencesStore } from '@/state/preferencesStore';
 
 import { useSettingsPageSection } from '../SettingsPageStateContext';
@@ -10,101 +17,113 @@ export function useSettingsNotificationsTabState() {
     const notifications = useSettingsPageSection('notifications');
     const prefs = usePreferencesStore(
         useShallow((state) => ({
-            desktopToast: state.desktopToast,
-            afkDesktopToast: state.afkDesktopToast,
-            desktopNotificationSound: state.desktopNotificationSound,
-            notificationDoNotDisturbEndOnGameStart:
-                state.notificationDoNotDisturbEndOnGameStart,
-            notificationTTS: state.notificationTTS,
-            notificationTTSVoiceNative: state.notificationTTSVoiceNative,
-            notificationTTSVolume: state.notificationTTSVolume,
-            notificationTTSNameMode: state.notificationTTSNameMode,
-            notificationTTSNickName: state.notificationTTSNickName
+            webhookEnabled: state.webhookEnabled,
+            webhookAuthEventsEnabled: state.webhookAuthEventsEnabled,
+            webhookUrl: state.webhookUrl,
+            webhookFormat: state.webhookFormat,
+            webhookFields: state.webhookFields
         }))
     );
     const {
-        desktopToastOptions,
-        notificationTtsOptions,
-        notificationTtsNameModeOptions,
-        ttsVoices,
-        notificationTtsTestVisible,
-        notificationTtsTest,
-        setDesktopNotificationsDialogOpen,
-        setTtsNotificationsDialogOpen,
+        setWebhookNotificationsDialogOpen,
+        setPrefs,
         saveStringPreference,
-        saveBoolPreference,
-        savePreferenceValue,
-        setIntConfigPreference,
-        saveNotificationTtsMode,
-        saveNotificationTtsVoice,
-        setNotificationTtsTestVisible,
-        setNotificationTtsTest,
-        speakNotificationTts
+        saveBoolPreference
     } = notifications;
+    const [webhookDeliverySnapshot, setWebhookDeliverySnapshot] =
+        useState<WebhookDeliverySnapshot | null>(null);
+    const [webhookDeliveryLoading, setWebhookDeliveryLoading] = useState(true);
+
+    const refreshWebhookDeliveryStatus = useCallback(
+        async (showError: boolean) => {
+            setWebhookDeliveryLoading(true);
+            try {
+                setWebhookDeliverySnapshot(
+                    await commands.appWebhookDeliverySnapshotGet()
+                );
+            } catch (error: unknown) {
+                if (showError) {
+                    toast.add({
+                        type: 'error',
+                        title:
+                            error instanceof Error
+                                ? error.message
+                                : String(error)
+                    });
+                }
+            } finally {
+                setWebhookDeliveryLoading(false);
+            }
+        },
+        []
+    );
+
+    useEffect(() => {
+        void refreshWebhookDeliveryStatus(false);
+    }, [refreshWebhookDeliveryStatus]);
 
     return {
         prefs,
-        desktopToastOptions,
-        notificationTtsOptions,
-        notificationTtsNameModeOptions,
-        ttsVoices,
-        notificationTtsTestVisible,
-        notificationTtsTest,
-        onOpenDesktopNotificationFiltersDialog: () =>
-            setDesktopNotificationsDialogOpen(true),
-        onOpenTtsNotificationFiltersDialog: () =>
-            setTtsNotificationsDialogOpen(true),
-        onDesktopToastChange: (value: string) => {
-            saveStringPreference('desktopToast', 'desktopToast', value);
+        webhookDeliverySnapshot,
+        webhookDeliveryLoading,
+        onRefreshDeliveryStatus: () => {
+            void refreshWebhookDeliveryStatus(true);
         },
-        onAfkDesktopToastChange: (enabled: boolean) => {
-            saveBoolPreference('afkDesktopToast', 'afkDesktopToast', enabled);
+        onOpenWebhookNotificationFiltersDialog: () => {
+            setWebhookNotificationsDialogOpen(true);
         },
-        onDesktopNotificationSoundChange: (enabled: boolean) => {
+        onWebhookEnabledChange: (checked: boolean) => {
+            saveBoolPreference('webhookEnabled', 'webhookEnabled', checked);
+        },
+        onWebhookAuthEventsEnabledChange: (checked: boolean) => {
             saveBoolPreference(
-                'desktopNotificationSound',
-                'desktopNotificationSound',
-                enabled
+                'webhookAuthEventsEnabled',
+                'webhookAuthEventsEnabled',
+                checked
             );
         },
-        onNotificationDoNotDisturbEndOnGameStartChange: (enabled: boolean) => {
-            saveBoolPreference(
-                'notificationDoNotDisturbEndOnGameStart',
-                'notificationDoNotDisturbEndOnGameStart',
-                enabled
-            );
+        onWebhookUrlDraftChange: (value: string) => {
+            setPrefs((current) => ({
+                ...current,
+                webhookUrl: String(value ?? '')
+            }));
         },
-        onNotificationTtsModeChange: (value: string) => {
-            saveNotificationTtsMode(value);
+        onWebhookUrlBlur: (value: string) => {
+            saveStringPreference('webhookUrl', 'webhookUrl', value);
         },
-        onNotificationTtsVoiceChange: (value: string) => {
-            saveNotificationTtsVoice(value);
+        onWebhookFormatChange: (value: NotificationWebhookFormat) => {
+            saveStringPreference('webhookFormat', 'webhookFormat', value);
         },
-        onNotificationTtsVolumeChange: (value: number) => {
-            const volume = Math.min(100, Math.max(0, Math.round(value)));
-            savePreferenceValue('notificationTTSVolume', volume, () =>
-                setIntConfigPreference('notificationTTSVolume', volume, {
-                    min: 0,
-                    max: 100,
-                    fallback: 100
+        onWebhookFieldsChange: (value: string) => {
+            saveStringPreference('webhookFields', 'webhookFields', value);
+        },
+        onTestWebhook: () => {
+            const webhookFormat =
+                prefs.webhookFormat === 'discord' ? 'discord' : 'generic';
+            commands
+                .appWebhookSendTest(
+                    String(prefs.webhookUrl || ''),
+                    webhookFormat,
+                    String(prefs.webhookFields || '')
+                )
+                .then((outcome) => {
+                    toast.add({
+                        type: 'success',
+                        title: t(
+                            'view.settings.notifications.notifications.webhook.test_sent',
+                            { status: outcome.status }
+                        )
+                    });
                 })
-            );
-        },
-        onNotificationTtsNameModeChange: (value: string) => {
-            saveStringPreference(
-                'notificationTTSNameMode',
-                'notificationTTSNameMode',
-                value
-            );
-        },
-        onNotificationTtsTestVisibleChange: setNotificationTtsTestVisible,
-        onNotificationTtsTestChange: setNotificationTtsTest,
-        onSpeakNotificationTts: (message: string) =>
-            speakNotificationTts(
-                message ||
-                    t(
-                        'view.settings.notifications.notifications.text_to_speech.tts_test_placeholder'
-                    )
-            )
+                .catch((error: unknown) => {
+                    toast.add({
+                        type: 'error',
+                        title:
+                            error instanceof Error
+                                ? error.message
+                                : String(error)
+                    });
+                });
+        }
     };
 }

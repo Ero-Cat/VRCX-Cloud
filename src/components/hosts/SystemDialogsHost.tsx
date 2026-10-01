@@ -16,8 +16,6 @@ import { DatabaseMaintenanceDialog } from './system-dialogs/DatabaseMaintenanceD
 import { DatabaseUpgradeDialog } from './system-dialogs/DatabaseUpgradeDialog';
 import { DataDirMigrationDialog } from './system-dialogs/DataDirMigrationDialog';
 import { ProfileBackupDialogs } from './system-dialogs/ProfileBackupDialogs';
-import { UpdaterDialog } from './system-dialogs/UpdaterDialog';
-import { UpdateAvailableToastHost } from './UpdateAvailableToastHost';
 
 const ChangelogDialog = lazy(() =>
     import('./system-dialogs/ChangelogDialog').then((module) => ({
@@ -51,9 +49,6 @@ const ProxySettingsDialog = lazy(() =>
 );
 
 export function SystemDialogsHost() {
-    const updaterOpen = useRuntimeStore(
-        (state) => state.systemHosts.updaterOpen
-    );
     const changelogOpen = useRuntimeStore(
         (state) => state.systemHosts.changelogOpen
     );
@@ -128,13 +123,6 @@ export function SystemDialogsHost() {
             <ProfileRestoreResultHost />
             <DataDirCleanupHost />
             <DataDirMigrationDialog />
-            <UpdateAvailableToastHost />
-            <UpdaterDialog
-                open={updaterOpen}
-                onOpenChange={(open: boolean) =>
-                    setSystemHostOpen('updaterOpen', open)
-                }
-            />
             <MountOnFirstOpen open={changelogOpen}>
                 <ChangelogDialog
                     open={changelogOpen}

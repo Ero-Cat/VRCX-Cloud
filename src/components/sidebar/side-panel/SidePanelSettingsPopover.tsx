@@ -24,7 +24,6 @@ import { Separator } from '@/ui/shadcn/separator';
 import { Spinner } from '@/ui/shadcn/spinner';
 import { Switch } from '@/ui/shadcn/switch';
 
-import { SidebarAutoHideSetting } from './SidebarAutoHideSetting';
 import { SidePanelSettingRow as SettingRow } from './SidePanelSettingRow';
 import type {
     SidePanelBooleanPreferenceKey,
@@ -206,7 +205,6 @@ export function SidePanelSettingsPopover({
                     <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                         {t('side_panel.settings.display')}
                     </span>
-                    <SidebarAutoHideSetting />
                     <SettingRow
                         id="side-panel-group-by-instance"
                         label={t('side_panel.settings.group_by_instance')}

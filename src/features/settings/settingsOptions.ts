@@ -1,4 +1,3 @@
-import type { TranslationProvider } from '@/platform/tauri/bindings';
 import { AVATAR_AUTO_CLEANUP_OPTIONS } from '@/shared/constants/settings';
 
 export const notificationLayoutOptions = [
@@ -7,63 +6,6 @@ export const notificationLayoutOptions = [
         'view.settings.notifications.notifications.layout_notification_center'
     ],
     ['table', 'view.settings.notifications.notifications.layout_table']
-] as const;
-
-export const desktopToastOptions = [
-    ['Never', 'view.settings.notifications.notifications.conditions.never'],
-    [
-        'Desktop Mode',
-        'view.settings.notifications.notifications.conditions.desktop'
-    ],
-    [
-        'Inside VR',
-        'view.settings.notifications.notifications.conditions.inside_vr'
-    ],
-    [
-        'Outside VR',
-        'view.settings.notifications.notifications.conditions.outside_vr'
-    ],
-    [
-        'Game Running',
-        'view.settings.notifications.notifications.conditions.inside_vrchat'
-    ],
-    [
-        'Game Closed',
-        'view.settings.notifications.notifications.conditions.outside_vrchat'
-    ],
-    ['Always', 'view.settings.notifications.notifications.conditions.always']
-] as const;
-
-export const notificationTtsOptions = [
-    ['Never', 'view.settings.notifications.notifications.conditions.never'],
-    [
-        'Inside VR',
-        'view.settings.notifications.notifications.conditions.inside_vr'
-    ],
-    [
-        'Game Running',
-        'view.settings.notifications.notifications.conditions.inside_vrchat'
-    ],
-    [
-        'Game Closed',
-        'view.settings.notifications.notifications.conditions.outside_vrchat'
-    ],
-    ['Always', 'view.settings.notifications.notifications.conditions.always']
-] as const;
-
-export const notificationTtsNameModeOptions = [
-    [
-        'username',
-        'view.settings.notifications.notifications.text_to_speech.name_mode_username'
-    ],
-    [
-        'note',
-        'view.settings.notifications.notifications.text_to_speech.name_mode_note'
-    ],
-    [
-        'usernameAndNote',
-        'view.settings.notifications.notifications.text_to_speech.name_mode_username_and_note'
-    ]
 ] as const;
 
 export const avatarAutoCleanupOptions = AVATAR_AUTO_CLEANUP_OPTIONS;
@@ -101,37 +43,15 @@ export const sqliteTableSizeRows = [
     ['event', 'view.settings.advanced.advanced.sqlite_table_size.event']
 ] as const;
 
-export const translationProviderOptions = [
-    {
-        value: 'google',
-        labelKey: 'dialog.translation_api.mode_google'
-    },
-    {
-        value: 'openai',
-        label: 'OpenAI'
-    },
-    {
-        value: 'deepl',
-        labelKey: 'dialog.translation_api.mode_deepl'
-    }
-] satisfies ReadonlyArray<{
-    value: TranslationProvider;
-    label?: string;
-    labelKey?: string;
-}>;
-
 export const settingsTabs = [
     ['system', 'view.settings.category.system'],
     ['interface', 'view.settings.category.interface'],
     ['social', 'view.settings.category.social'],
     ['notifications', 'view.settings.category.notifications'],
-    ['vr', 'view.settings.category.vr'],
     ['media', 'view.settings.category.media'],
     ['ai', 'view.settings.category.ai'],
-    ['integrations', 'view.settings.category.integrations'],
     ['sync', 'view.settings.category.sync'],
-    ['advanced', 'view.settings.category.advanced'],
-    ['feedback', 'view.settings.category.feedback']
+    ['advanced', 'view.settings.category.advanced']
 ];
 
 export function resolveActiveSettingsTab(

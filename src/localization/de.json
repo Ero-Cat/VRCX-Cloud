@@ -5,7 +5,7 @@
         "theme_catalog_title": "Zurzeit sind keine Themes verfügbar",
         "theme_catalog_description": "Community-Themes erscheinen hier, sobald der Katalog verfügbar ist.",
         "installed_themes_title": "Noch keine Community-Themes installiert",
-        "installed_themes_description": "Durchsuche den Katalog und installiere ein Theme, um VRCX-0 einen neuen Look zu geben.",
+        "installed_themes_description": "Durchsuche den Katalog und installiere ein Theme, um VRCX-Cloud einen neuen Look zu geben.",
         "browse_themes": "Themes entdecken",
         "app_launcher_title": "Lege fest, was mit VRChat startet",
         "app_launcher_description": "Füge eine App oder Verknüpfung hinzu und lege fest, wann sie geöffnet werden soll.",
@@ -182,7 +182,7 @@
                 "title": "Weltensammlung importieren?",
                 "description": "\"{title}\" von {author} · {count} Welten",
                 "worlds_preview": "Enthält: {names}",
-                "confirm": "Zu VRCX-0 importieren",
+                "confirm": "Zu VRCX-Cloud importieren",
                 "cancel": "Abbrechen"
             },
             "toast": {
@@ -200,7 +200,7 @@
         "title": "Datenordner ändern",
         "description": "Wähle, welche Daten du im neuen Ordner verwenden möchtest.",
         "completed_title": "Zum Abschließen neu starten",
-        "completed_description": "Starte VRCX-0 neu, um den neuen Ordner zu verwenden.",
+        "completed_description": "Starte VRCX-Cloud neu, um den neuen Ordner zu verwenden.",
         "error_short": "Datenordner konnte nicht geändert werden",
         "start": "Kopieren und wechseln",
         "restart_now": "Jetzt neu starten",
@@ -217,8 +217,8 @@
         },
         "target": {
             "empty": "Der ausgewählte Ordner ist leer.",
-            "existingProfile": "Die VRCX-0-Daten in diesem Ordner werden ersetzt. Vorher wird eine Kopie davon aufbewahrt.",
-            "foreignContent": "Dieser Ordner enthält auch andere Dateien. VRCX-0 ändert nur seine eigenen Dateien."
+            "existingProfile": "Die VRCX-Cloud-Daten in diesem Ordner werden ersetzt. Vorher wird eine Kopie davon aufbewahrt.",
+            "foreignContent": "Dieser Ordner enthält auch andere Dateien. VRCX-Cloud ändert nur seine eigenen Dateien."
         },
         "phase": {
             "preparing": "Daten werden vorbereitet…",
@@ -232,14 +232,14 @@
             "databaseUnavailable": "Die Daten können gerade nicht kopiert werden. Versuche es später noch einmal.",
             "pendingRestore": "Schließe zuerst die ausstehende Profilwiederherstellung ab oder brich sie ab.",
             "pendingLegacyMigration": "Schließe zuerst die ausstehende Altdatenmigration ab.",
-            "pendingMigration": "Ein Datenordnerwechsel steht aus. Starte VRCX-0 neu.",
+            "pendingMigration": "Ein Datenordnerwechsel steht aus. Starte VRCX-Cloud neu.",
             "cleanupConflict": "Verarbeite zuerst die alten Daten, bevor du zu diesem Ordner zurückkehrst.",
             "insufficientSpace": "Zum Verschieben der Daten ist nicht genügend freier Speicherplatz verfügbar.",
-            "invalidAdoptionTarget": "Dieser Ordner enthält keine verwendbaren VRCX-0-Daten. Wähle einen anderen Ordner.",
-            "invalidFreshStartTarget": "Dieser Ordner enthält bereits VRCX-0-Daten. Wähle einen anderen Ordner, um neu anzufangen.",
-            "copyFailed": "Die Daten konnten nicht kopiert werden. VRCX-0 verwendet weiterhin den bisherigen Ordner.",
-            "commitFailed": "Die kopierten Daten konnten nicht gespeichert werden. VRCX-0 verwendet weiterhin den bisherigen Ordner.",
-            "pointerCommitFailed": "Der neue Datenordner konnte nicht aktiviert werden. Starte VRCX-0 neu, um sicher fortzufahren.",
+            "invalidAdoptionTarget": "Dieser Ordner enthält keine verwendbaren VRCX-Cloud-Daten. Wähle einen anderen Ordner.",
+            "invalidFreshStartTarget": "Dieser Ordner enthält bereits VRCX-Cloud-Daten. Wähle einen anderen Ordner, um neu anzufangen.",
+            "copyFailed": "Die Daten konnten nicht kopiert werden. VRCX-Cloud verwendet weiterhin den bisherigen Ordner.",
+            "commitFailed": "Die kopierten Daten konnten nicht gespeichert werden. VRCX-Cloud verwendet weiterhin den bisherigen Ordner.",
+            "pointerCommitFailed": "Der neue Datenordner konnte nicht aktiviert werden. Starte VRCX-Cloud neu, um sicher fortzufahren.",
             "io": "Eine Datei im Datenordner konnte nicht gelesen oder geschrieben werden."
         },
         "warning": {
@@ -250,27 +250,27 @@
         "result": {
             "succeeded": "Datenordner geändert",
             "failed_title": "Der neue Datenordner konnte nicht verwendet werden",
-            "database_open_failed": "VRCX-0 verwendet weiterhin den ursprünglichen Ordner. Deine Daten sind unverändert.",
+            "database_open_failed": "VRCX-Cloud verwendet weiterhin den ursprünglichen Ordner. Deine Daten sind unverändert.",
             "interrupted_title": "Ordnerwechsel unterbrochen",
-            "interrupted": "VRCX-0 verwendet weiterhin den ursprünglichen Ordner. Du kannst es erneut versuchen."
+            "interrupted": "VRCX-Cloud verwendet weiterhin den ursprünglichen Ordner. Du kannst es erneut versuchen."
         },
         "cleanup": {
             "ready_title": "Datenordner geändert",
             "ready_description": "Die alten Daten liegen noch unter {path}.",
             "action": "Alte Daten bereinigen",
             "action_with_size": "Alte Daten bereinigen ({size})",
-            "confirm_title": "Alte VRCX-0-Daten endgültig löschen?",
-            "confirm_description": "Dadurch werden etwa {size} bekannte VRCX-0-Dateien aus {path} gelöscht. Unbekannte Dateien bleiben erhalten. Dies kann nicht rückgängig gemacht werden.",
-            "completed": "Alte VRCX-0-Daten bereinigt",
+            "confirm_title": "Alte VRCX-Cloud-Daten endgültig löschen?",
+            "confirm_description": "Dadurch werden etwa {size} bekannte VRCX-Cloud-Dateien aus {path} gelöscht. Unbekannte Dateien bleiben erhalten. Dies kann nicht rückgängig gemacht werden.",
+            "completed": "Alte VRCX-Cloud-Daten bereinigt",
             "freed": "{size} freigegeben.",
             "completed_with_skipped": "{size} freigegeben; {count} Elemente konnten nicht entfernt werden.",
             "settings_title": "Alte Daten können bereinigt werden",
-            "settings_description": "Alte VRCX-0-Daten liegen noch unter {path} ({size} Byte).",
+            "settings_description": "Alte VRCX-Cloud-Daten liegen noch unter {path} ({size} Byte).",
             "dismiss": "Behalten und nicht mehr erinnern",
             "dismissed": "Bereinigungserinnerungen deaktiviert"
         },
         "running_title": "Datenordner wird geändert",
-        "running_description": "Lass VRCX-0 geöffnet, bis der Vorgang abgeschlossen ist.",
+        "running_description": "Lass VRCX-Cloud geöffnet, bis der Vorgang abgeschlossen ist.",
         "start_existing": "Vorhandene Daten verwenden",
         "start_fresh": "Neuen Ordner verwenden",
         "new_folder": "Neuer Ordner",
@@ -282,7 +282,7 @@
     },
     "profile_backup": {
         "header": "Sichern & Wiederherstellen",
-        "tools_description": "VRCX-0-Daten sichern und wiederherstellen",
+        "tools_description": "VRCX-Cloud-Daten sichern und wiederherstellen",
         "automatic": "Automatische Sicherungen",
         "automatic_description": "Sicherungen regelmäßig im ausgewählten Ordner speichern.",
         "automatic_on": "Ein",
@@ -305,9 +305,9 @@
         "backup_now": "Jetzt sichern",
         "backup_now_confirm": "Sicherung erstellen",
         "restore": "Daten wiederherstellen",
-        "restore_description": "Wähle eine VRCX-0-Sicherungsdatei zum Wiederherstellen. VRCX-0 prüft sie und startet neu.",
+        "restore_description": "Wähle eine VRCX-Cloud-Sicherungsdatei zum Wiederherstellen. VRCX-Cloud prüft sie und startet neu.",
         "restore_from_backup": "Aus Sicherung wiederherstellen",
-        "file_filter": "VRCX-0-Sicherungen",
+        "file_filter": "VRCX-Cloud-Sicherungen",
         "automatic_running": "Automatische Sicherung läuft",
         "manual_running": "Sicherung läuft",
         "retryable_short": "Sicherung nicht gespeichert",
@@ -318,19 +318,19 @@
         "discard_backup": "Diese Sicherung verwerfen",
         "dismiss_error": "Ausblenden",
         "validating_restore": "Sicherung wird geprüft",
-        "restore_validation_description": "VRCX-0 kopiert und prüft die Sicherung, bevor sie wiederhergestellt werden kann.",
+        "restore_validation_description": "VRCX-Cloud kopiert und prüft die Sicherung, bevor sie wiederhergestellt werden kann.",
         "restore_progress_copy": "Sicherung wird kopiert",
         "restore_progress_extract": "Datenbank wird entpackt",
         "restore_progress_database_check": "Datenbankintegrität wird geprüft",
         "restore_progress_verify_staging": "Vorbereitete Daten werden abschließend geprüft",
         "preparing_restore": "Wiederherstellung wird vorbereitet",
-        "restore_prepare_description": "VRCX-0 prüft die vorbereiteten Daten vor dem Neustart.",
+        "restore_prepare_description": "VRCX-Cloud prüft die vorbereiteten Daten vor dem Neustart.",
         "restore_confirm_title": "Aus dieser Sicherung wiederherstellen?",
-        "restore_confirm_description": "Deine aktuellen Daten werden ersetzt und VRCX-0 startet neu. Eine Kopie wird für den Fall aufbewahrt, dass etwas schiefgeht.",
+        "restore_confirm_description": "Deine aktuellen Daten werden ersetzt und VRCX-Cloud startet neu. Eine Kopie wird für den Fall aufbewahrt, dass etwas schiefgeht.",
         "restore_and_restart": "Wiederherstellen und neu starten",
-        "restarting_to_restore": "VRCX-0 wird neu gestartet, um die Sicherung wiederherzustellen",
+        "restarting_to_restore": "VRCX-Cloud wird neu gestartet, um die Sicherung wiederherzustellen",
         "created_at": "Erstellt",
-        "app_version": "VRCX-0-Version",
+        "app_version": "VRCX-Cloud-Version",
         "database_version": "Datenbankversion",
         "source_file": "Sicherungsdatei",
         "backup_verified": "Sicherung überprüft",
@@ -347,22 +347,22 @@
         "rollback_cleanup_succeeded": "Aufbewahrte Daten gelöscht",
         "restore_failed_title": "Die Sicherung konnte nicht wiederhergestellt werden",
         "restore_failed_unchanged": "Deine aktuellen Daten wurden nicht geändert.",
-        "restore_failed_rolled_back": "VRCX-0 hat die Daten von vor der Wiederherstellung wiederhergestellt.",
+        "restore_failed_rolled_back": "VRCX-Cloud hat die Daten von vor der Wiederherstellung wiederhergestellt.",
         "settings_load_failed": "Sicherungseinstellungen konnten nicht geladen werden",
         "settings_save_failed": "Sicherungseinstellungen konnten nicht gespeichert werden",
         "folder_selection_failed": "Sicherungsordner konnte nicht ausgewählt werden",
         "file_selection_failed": "Sicherungsdatei konnte nicht ausgewählt werden",
         "backup_start_failed": "Sicherung konnte nicht gestartet werden",
         "restore_validation_failed": "Sicherung konnte nicht geprüft werden",
-        "restore_request_failed": "VRCX-0 konnte für die Wiederherstellung nicht neu gestartet werden",
+        "restore_request_failed": "VRCX-Cloud konnte für die Wiederherstellung nicht neu gestartet werden",
         "action_failed": "Die Sicherungsaktion konnte nicht abgeschlossen werden",
         "error": {
             "busy": "Eine andere Sicherung oder Wiederherstellung läuft bereits.",
             "delivery_pending": "Die vorherige Sicherung wartet noch darauf, gespeichert zu werden. Wiederhole oder verwirf sie, bevor du eine neue Sicherung startest.",
-            "pending_restore": "Eine Wiederherstellung wird nach dem Neustart von VRCX-0 abgeschlossen.",
+            "pending_restore": "Eine Wiederherstellung wird nach dem Neustart von VRCX-Cloud abgeschlossen.",
             "directory_unavailable": "Der Sicherungsordner ist nicht erreichbar. Prüfe das Laufwerk oder die Netzwerkverbindung.",
-            "permission_denied": "VRCX-0 darf an diesem Ort nicht speichern. Wähle einen anderen Ordner.",
-            "local_disk_full": "Am VRCX-0-Datenspeicherort ist nicht genügend freier Speicherplatz für die Sicherung vorhanden.",
+            "permission_denied": "VRCX-Cloud darf an diesem Ort nicht speichern. Wähle einen anderen Ordner.",
+            "local_disk_full": "Am VRCX-Cloud-Datenspeicherort ist nicht genügend freier Speicherplatz für die Sicherung vorhanden.",
             "target_disk_full": "Am Sicherungsort ist nicht genügend freier Speicherplatz vorhanden.",
             "device_removed": "Die Verbindung zum Sicherungsort wurde getrennt. Schließe das Laufwerk wieder an und versuche es erneut.",
             "already_exists": "Eine Sicherung mit demselben Namen ist bereits vorhanden. Versuche es gleich noch einmal.",
@@ -371,14 +371,14 @@
             "package_failed": "Die Sicherungsdatei konnte nicht erstellt werden.",
             "io": "Die Sicherungsdatei konnte nicht gelesen oder geschrieben werden.",
             "unknown": "Bei der Sicherung ist ein unerwarteter Fehler aufgetreten.",
-            "invalid_archive": "Diese Datei ist keine gültige VRCX-0-Sicherung.",
-            "unsupported_manifest": "Dieses Sicherungsformat wird von dieser VRCX-0-Version nicht unterstützt.",
+            "invalid_archive": "Diese Datei ist keine gültige VRCX-Cloud-Sicherung.",
+            "unsupported_manifest": "Dieses Sicherungsformat wird von dieser VRCX-Cloud-Version nicht unterstützt.",
             "checksum_mismatch": "Die Sicherung ist beschädigt oder wurde verändert.",
             "validation_expired": "Die geprüften Wiederherstellungsdaten sind nicht mehr verfügbar. Wähle die Sicherung erneut aus.",
-            "newer_app_version": "Diese Sicherung wurde mit einer neueren VRCX-0-Version erstellt. Aktualisiere VRCX-0 und versuche es erneut.",
-            "newer_database_version": "Diese Sicherung verwendet ein neueres Datenbankformat. Aktualisiere VRCX-0 und versuche es erneut.",
+            "newer_app_version": "Diese Sicherung wurde mit einer neueren VRCX-Cloud-Version erstellt. Aktualisiere VRCX-Cloud und versuche es erneut.",
+            "newer_database_version": "Diese Sicherung verwendet ein neueres Datenbankformat. Aktualisiere VRCX-Cloud und versuche es erneut.",
             "database_corrupt": "Die Datenbank in dieser Sicherung ist beschädigt.",
-            "not_vrcx0_profile": "Diese Datei enthält keine VRCX-0-Sicherungsdaten."
+            "not_vrcx0_profile": "Diese Datei enthält keine VRCX-Cloud-Sicherungsdaten."
         },
         "rollback_error": {
             "busy": "Ein anderer Sicherungs- oder Wiederherstellungsvorgang läuft. Versuche es nach dessen Abschluss erneut.",
@@ -500,7 +500,7 @@
     },
     "nativeShell": {
         "tray": {
-            "open": "VRCX-0 öffnen",
+            "open": "VRCX-Cloud öffnen",
             "backgroundMode": "Hintergrundmodus",
             "lock": "Sperren",
             "doNotDisturb": "Nicht stören",
@@ -516,7 +516,7 @@
         "notification": {
             "backgroundModeStarted": {
                 "title": "Hintergrundmodus gestartet",
-                "body": "VRCX-0 läuft im Hintergrundmodus."
+                "body": "VRCX-Cloud läuft im Hintergrundmodus."
             },
             "authFailure": {
                 "title": "VRChat-Anmeldung abgelaufen",
@@ -525,13 +525,13 @@
         },
         "menu": {
             "app": {
-                "about": "Über VRCX-0",
+                "about": "Über VRCX-Cloud",
                 "settings": "Einstellungen...",
                 "checkUpdates": "Nach Updates suchen",
-                "restart": "VRCX-0 neu starten",
+                "restart": "VRCX-Cloud neu starten",
                 "startBackgroundMode": "In den Hintergrundmodus wechseln",
                 "logout": "Abmelden",
-                "quit": "VRCX-0 beenden"
+                "quit": "VRCX-Cloud beenden"
             },
             "view": {
                 "title": "Ansicht",
@@ -572,7 +572,7 @@
                 "reportIssue": "Problem melden",
                 "qqGroup": "QQ-Gruppe",
                 "openDevtools": "DevTools öffnen",
-                "supportVrcx": "VRCX-0 unterstützen"
+                "supportVrcx": "VRCX-Cloud unterstützen"
             }
         }
     },
@@ -721,10 +721,10 @@
         "devkit_build_badge": "Dev Kit",
         "settings": "Einstellungen...",
         "check_updates": "Nach Updates suchen",
-        "restart": "VRCX-0 neu starten",
+        "restart": "VRCX-Cloud neu starten",
         "start_background_mode": "In den Hintergrundmodus wechseln",
         "logout": "Abmelden",
-        "quit": "VRCX-0 beenden",
+        "quit": "VRCX-Cloud beenden",
         "quick_search": "Schnellsuche",
         "keyboard_shortcuts": "Tastenkombinationen",
         "show_friends_sidebar": "Freundesleiste anzeigen",
@@ -739,11 +739,11 @@
         "report_issue": "Problem melden",
         "community": "Community",
         "open_source_licenses": "Hinweise zu Drittanbietern",
-        "about": "Über VRCX-0",
+        "about": "Über VRCX-Cloud",
         "messages": {
             "zoom_failed": "Zoom konnte nicht angewendet werden",
-            "logout_failed": "Abmeldung von VRCX-0 fehlgeschlagen",
-            "restart_failed": "VRCX-0 konnte nicht neu gestartet werden",
+            "logout_failed": "Abmeldung von VRCX-Cloud fehlgeschlagen",
+            "restart_failed": "VRCX-Cloud konnte nicht neu gestartet werden",
             "open_devtools_failed": "DevTools konnten nicht geöffnet werden"
         },
         "label": {
@@ -766,8 +766,8 @@
             "checking": "Tastenkürzel wird geprüft…",
             "background_hint": "Beim Ausblenden gelten die Einstellungen für Hintergrundmodus und Verzögerung.",
             "global": "Global",
-            "title": "VRCX-0 anzeigen / ausblenden",
-            "description": "VRCX-0 aus jeder App heraus anzeigen oder ausblenden. Ausgeblendet läuft VRCX-0 im Hintergrund weiter.",
+            "title": "VRCX-Cloud anzeigen / ausblenden",
+            "description": "VRCX-Cloud aus jeder App heraus anzeigen oder ausblenden. Ausgeblendet läuft VRCX-Cloud im Hintergrund weiter.",
             "configure": "Globales Tastenkürzel festlegen",
             "unset": "Nicht festgelegt",
             "inactive": "Nicht aktiv",
@@ -821,18 +821,18 @@
         },
         "setup": {
             "create_title": "Sperrpasswort festlegen",
-            "create_description": "Die Sperre verbirgt VRCX-0 hinter diesem 4-stelligen Code, während weiter aufgezeichnet wird. Das ist keine Verschlüsselung – es hindert nur andere am PC daran, sich umzusehen.",
+            "create_description": "Die Sperre verbirgt VRCX-Cloud hinter diesem 4-stelligen Code, während weiter aufgezeichnet wird. Das ist keine Verschlüsselung – es hindert nur andere am PC daran, sich umzusehen.",
             "change_title": "Sperrpasswort ändern",
             "change_description": "Gib dein aktuelles Sperrpasswort ein und wähle dann ein neues.",
             "clear_title": "Sperrpasswort entfernen",
-            "clear_description": "Gib dein VRChat-Kontopasswort ein, um den Sperrcode zu entfernen. Es wird nur mit dem lokal in VRCX-0 gespeicherten Passwort verglichen; nichts wird an die VRChat-Server gesendet."
+            "clear_description": "Gib dein VRChat-Kontopasswort ein, um den Sperrcode zu entfernen. Es wird nur mit dem lokal in VRCX-Cloud gespeicherten Passwort verglichen; nichts wird an die VRChat-Server gesendet."
         },
         "recover": {
-            "description": "Gib dein VRChat-Kontopasswort ein, um die Sperre zu entfernen. Es wird nur mit dem lokal in VRCX-0 gespeicherten Passwort verglichen; nichts wird an die VRChat-Server gesendet."
+            "description": "Gib dein VRChat-Kontopasswort ein, um die Sperre zu entfernen. Es wird nur mit dem lokal in VRCX-Cloud gespeicherten Passwort verglichen; nichts wird an die VRChat-Server gesendet."
         },
         "settings": {
             "label": "Privatsphäre-Sperre",
-            "description": "Verbirgt das Fenster hinter einem Sperrpasswort, während VRCX-0 weiter aufzeichnet. Sperren über das Tray-Menü oder das Kontomenü in der Seitenleiste.",
+            "description": "Verbirgt das Fenster hinter einem Sperrpasswort, während VRCX-Cloud weiter aufzeichnet. Sperren über das Tray-Menü oder das Kontomenü in der Seitenleiste.",
             "status_set": "Passwort festgelegt",
             "status_unset": "Kein Passwort"
         },
@@ -1003,8 +1003,8 @@
         }
     },
     "support_vrcx": {
-        "title": "VRCX-0 unterstützen",
-        "description": "Unterstütze die zukünftige Entwicklung von VRCX-0 über GitHub Sponsors oder Ko-fi."
+        "title": "VRCX-Cloud unterstützen",
+        "description": "Unterstütze die zukünftige Entwicklung von VRCX-Cloud über GitHub Sponsors oder Ko-fi."
     },
     "view": {
         "login": {
@@ -1524,7 +1524,7 @@
                     "listed_description": "Andere können diese Sammlung auf der Startseite entdecken. Wenn die Option deaktiviert ist, bleibt sie über den Freigabelink erreichbar.",
                     "include_notes": "Meine Notizen einbeziehen",
                     "include_notes_description": "Lokale Welt-Notizen als Kommentare auf die geteilte Seite kopieren. Sie können später auf der Website bearbeitet werden.",
-                    "account_connection": "Freigaben sind mit dem VRChat-Konto verknüpft, das derzeit in VRCX-0 angemeldet ist. Eine separate Website-Anmeldung ist nicht erforderlich; die Freigabe wird von VRCX-0 bereitgestellt, nicht von VRChat.",
+                    "account_connection": "Freigaben sind mit dem VRChat-Konto verknüpft, das derzeit in VRCX-Cloud angemeldet ist. Eine separate Website-Anmeldung ist nicht erforderlich; die Freigabe wird von VRCX-Cloud bereitgestellt, nicht von VRChat.",
                     "worlds": "{count}/{total} Welten bereit zum Teilen",
                     "truncated": "Es werden nur die ersten {cap} Welten hochgeladen.",
                     "share_url": "Teillink",
@@ -1959,7 +1959,7 @@
             "export": {
                 "header": "Exportieren",
                 "export_notes": "Lokale Nutzernotizen exportieren",
-                "export_notes_description": "Deine VRCX-0-Notizen in VRChat-Notizen exportieren",
+                "export_notes_description": "Deine VRCX-Cloud-Notizen in VRChat-Notizen exportieren",
                 "discord_names": "Discord-Namen",
                 "export_friend_list": "Freundesliste exportieren",
                 "export_own_avatars": "Eigene Avatare exportieren"
@@ -1981,8 +1981,8 @@
             },
             "shortcuts": {
                 "header": "Ordner",
-                "vrcx_data": "VRCX-0-Daten",
-                "vrcx_data_description": "Den VRCX-0-Datenordner öffnen",
+                "vrcx_data": "VRCX-Cloud-Daten",
+                "vrcx_data_description": "Den VRCX-Cloud-Datenordner öffnen",
                 "vrchat_data": "VRChat-Daten",
                 "vrchat_data_description": "Den VRChat-Datenordner öffnen",
                 "crash_dumps": "Absturzberichte",
@@ -2217,7 +2217,7 @@
             "llm_endpoints": {
                 "title": "LLM-Endpunkte",
                 "description": "Gemeinsame OpenAI-kompatible Verbindungen für Social AI und Übersetzung.",
-                "follow_custom_proxy": "Benutzerdefinierten Proxy von VRCX-0 verwenden",
+                "follow_custom_proxy": "Benutzerdefinierten Proxy von VRCX-Cloud verwenden",
                 "follow_custom_proxy_description": "LLM-Anfragen verwenden ihn, wenn er eingerichtet ist; andernfalls gilt die System-Proxykonfiguration.",
                 "add": "Endpunkt hinzufügen",
                 "empty_description": "Füge einen OpenAI-kompatiblen Endpunkt für Social AI und OpenAI-kompatible Übersetzung hinzu.",
@@ -2364,7 +2364,7 @@
                 },
                 "test_mode": {
                     "header": "Overlay-Test",
-                    "description": "Erzwingt eine Testkarte im Handgelenk-Overlay und in der HMD-Benachrichtigung, damit du Position, Größe und Deckkraft mit aufgesetzter Brille prüfen kannst. Die Einstellung wird nicht gespeichert und ist nach einem Neustart von VRCX-0 wieder aus.",
+                    "description": "Erzwingt eine Testkarte im Handgelenk-Overlay und in der HMD-Benachrichtigung, damit du Position, Größe und Deckkraft mit aufgesetzter Brille prüfen kannst. Die Einstellung wird nicht gespeichert und ist nach einem Neustart von VRCX-Cloud wieder aus.",
                     "force_display": "Overlay-Anzeige erzwingen",
                     "requires_steamvr": "Erfordert ein laufendes SteamVR."
                 }
@@ -2381,7 +2381,7 @@
             "integrations": {
                 "mcp_server": {
                     "header": "MCP-Server",
-                    "description": "Vertrauenswürdige MCP-Clients können auf deine VRCX-0-Daten zugreifen. Standardmäßig nur auf localhost.",
+                    "description": "Vertrauenswürdige MCP-Clients können auf deine VRCX-Cloud-Daten zugreifen. Standardmäßig nur auf localhost.",
                     "enable": "MCP-Server aktivieren",
                     "enable_description": "Startet einen tokengeschützten MCP-Server auf localhost.",
                     "allow_vrchat_writes": "Schreibzugriffe auf VRChat-Konto erlauben",
@@ -2413,7 +2413,7 @@
                 },
                 "integration_api": {
                     "header": "Integrations-API",
-                    "description": "Gibt ausgewählte VRCX-0-Informationen für vertrauenswürdige Apps frei. Der Port ist nur geöffnet, solange VRChat läuft.",
+                    "description": "Gibt ausgewählte VRCX-Cloud-Informationen für vertrauenswürdige Apps frei. Der Port ist nur geöffnet, solange VRChat läuft.",
                     "enable": "Integrations-API aktivieren",
                     "enable_description": "Startet bei laufendem VRChat einen token-geschützten WebSocket-Datenstrom.",
                     "information_types": "Freigegebene Informationen",
@@ -2471,13 +2471,13 @@
                     "header": "Anwendung",
                     "startup": "Beim Windows-Start starten",
                     "startup_system": "Beim Systemstart starten",
-                    "startup_system_description": "Erstellt einen Autostart-Eintrag, der VRCX-0 mit --autostart startet.",
+                    "startup_system_description": "Erstellt einen Autostart-Eintrag, der VRCX-Cloud mit --autostart startet.",
                     "minimized": "Minimiert beim Systemstart starten",
                     "tray": "Beim Schließen in den Infobereich minimieren",
-                    "tray_description": "Beim Schließen in den Infobereich minimieren, statt VRCX-0 zu beenden.",
+                    "tray_description": "Beim Schließen in den Infobereich minimieren, statt VRCX-Cloud zu beenden.",
                     "system_window_frame": "Fenster-Kompatibilitätsmodus",
                     "system_window_frame_description": "Standardmäßigen Systemfensterstil verwenden. Aktiviere diese Option, wenn das Fenster flackert oder der Desktop durchscheint.",
-                    "system_window_frame_saved": "Gespeichert. Starten Sie VRCX-0 neu, um die Änderung zu übernehmen.",
+                    "system_window_frame_saved": "Gespeichert. Starten Sie VRCX-Cloud neu, um die Änderung zu übernehmen.",
                     "system_window_frame_restart_now": "Jetzt neu starten",
                     "background_mode": "Hintergrundmodus im Infobereich",
                     "background_mode_description": "Spart ~90 % Speicher im Infobereich. Manche Seitenzustände können beim Wiederherstellen zurückgesetzt werden.",
@@ -2488,7 +2488,7 @@
                     "auto_install_updates_on_startup_description": "Updates beim Start automatisch herunterladen und installieren.",
                     "check_for_updates_and_update": "Nach Updates suchen und aktualisieren",
                     "update_check_disabled": "Deaktiviert",
-                    "update_check_disabled_build_description": "In dieser speziellen Version ist die Update-Suche deaktiviert. Aktualisieren Sie VRCX-0 über Ihren Paketmanager oder wenden Sie sich an den Maintainer.",
+                    "update_check_disabled_build_description": "In dieser speziellen Version ist die Update-Suche deaktiviert. Aktualisieren Sie VRCX-Cloud über Ihren Paketmanager oder wenden Sie sich an den Maintainer.",
                     "proxy": "Proxy-Einstellungen"
                 },
                 "favorites": {
@@ -2527,7 +2527,7 @@
                     "font_family_custom_secondary": "Ersatzschriftart (optional)",
                     "font_family_custom_secondary_description": "Wird verwendet, wenn ein Zeichen in der App-Schriftart fehlt.",
                     "font_family_custom_detection_unavailable_title": "Installierte Schriftarten nicht verfügbar",
-                    "font_family_custom_detection_unavailable": "VRCX-0 konnte die auf diesem Gerät installierten Schriftarten nicht lesen. Gib stattdessen einen CSS-Schriftstapel ein.",
+                    "font_family_custom_detection_unavailable": "VRCX-Cloud konnte die auf diesem Gerät installierten Schriftarten nicht lesen. Gib stattdessen einen CSS-Schriftstapel ein.",
                     "font_family_custom_detection_unavailable_toast": "Installierte Schriftarten sind nicht verfügbar. Verwende stattdessen einen CSS-Schriftstapel.",
                     "font_family_custom_mode_label": "Schriftquelle",
                     "font_family_custom_mode_installed": "Installierte Schriftarten",
@@ -2564,7 +2564,7 @@
                     "table_page_sizes_error": "Die Seitengröße muss eine Zahl zwischen 1 und 1000 sein",
                     "show_notification_icon_dot": "Tray-Benachrichtigungspunkt",
                     "show_taskbar_icon_dot": "Taskleisten-Benachrichtigungspunkt",
-                    "show_taskbar_icon_dot_description": "Zeigt einen roten Punkt auf der VRCX-0-Schaltfläche in der Taskleiste, solange Benachrichtigungen ungelesen sind.",
+                    "show_taskbar_icon_dot_description": "Zeigt einen roten Punkt auf der VRCX-Cloud-Schaltfläche in der Taskleiste, solange Benachrichtigungen ungelesen sind.",
                     "striped_data_table_mode": "Gestreifte Tabellen",
                     "reduced_motion_and_blur": "Effekte reduzieren",
                     "reduced_motion_and_blur_description": "Deaktiviert Animationen, Übergänge und Hintergrundunschärfe für eine bessere Leistung auf schwächeren Geräten.",
@@ -2629,7 +2629,7 @@
                     "vrchat_notes": "VRChat-Notizen",
                     "vrchat_notes_description": "Zeigt in VRChat gespeicherte Notizen an",
                     "vrcx_memos": "Lokale Notizen",
-                    "vrcx_memos_description": "Zeigt lokal in VRCX-0 gespeicherte Notizen an",
+                    "vrcx_memos_description": "Zeigt lokal in VRCX-Cloud gespeicherte Notizen an",
                     "recent_action_cooldown": "Symbol für letzte Aktion",
                     "recent_action_cooldown_description": "Zeigt ein Uhrsymbol bei kürzlichen Einladungs- und Anfrageaktionen an."
                 },
@@ -2665,7 +2665,7 @@
                     "post_update_changelog_prompt_description": "Zeigt die Neuerungen nach einer Aktualisierung an.",
                     "do_not_disturb": {
                         "header": "Nicht stören",
-                        "description": "Pausiert vorübergehend Desktop-Benachrichtigungen, TTS, XSOverlay, OVR Toolkit und HMD-Einblendungen von VRCX-0. Webhooks, Handgelenk-Aktivitäten und der Benachrichtigungsverlauf laufen weiter.",
+                        "description": "Pausiert vorübergehend Desktop-Benachrichtigungen, TTS, XSOverlay, OVR Toolkit und HMD-Einblendungen von VRCX-Cloud. Webhooks, Handgelenk-Aktivitäten und der Benachrichtigungsverlauf laufen weiter.",
                         "end_on_game_start": "Beim Start von VRChat ausschalten",
                         "end_on_game_start_description": "Gilt nur, wenn VRChat vom beendeten in den laufenden Zustand wechselt. Während des Spielens kann „Nicht stören“ erneut aktiviert werden."
                     },
@@ -2699,7 +2699,7 @@
                         "header": "Webhook-Benachrichtigungen",
                         "enabled": "Webhook-Zustellung aktivieren",
                         "auth_events_enabled": "Automatische Login-Fehler-Benachrichtigungen senden",
-                        "auth_events_description": "Sendet eine Benachrichtigung, wenn VRCX-0 einen abgebrochenen Hintergrund-Login nicht automatisch wiederherstellen kann.",
+                        "auth_events_description": "Sendet eine Benachrichtigung, wenn VRCX-Cloud einen abgebrochenen Hintergrund-Login nicht automatisch wiederherstellen kann.",
                         "url": "Webhook-URL",
                         "url_placeholder": "https://example.com/webhook",
                         "format": "Payload-Format",
@@ -2719,10 +2719,10 @@
                         "delivery_contract_title": "Zustellregeln",
                         "delivery_contract_http": "Nur HTTP 2xx gilt als Erfolg. Jeder Versuch läuft nach 10 Sekunden ab, Antwortinhalte sind auf 64 KiB begrenzt und vorübergehende Fehler werden bis zu zweimal wiederholt.",
                         "delivery_contract_auth": "Feldauswahl und Aktivitätsfilter gelten nur für Aktivitätsbenachrichtigungen. Fehler bei der automatischen Anmeldung verwenden feste, sicherheitsorientierte Nutzdaten und einen separaten Schalter.",
-                        "delivery_contract_queue": "Die Zustellung verwendet begrenzte Warteschlangen im Arbeitsspeicher ohne dauerhaften Wiederholungsspeicher. Ereignisse können verworfen werden; der Zustellstatus wird beim Neustart von VRCX-0 zurückgesetzt.",
-                        "delivery_contract_secret": "Webhook-URLs enthalten häufig Zugangsdaten. Behandle diese URL vertraulich und schütze das lokale VRCX-0-Profil sowie dessen Sicherungen.",
+                        "delivery_contract_queue": "Die Zustellung verwendet begrenzte Warteschlangen im Arbeitsspeicher ohne dauerhaften Wiederholungsspeicher. Ereignisse können verworfen werden; der Zustellstatus wird beim Neustart von VRCX-Cloud zurückgesetzt.",
+                        "delivery_contract_secret": "Webhook-URLs enthalten häufig Zugangsdaten. Behandle diese URL vertraulich und schütze das lokale VRCX-Cloud-Profil sowie dessen Sicherungen.",
                         "examples_title": "Webhook-Payload-Felder und Beispiele",
-                        "examples_description": "Wähle generische JSON-Felder aus und sieh dir an, was VRCX-0 für jedes Webhook-Payload-Format sendet.",
+                        "examples_description": "Wähle generische JSON-Felder aus und sieh dir an, was VRCX-Cloud für jedes Webhook-Payload-Format sendet.",
                         "comments_note": "Die Beispiele zeigen die Struktur des Request-Bodys; die Feldhinweise hier erklären die Verwendung und werden nicht mitgesendet.",
                         "generic_example": "Beispiel für generisches JSON",
                         "discord_example": "Discord-Beispiel",
@@ -2799,12 +2799,12 @@
                         "quit_description": "Nach dem Beenden von VRChat noch laufende VRChat-Prozesse schließen.",
                         "focus_on_join_header": "VRChat in den Vordergrund holen",
                         "focus_on_join_description": "Beim Beitreten einer Instanz zu VRChat wechseln. Nur im Desktop-Modus.",
-                        "deep_link_registration": "VRCX-0-Links öffnen",
-                        "deep_link_registered": "VRCX-0-Links werden für dieses Benutzerkonto mit VRCX-0 geöffnet.",
-                        "deep_link_not_registered": "Die Systemeinstellung zum Öffnen von VRCX-0-Links fehlt oder verweist auf eine ungültige Installation.",
+                        "deep_link_registration": "VRCX-Cloud-Links öffnen",
+                        "deep_link_registered": "VRCX-Cloud-Links werden für dieses Benutzerkonto mit VRCX-Cloud geöffnet.",
+                        "deep_link_not_registered": "Die Systemeinstellung zum Öffnen von VRCX-Cloud-Links fehlt oder verweist auf eine ungültige Installation.",
                         "deep_link_repair": "Reparieren",
-                        "deep_link_repair_success": "Das Öffnen von VRCX-0-Links wurde repariert",
-                        "deep_link_repair_failed": "Das Öffnen von VRCX-0-Links konnte nicht repariert werden"
+                        "deep_link_repair_success": "Das Öffnen von VRCX-Cloud-Links wurde repariert",
+                        "deep_link_repair_failed": "Das Öffnen von VRCX-Cloud-Links konnte nicht repariert werden"
                     },
                     "storage": {
                         "header": "Speicher und Bereinigung",
@@ -2815,7 +2815,7 @@
                         "cache_header": "VRChat-Cache automatisch bereinigen",
                         "cache_description": "Alte Daten im VRChat-Asset-Cache beim Schließen von VRChat entfernen.",
                         "keep_avatar_data": "Avatar-Daten aufbewahren für",
-                        "avatar_cleanup_description": "Wird beim Start von VRCX-0 wöchentlich geprüft."
+                        "avatar_cleanup_description": "Wird beim Start von VRCX-Cloud wöchentlich geprüft."
                     },
                     "troubleshooting": {
                         "header": "Problembehandlung",
@@ -2836,13 +2836,13 @@
                     "import_recovery": {
                         "header": "Import und Wiederherstellung",
                         "import_from_vrcx": "Aus VRCX importieren",
-                        "description": "Die aktuelle VRCX-0-Konfiguration und Datenbank durch Daten aus dem festen VRCX-Datenordner ersetzen.",
+                        "description": "Die aktuelle VRCX-Cloud-Konfiguration und Datenbank durch Daten aus dem festen VRCX-Datenordner ersetzen.",
                         "review": "Import prüfen…"
                     },
                     "usage_data": {
                         "header": "Nutzungsdaten",
                         "share": "Anonyme Nutzungsdaten teilen",
-                        "description": "Nur anonyme Informationen teilen, die zur Verbesserung von VRCX-0 benötigt werden."
+                        "description": "Nur anonyme Informationen teilen, die zur Verbesserung von VRCX-Cloud benötigt werden."
                     },
                     "danger": {
                         "avatar_history": "Avatar-Verlauf",
@@ -2865,11 +2865,11 @@
                         "description": "Räumt beim Schließen von VRChat automatisch alte Cache-Daten auf."
                     },
                     "improvement": {
-                        "header": "Hilf mit, VRCX-0 zu verbessern"
+                        "header": "Hilf mit, VRCX-Cloud zu verbessern"
                     },
                     "anonymous_usage_telemetry": {
                         "header": "Anonyme Nutzungsdaten sammeln",
-                        "description": "Sammelt nur die nötigsten anonymen Daten, um VRCX-0 zu verbessern."
+                        "description": "Sammelt nur die nötigsten anonymen Daten, um VRCX-Cloud zu verbessern."
                     },
                     "save_instance_prints_to_file": {
                         "header": "Instanz-Prints als Datei speichern",
@@ -2887,7 +2887,7 @@
                     },
                     "delete_all_screenshot_metadata": {
                         "button": "Screenshot-Metadaten entfernen",
-                        "ask": "Möchtest du wirklich alle VRChat- und VRCX-0-Screenshot-Metadaten aus deinem VRChat-Pictures-Ordner löschen?",
+                        "ask": "Möchtest du wirklich alle VRChat- und VRCX-Cloud-Screenshot-Metadaten aus deinem VRChat-Pictures-Ordner löschen?",
                         "confirm": "Das Löschen aller Screenshot-Metadaten ist eine sehr weitreichende Aktion und kann nicht rückgängig gemacht werden! Dies betrifft auch alle Prints, Unterordner und andere unabhängige Bilder in deinem VRChat-Pictures-Ordner. Wenn dir diese Fotos wichtig sind, sichere sie vorher.",
                         "confirm_yes": "Ja",
                         "confirm_no": "Nein"
@@ -2927,13 +2927,13 @@
                         "choose": "Ordner wählen",
                         "reset": "Auf Standard zurücksetzen",
                         "restart": "Neu starten",
-                        "restart_hint": "Änderungen werden nach einem Neustart von VRCX-0 wirksam.",
+                        "restart_hint": "Änderungen werden nach einem Neustart von VRCX-Cloud wirksam.",
                         "source_cli": "Kommandozeilen-Override",
                         "source_persisted": "eigener Ordner",
                         "source_default": "Standardordner",
                         "cli_override": "Dieser Start verwendet --data-dir. Starte ohne den Kommandozeilen-Override, um das gespeicherte Verzeichnis zu ändern.",
-                        "saved_restart_required": "Datenverzeichnis gespeichert. Starte VRCX-0 neu, um es anzuwenden.",
-                        "reset_saved": "Datenverzeichnis zurückgesetzt. Starte VRCX-0 neu, um es anzuwenden.",
+                        "saved_restart_required": "Datenverzeichnis gespeichert. Starte VRCX-Cloud neu, um es anzuwenden.",
+                        "reset_saved": "Datenverzeichnis zurückgesetzt. Starte VRCX-Cloud neu, um es anzuwenden.",
                         "failed_to_load": "Einstellungen für das Datenverzeichnis konnten nicht geladen werden."
                     },
                     "cache_debug": {
@@ -2979,19 +2979,19 @@
                         "purge_confirm_title": "Avatar-Feed-Daten bereinigen",
                         "purge_confirm_description_1": "Dadurch werden Avatar-Änderungsdatensätze dauerhaft aus der Datenbank gelöscht und Speicherplatz freigegeben.",
                         "purge_confirm_description_2": "Diese Aktion kann nicht rückgängig gemacht werden!",
-                        "purge_confirm_description_3": "VRCX-0 wird nach Abschluss des Vorgangs neu gestartet.",
+                        "purge_confirm_description_3": "VRCX-Cloud wird nach Abschluss des Vorgangs neu gestartet.",
                         "purge_confirm_alert": "Es wird dringend empfohlen, deine Datenbankdatei vorher zu sichern!",
                         "purge_confirm_button": "Bereinigen & Neustarten",
                         "purge_complete": "Avatar-Daten erfolgreich bereinigt. Wird neu gestartet",
                         "purge_failed": "Bereinigung fehlgeschlagen: {error}",
                         "purge_optimization_failed": "Die Avatar-Daten wurden bereinigt, aber die Datenbank konnte nicht optimiert werden: {error}",
                         "legacy_migration": "VRCX-Daten migrieren",
-                        "legacy_migration_description": "Ersetzt die aktuelle VRCX-0-Konfiguration und -Datenbank durch Daten aus dem festen VRCX-Datenordner.",
-                        "legacy_migration_confirm_title": "VRCX-0-Daten durch VRCX-Daten ersetzen?",
-                        "legacy_migration_confirm_description": "Dadurch werden die aktuellen VRCX-0-Einstellungen und die lokale Datenbank gelöscht und durch die Daten unter {path} ersetzt. VRCX-0 wird neu gestartet, um die Migration abzuschließen. Die ursprünglichen VRCX-Daten werden nicht verändert.",
+                        "legacy_migration_description": "Ersetzt die aktuelle VRCX-Cloud-Konfiguration und -Datenbank durch Daten aus dem festen VRCX-Datenordner.",
+                        "legacy_migration_confirm_title": "VRCX-Cloud-Daten durch VRCX-Daten ersetzen?",
+                        "legacy_migration_confirm_description": "Dadurch werden die aktuellen VRCX-Cloud-Einstellungen und die lokale Datenbank gelöscht und durch die Daten unter {path} ersetzt. VRCX-Cloud wird neu gestartet, um die Migration abzuschließen. Die ursprünglichen VRCX-Daten werden nicht verändert.",
                         "legacy_migration_confirm": "Migrieren & Neustarten",
                         "legacy_migration_not_available": "Es wurde keine unterstützte VRCX-Datenbank gefunden.",
-                        "legacy_migration_restart_manually": "Migration ist bereit. Starte VRCX-0 neu, um sie abzuschließen.",
+                        "legacy_migration_restart_manually": "Migration ist bereit. Starte VRCX-Cloud neu, um sie abzuschließen.",
                         "legacy_migration_failed": "VRCX-Migration konnte nicht gestartet werden: {error}"
                     },
                     "user_content": {
@@ -3148,8 +3148,8 @@
                 "no_players_reconstructed_for_this_instance_yet": "Noch keine aktuellen Spieler gefunden",
                 "enable_game_log_ingestion_in_settings_before_current_players_can_be_reconstructed": "Aktiviere das Spielprotokoll in den Einstellungen, um aktuelle Spieler anzuzeigen.",
                 "start_vrchat_and_let_vrcx_receive_game_log_events_before_this_page_can_rebuild_the_current_instance": "Starte VRChat und betrete eine Instanz. Spieler in derselben Instanz werden hier angezeigt, und die Liste wird automatisch aktualisiert, wenn jemand beitritt oder die Instanz verlässt.",
-                "stay_in_the_instance_until_local_join_leave_events_are_recorded": "Bleib in der Instanz, bis VRCX-0 Spieleraktivität erkennt. Diese Liste wird automatisch aktualisiert.",
-                "current_players_follow_live_instance_locations": "Aktuelle Spieler werden angezeigt, sobald VRCX-0 deinen nächsten Standort erkennt.",
+                "stay_in_the_instance_until_local_join_leave_events_are_recorded": "Bleib in der Instanz, bis VRCX-Cloud Spieleraktivität erkennt. Diese Liste wird automatisch aktualisiert.",
+                "current_players_follow_live_instance_locations": "Aktuelle Spieler werden angezeigt, sobald VRCX-Cloud deinen nächsten Standort erkennt.",
                 "local_join_leave_history_has_no_current_players": "Der lokale Beitritts-/Verlassen-Verlauf enthält für den aktiven Standort noch keine aktuellen Spieler."
             },
             "label": {
@@ -3439,7 +3439,7 @@
             },
             "source": {
                 "built_in": "Standard",
-                "built_in_description": "Verwende die Standard-Hell- und Dunkel-Themes von VRCX-0.",
+                "built_in_description": "Verwende die Standard-Hell- und Dunkel-Themes von VRCX-Cloud.",
                 "background": "Hintergrundbild",
                 "community": "Community-Theme"
             },
@@ -3669,8 +3669,8 @@
             "run_error_elevation_required": "Administratorrechte erforderlich (Windows-Fehler {code}). „Als Administrator ausführen“ aktivieren.",
             "run_error_elevation_cancelled": "Die Administratorbestätigung wurde abgebrochen (Windows-Fehler {code}).",
             "run_error_failed": "Die App konnte nicht gestartet werden.",
-            "stop_locked_steam": "Von Steam gestartet; VRCX-0 kann sie nicht schließen.",
-            "stop_locked_admin": "Läuft als Administrator; VRCX-0 kann sie nicht schließen.",
+            "stop_locked_steam": "Von Steam gestartet; VRCX-Cloud kann sie nicht schließen.",
+            "stop_locked_admin": "Läuft als Administrator; VRCX-Cloud kann sie nicht schließen.",
             "remove_app": "App entfernen",
             "remove_confirm": "{name} aus dem App-Launcher entfernen?",
             "name_required": "Name ist erforderlich",
@@ -3698,7 +3698,7 @@
                 "hidden": "Verborgen",
                 "visible": "Sichtbar",
                 "visibility": "Sichtbarkeit",
-                "developer": "VRCX-0-Entwickler"
+                "developer": "VRCX-Cloud-Entwickler"
             },
             "actions": {
                 "invite": "Einladen",
@@ -4147,8 +4147,8 @@
                 "copy_url": "URL kopieren",
                 "url": "VRChat-Link",
                 "vrcx_url": "Link zum Teilen",
-                "vrcx_url_description": "Dieser Link öffnet VRCX-0 direkt",
-                "vrcx_share_text": "Welt „{name}“ in VRCX-0 öffnen: {url}",
+                "vrcx_url_description": "Dieser Link öffnet VRCX-Cloud direkt",
+                "vrcx_share_text": "Welt „{name}“ in VRCX-Cloud öffnen: {url}",
                 "copy_vrcx_url": "Link zum Teilen kopieren",
                 "youtube_preview": "YouTube-Vorschau",
                 "author_tags": "Autoren-Tags",
@@ -4355,8 +4355,8 @@
                 "url": "VRChat-Link",
                 "copy_url": "URL kopieren",
                 "vrcx_url": "Link zum Teilen",
-                "vrcx_url_description": "Dieser Link öffnet VRCX-0 direkt",
-                "vrcx_share_text": "Avatar „{name}“ in VRCX-0 öffnen: {url}",
+                "vrcx_url_description": "Dieser Link öffnet VRCX-Cloud direkt",
+                "vrcx_share_text": "Avatar „{name}“ in VRCX-Cloud öffnen: {url}",
                 "copy_vrcx_url": "Link zum Teilen kopieren",
                 "created_at": "Erstellt am",
                 "last_updated": "Zuletzt aktualisiert",
@@ -4743,7 +4743,7 @@
             "header": "Starten",
             "short_url": "Kurz-URL",
             "share": "Teilen",
-            "share_description": "VRCX-0-Freigabelink kopieren. Wer ihn öffnet, sieht eine Vorschau und kann die Instanz im Client öffnen.",
+            "share_description": "VRCX-Cloud-Freigabelink kopieren. Wer ihn öffnet, sieht eine Vorschau und kann die Instanz im Client öffnen.",
             "more_copy_options": "Weitere Kopieroptionen",
             "invite": "Einladen",
             "open_ingame": "Im Spiel öffnen",
@@ -4863,14 +4863,14 @@
         },
         "note_export": {
             "header": "Notizexport",
-            "description1": "Dieser Vorgang exportiert alle deine lokalen VRCX-0-Notizen und importiert sie in die VRChat-Notizen.",
+            "description1": "Dieser Vorgang exportiert alle deine lokalen VRCX-Cloud-Notizen und importiert sie in die VRChat-Notizen.",
             "description2": "Beachte folgende Einschränkungen:",
             "description3": "- Der API-Endpunkt hat ein Ratenlimit, das eine große Verzögerung zwischen den Anfragen erfordert.",
             "description4": "- Zeichenlimit von 256 pro Notiz.",
             "description5": "- Filter für Schimpfwörter (kein Spaß erlaubt).",
             "description6": "- Keine Zeilenumbrüche (werden durch ein Leerzeichen ersetzt).",
             "description7": "- Dies überschreibt vorhandene VRChat-Notizen für diese Nutzer.",
-            "description8": "- Änderungen, die hier vorgenommen werden, wirken sich nicht auf lokale VRCX-0-Notizen aus, wohl aber auf VRChat-Notizen nach dem Export.",
+            "description8": "- Änderungen, die hier vorgenommen werden, wirken sich nicht auf lokale VRCX-Cloud-Notizen aus, wohl aber auf VRChat-Notizen nach dem Export.",
             "refresh": "Aktualisieren",
             "export": "Exportieren",
             "cancel": "Abbrechen",
@@ -5410,13 +5410,13 @@
             "failed_to_load_emojis": "Emojis konnten nicht geladen werden"
         },
         "vrcx_updater": {
-            "latest_version": "VRCX-0 ist auf dem neuesten Stand",
+            "latest_version": "VRCX-Cloud ist auf dem neuesten Stand",
             "ready_for_update": "Update {value} ist bereit",
             "channel": {
                 "label": "Update-Kanal",
                 "stable": "Stabil",
                 "beta": "Beta",
-                "description": "VRCX-0 sucht nur im derzeit installierten Kanal nach Updates.",
+                "description": "VRCX-Cloud sucht nur im derzeit installierten Kanal nach Updates.",
                 "switch_description": "Um zu {channel} zu wechseln, lade die neueste Version dieses Kanals herunter und installiere sie.",
                 "download_stable": "Neueste stabile Version herunterladen",
                 "download_beta": "Neueste Beta herunterladen",
@@ -5425,7 +5425,7 @@
         },
         "change_log": {
             "header": "Änderungsprotokoll",
-            "support_title": "Wenn dir VRCX-0 hilft",
+            "support_title": "Wenn dir VRCX-Cloud hilft",
             "support_description": "Ein GitHub Star ist der einfachste Weg, das Projekt zu unterstützen.",
             "star_on_github": "Auf GitHub sternen",
             "support_development": "Entwicklung unterstützen",
@@ -5533,7 +5533,7 @@
         },
         "system": {
             "label": {
-                "vrcx_0_update": "VRCX-0-Update",
+                "vrcx_0_update": "VRCX-Cloud-Update",
                 "fps_144": "--fps=144"
             },
             "action": {
@@ -5675,13 +5675,13 @@
             "description": "Gib die Adresse und den Port des Proxyservers ein. Unterstützt 127.0.0.1:7890, http://127.0.0.1:7890 und socks5://127.0.0.1:7890.",
             "restart": "Speichern & Neustarten",
             "enabled": "Proxy aktivieren",
-            "enabled_description": "Ist der Proxy ohne Adresse aktiviert, verbindet sich VRCX-0 direkt und behält den Proxy-Schalter eingeschaltet.",
+            "enabled_description": "Ist der Proxy ohne Adresse aktiviert, verbindet sich VRCX-Cloud direkt und behält den Proxy-Schalter eingeschaltet.",
             "address": "Proxy-Adresse",
             "address_description": "Leer lassen, um direkt zu verbinden, während der Proxy-Schalter aktiviert bleibt.",
             "test": "Testen",
             "configure": "Konfigurieren",
             "configure_empty": "Adresse konfigurieren",
-            "saved_restart_required": "Proxy-Einstellungen gespeichert. Starte VRCX-0 neu, um die Netzwerk-Proxy-Änderungen zu übernehmen.",
+            "saved_restart_required": "Proxy-Einstellungen gespeichert. Starte VRCX-Cloud neu, um die Netzwerk-Proxy-Änderungen zu übernehmen.",
             "test_success": "Proxy-Test erfolgreich (HTTP {status}).",
             "test_failed": "Proxy-Test fehlgeschlagen: {message}"
         },
@@ -5694,7 +5694,7 @@
         },
         "table_entries_settings": {
             "header": "Tabelleneinträge-Einstellungen",
-            "description": "Begrenze, wie viele Einträge VRCX-0 aus der Datenbank in die Oberfläche lädt. Große Werte können RAM-Nutzung und Leistung beeinträchtigen.",
+            "description": "Begrenze, wie viele Einträge VRCX-Cloud aus der Datenbank in die Oberfläche lädt. Große Werte können RAM-Nutzung und Leistung beeinträchtigen.",
             "table_max_entries": "Maximale Tabelleneinträge",
             "table_max_entries_error": "Gib eine Zahl zwischen {min} und {max} ein",
             "table_max_entries_hint": "Gültiger Bereich: {min} – {max}",
@@ -5714,7 +5714,7 @@
             "auto_login_success": "Automatisch angemeldet",
             "auto_login_failed": "Automatische Anmeldung fehlgeschlagen",
             "session_expired": "VRChat-Sitzung abgelaufen. Zurück zur Anmeldung.",
-            "session_restore_available": "Falls ein gespeicherter Account verfügbar ist, versucht VRCX-0 automatisch, dich erneut anzumelden.",
+            "session_restore_available": "Falls ein gespeicherter Account verfügbar ist, versucht VRCX-Cloud automatisch, dich erneut anzumelden.",
             "offline": "Du bist offline"
         },
         "vrcx_updater": {
@@ -5741,14 +5741,14 @@
         },
         "database": {
             "migration_found_title": "Bestehende VRCX-Datenbank gefunden",
-            "migration_found_description": "Auf diesem Computer wurde eine bestehende VRCX-Datenbank gefunden. Möchtest du sie zu VRCX-0 migrieren? Die ursprünglichen VRCX-Daten werden dabei nicht verändert",
+            "migration_found_description": "Auf diesem Computer wurde eine bestehende VRCX-Datenbank gefunden. Möchtest du sie zu VRCX-Cloud migrieren? Die ursprünglichen VRCX-Daten werden dabei nicht verändert",
             "legacy_vrcx_running_title": "VRCX wird noch ausgeführt",
-            "legacy_vrcx_running_description": "VRCX-0 hat erkannt, dass VRCX noch ausgeführt wird. Beenden Sie es und wählen Sie anschließend „Erneut versuchen“. Eine erzwungene Migration kann fehlschlagen.",
+            "legacy_vrcx_running_description": "VRCX-Cloud hat erkannt, dass VRCX noch ausgeführt wird. Beenden Sie es und wählen Sie anschließend „Erneut versuchen“. Eine erzwungene Migration kann fehlschlagen.",
             "legacy_vrcx_check_again": "Erneut versuchen",
             "legacy_vrcx_force_migration": "Migration erzwingen",
             "migration_skip": "Überspringen",
             "migration_restarting_title": "Daten werden migriert",
-            "migration_restarting": "VRCX-0 wird neu gestartet, um die Migration abzuschließen...",
+            "migration_restarting": "VRCX-Cloud wird neu gestartet, um die Migration abzuschließen...",
             "upgrade_in_progress_title": "Datenbank-Upgrade läuft",
             "maintenance_in_progress_title": "Datenbankwartung läuft",
             "maintenance_in_progress_description": "Speicherplatz wird freigegeben. Der Datenbankzugriff pausiert, bis der Vorgang abgeschlossen ist.",
@@ -5778,12 +5778,12 @@
             "database_upload_warning": "Diese Datenbank kann private Konto- und Aktivitätsdaten enthalten. Lade sie nicht auf GitHub hoch.",
             "use_new_database": "Neue Datenbank verwenden",
             "fresh_start_confirm_title": "Eine neue Datenbank verwenden?",
-            "fresh_start_confirm_description": "VRCX-0 bewahrt die aktuelle Datenbank und die Dateien des fehlgeschlagenen Upgrades in einem Wiederherstellungsordner auf und startet dann mit einer neuen, leeren Datenbank neu. Einstellungen, lokaler Verlauf und gespeicherte Kontodaten werden nicht in die neue Datenbank übernommen.",
-            "fresh_start_restarting": "Die aktuelle Datenbank wird archiviert und VRCX-0 neu gestartet...",
+            "fresh_start_confirm_description": "VRCX-Cloud bewahrt die aktuelle Datenbank und die Dateien des fehlgeschlagenen Upgrades in einem Wiederherstellungsordner auf und startet dann mit einer neuen, leeren Datenbank neu. Einstellungen, lokaler Verlauf und gespeicherte Kontodaten werden nicht in die neue Datenbank übernommen.",
+            "fresh_start_restarting": "Die aktuelle Datenbank wird archiviert und VRCX-Cloud neu gestartet...",
             "fresh_start_failed": "Die neue Datenbank konnte nicht erstellt werden.",
-            "upgrade_keep_open": "Bitte VRCX-0 geöffnet lassen, bis der Vorgang abgeschlossen ist.",
+            "upgrade_keep_open": "Bitte VRCX-Cloud geöffnet lassen, bis der Vorgang abgeschlossen ist.",
             "failure_reason": "Ursache",
-            "restart_app": "VRCX-0 neu starten"
+            "restart_app": "VRCX-Cloud neu starten"
         },
         "file": {
             "not_image": "Datei ist kein Bild",
@@ -6251,7 +6251,7 @@
             "modal": {
                 "launch_vrchat": "VRChat starten",
                 "launch": "Starten",
-                "vrchat_is_already_running_continue_launching_this_instance": "VRChat läuft bereits. VRCX-0 sendet eine weitere Startanfrage an den laufenden Client. Wenn mehrere Clients geöffnet sind, können GameLog, aktueller Standort, Spielerliste und einige Hintergrunddienste unzuverlässig sein. Fortfahren?"
+                "vrchat_is_already_running_continue_launching_this_instance": "VRChat läuft bereits. VRCX-Cloud sendet eine weitere Startanfrage an den laufenden Client. Wenn mehrere Clients geöffnet sind, können GameLog, aktueller Standort, Spielerliste und einige Hintergrunddienste unzuverlässig sein. Fortfahren?"
             },
             "dynamic": {
                 "value_copied": "{value} kopiert"
@@ -6336,15 +6336,15 @@
             },
             "error": {
                 "failed_upgrade_description": "Das vorherige Datenbank-Upgrade ist fehlgeschlagen. Diese Datenbank kann erst wieder verwendet werden, nachdem sie manuell repariert wurde.",
-                "apply_upgrade_failed": "VRCX-0 konnte ein lokales Datenbank-Upgrade nicht anwenden",
-                "legacy_migration_restart_failed": "VRCX-0 konnte nicht neu starten, um deine vorhandenen VRCX-Daten zu migrieren. Du kannst es erneut versuchen oder überspringen, um mit der aktuellen Datenbank fortzufahren.",
-                "newer_schema_requires_newer_app": "Diese Datenbank verwendet Schemaversion {value}, aber diese VRCX-0-Version unterstützt nur bis Version {value2}. Installiere die neueste VRCX-0-Version, um sie zu öffnen."
+                "apply_upgrade_failed": "VRCX-Cloud konnte ein lokales Datenbank-Upgrade nicht anwenden",
+                "legacy_migration_restart_failed": "VRCX-Cloud konnte nicht neu starten, um deine vorhandenen VRCX-Daten zu migrieren. Du kannst es erneut versuchen oder überspringen, um mit der aktuellen Datenbank fortzufahren.",
+                "newer_schema_requires_newer_app": "Diese Datenbank verwendet Schemaversion {value}, aber diese VRCX-Cloud-Version unterstützt nur bis Version {value2}. Installiere die neueste VRCX-Cloud-Version, um sie zu öffnen."
             },
             "success": {
                 "database_update_complete": "Datenbank-Update abgeschlossen"
             },
             "action": {
-                "refresh_config_failed_after_upgrade": "VRCX-0 hat die Datenbank aktualisiert, konnte aber die lokale Konfiguration nicht neu laden. Bitte starte die Anwendung neu",
+                "refresh_config_failed_after_upgrade": "VRCX-Cloud hat die Datenbank aktualisiert, konnte aber die lokale Konfiguration nicht neu laden. Bitte starte die Anwendung neu",
                 "requesting_legacy_migration": "Migration deiner vorhandenen VRCX-Daten wird vorbereitet …",
                 "skipping_legacy_migration": "Migration wird übersprungen, Datenbank wird eingerichtet …"
             }
@@ -6369,7 +6369,7 @@
         "background_maintenance": {
             "label": {
                 "vrchat_registry_backup": "VRChat-Registrierungssicherung",
-                "vrcx_update_available": "VRCX-0-Update verfügbar"
+                "vrcx_update_available": "VRCX-Cloud-Update verfügbar"
             },
             "description": {
                 "registry_backup_restore_description": "Der VRChat-Registrierungsordner fehlt und eine gespeicherte Registrierungssicherung ist verfügbar. Stelle vor dem Starten von VRChat eine Sicherung wieder her"
@@ -6379,7 +6379,7 @@
     "repository": {
         "sqlite_repository": {
             "modal": {
-                "please_repair_or_delete_your_database_file_by_fo": "Bitte repariere oder lösche deine Datenbankdatei. Weitere Informationen findest du in der VRCX-0-Anleitung zur Datenbankreparatur.",
+                "please_repair_or_delete_your_database_file_by_fo": "Bitte repariere oder lösche deine Datenbankdatei. Weitere Informationen findest du in der VRCX-Cloud-Anleitung zur Datenbankreparatur.",
                 "your_database_is_corrupted": "Deine Datenbank ist beschädigt",
                 "disk_full_description": "Das Laufwerk, auf dem sich die Datenbank befindet, ist voll",
                 "disk_full_title": "Laufwerk mit Datenbank ist voll",
@@ -6478,11 +6478,11 @@
     },
     "linux_rendering": {
         "title": "Hardwarebeschleunigung (experimentell)",
-        "description": "Wird nach einem Neustart von VRCX-0 wirksam. Bestätigen Sie nach dem Aktivieren innerhalb von 30 Sekunden nach dem Start; andernfalls wird die Beschleunigung deaktiviert und VRCX-0 neu gestartet.",
-        "saved": "Gespeichert. Starten Sie VRCX-0 neu, um die Änderung zu übernehmen.",
+        "description": "Wird nach einem Neustart von VRCX-Cloud wirksam. Bestätigen Sie nach dem Aktivieren innerhalb von 30 Sekunden nach dem Start; andernfalls wird die Beschleunigung deaktiviert und VRCX-Cloud neu gestartet.",
+        "saved": "Gespeichert. Starten Sie VRCX-Cloud neu, um die Änderung zu übernehmen.",
         "restart_now": "Jetzt neu starten",
         "confirm_title": "Wird die Oberfläche korrekt dargestellt?",
-        "confirm_description": "Ohne Bestätigung innerhalb von 30 Sekunden nach dem Start deaktiviert VRCX-0 die Hardwarebeschleunigung und startet neu.",
+        "confirm_description": "Ohne Bestätigung innerhalb von 30 Sekunden nach dem Start deaktiviert VRCX-Cloud die Hardwarebeschleunigung und startet neu.",
         "restore": "Wiederherstellen und neu starten",
         "keep": "Darstellung korrekt, beibehalten",
         "failed": "Die Darstellungseinstellung konnte nicht geändert werden. Versuche es erneut."

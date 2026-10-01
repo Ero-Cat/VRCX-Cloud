@@ -32,7 +32,6 @@ vi.mock('./AccountSwitcherPopover', () => ({
     AccountSwitcherPopover: () => <button type="button">Switch account</button>
 }));
 
-import { isSidebarAutoHideInteractionBlocked } from '@/services/sidebarAutoHideService';
 import { useShellStore } from '@/state/shellStore';
 
 import { FriendRow } from './FriendsSidebarFriendRow';
@@ -75,7 +74,6 @@ describe('FriendRow menus', () => {
             );
             expect(onOpen).toHaveBeenCalledOnce();
             await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
-            expect(isSidebarAutoHideInteractionBlocked()).toBe(false);
             await user.click(screen.getByRole('button', { name: /^Friend/ }));
             expect(await screen.findAllByRole('menu')).toHaveLength(1);
             expect(onOpen).toHaveBeenCalledOnce();
@@ -116,7 +114,6 @@ describe('FriendRow menus', () => {
             expect(await screen.findAllByRole('menu')).toHaveLength(1);
             expect(onOpen).not.toHaveBeenCalled();
             expect(useShellStore.getState().windowDisplayMode).toBe('sidebar');
-            expect(isSidebarAutoHideInteractionBlocked()).toBe(true);
 
             await user.click(
                 screen.getByRole('menuitem', {
@@ -126,7 +123,6 @@ describe('FriendRow menus', () => {
 
             expect(onOpen).toHaveBeenCalledOnce();
             await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
-            expect(isSidebarAutoHideInteractionBlocked()).toBe(false);
         }
     );
 
@@ -152,7 +148,6 @@ describe('FriendRow menus', () => {
 
             expect(await screen.findAllByRole('menu')).toHaveLength(1);
             expect(onOpen).not.toHaveBeenCalled();
-            expect(isSidebarAutoHideInteractionBlocked()).toBe(true);
             await user.click(
                 screen.getByRole('menuitem', {
                     name: 'dialog.user.actions.send_boop'
@@ -210,7 +205,6 @@ describe('FriendRow menus', () => {
             await user.keyboard('[Escape]');
             await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
             expect(document.activeElement).toBe(row);
-            expect(isSidebarAutoHideInteractionBlocked()).toBe(false);
         }
     );
 
@@ -270,7 +264,6 @@ describe('FriendRow menus', () => {
         expect(onOpen).not.toHaveBeenCalled();
         expect(useShellStore.getState().windowDisplayMode).toBe('sidebar');
         await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
-        expect(isSidebarAutoHideInteractionBlocked()).toBe(false);
     });
 
     it('keeps the account switcher independent of the self action menu', async () => {

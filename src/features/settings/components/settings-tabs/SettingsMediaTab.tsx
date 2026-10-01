@@ -21,11 +21,6 @@ export function SettingsMediaTab() {
     const media = useSettingsPageSection('media');
     const prefs = usePreferencesStore(
         useShallow((state) => ({
-            screenshotHelper: state.screenshotHelper,
-            screenshotHelperModifyFilename:
-                state.screenshotHelperModifyFilename,
-            screenshotHelperCopyToClipboard:
-                state.screenshotHelperCopyToClipboard,
             userGeneratedContentPath: state.userGeneratedContentPath,
             saveInstancePrints: state.saveInstancePrints,
             cropInstancePrints: state.cropInstancePrints,
@@ -36,10 +31,6 @@ export function SettingsMediaTab() {
         }))
     );
     const {
-        onScreenshotHelperChange,
-        onScreenshotHelperModifyFilenameChange,
-        onScreenshotHelperCopyToClipboardChange,
-        onDeleteAllScreenshotMetadata,
         onOpenUgcPhotosFolder,
         onOpenUgcFolderSelector,
         onResetUgcFolder,
@@ -54,70 +45,6 @@ export function SettingsMediaTab() {
     const { t } = useTranslation();
     return (
         <SettingsTabContent value="media">
-            <SettingsCard
-                cardId="media.screenshots"
-                title={t(
-                    'view.settings.advanced.advanced.screenshot_helper.header'
-                )}
-                description={t(
-                    'view.settings.advanced.advanced.screenshot_helper.description'
-                )}
-            >
-                <Field
-                    label={t(
-                        'view.settings.advanced.advanced.screenshot_helper.enable'
-                    )}
-                    description={t(
-                        'view.settings.advanced.advanced.screenshot_helper.description_tooltip'
-                    )}
-                >
-                    <Switch
-                        checked={prefs.screenshotHelper}
-                        onCheckedChange={onScreenshotHelperChange}
-                    />
-                </Field>
-                <Field
-                    label={t(
-                        'view.settings.advanced.advanced.screenshot_helper.modify_filename'
-                    )}
-                    description={t(
-                        'view.settings.advanced.advanced.screenshot_helper.modify_filename_tooltip'
-                    )}
-                >
-                    <Switch
-                        checked={prefs.screenshotHelperModifyFilename}
-                        disabled={!prefs.screenshotHelper}
-                        onCheckedChange={onScreenshotHelperModifyFilenameChange}
-                    />
-                </Field>
-                <Field
-                    label={t(
-                        'view.settings.advanced.advanced.screenshot_helper.copy_to_clipboard'
-                    )}
-                >
-                    <Switch
-                        checked={prefs.screenshotHelperCopyToClipboard}
-                        onCheckedChange={
-                            onScreenshotHelperCopyToClipboardChange
-                        }
-                    />
-                </Field>
-                <Field
-                    label={t(
-                        'view.settings.advanced.advanced.delete_all_screenshot_metadata.button'
-                    )}
-                >
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={onDeleteAllScreenshotMetadata}
-                    >
-                        {t(
-                            'view.settings.advanced.advanced.delete_all_screenshot_metadata.button'
-                        )}
-                    </Button>
-                </Field>
-            </SettingsCard>
             <SettingsCard
                 cardId="media.user-content"
                 title={t('view.settings.advanced.advanced.user_content.header')}

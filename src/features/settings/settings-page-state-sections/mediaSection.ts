@@ -6,10 +6,6 @@ import type { SettingsSectionInput } from '../settingsPageStateSectionTypes';
 type MediaSectionInput = SettingsSectionInput<
     | 'prefs'
     | 'commit'
-    | 'setScreenshotHelperPreference'
-    | 'setScreenshotHelperModifyFilenamePreference'
-    | 'setScreenshotHelperCopyToClipboardPreference'
-    | 'deleteAllScreenshotMetadata'
     | 'openUgcFolderSelector'
     | 'resetUgcFolder'
     | 'setSaveInstancePrintsPreference'
@@ -25,10 +21,6 @@ type MediaSectionInput = SettingsSectionInput<
 export function buildMediaSection({
     prefs,
     commit,
-    setScreenshotHelperPreference,
-    setScreenshotHelperModifyFilenamePreference,
-    setScreenshotHelperCopyToClipboardPreference,
-    deleteAllScreenshotMetadata,
     openUgcFolderSelector,
     resetUgcFolder,
     setSaveInstancePrintsPreference,
@@ -42,10 +34,6 @@ export function buildMediaSection({
 }: MediaSectionInput) {
     return {
         commit,
-        setScreenshotHelperPreference,
-        setScreenshotHelperModifyFilenamePreference,
-        setScreenshotHelperCopyToClipboardPreference,
-        deleteAllScreenshotMetadata,
         openUgcFolderSelector,
         resetUgcFolder,
         setSaveInstancePrintsPreference,
@@ -53,26 +41,6 @@ export function buildMediaSection({
         setSaveInstanceStickersPreference,
         setSaveInstanceEmojiPreference,
         setPrefs,
-        onScreenshotHelperChange: (checked: boolean) => {
-            savePreferenceValue('screenshotHelper', checked, () =>
-                setScreenshotHelperPreference(checked)
-            );
-        },
-        onScreenshotHelperModifyFilenameChange: (checked: boolean) => {
-            savePreferenceValue('screenshotHelperModifyFilename', checked, () =>
-                setScreenshotHelperModifyFilenamePreference(checked)
-            );
-        },
-        onScreenshotHelperCopyToClipboardChange: (checked: boolean) => {
-            savePreferenceValue(
-                'screenshotHelperCopyToClipboard',
-                checked,
-                () => setScreenshotHelperCopyToClipboardPreference(checked)
-            );
-        },
-        onDeleteAllScreenshotMetadata: () => {
-            deleteAllScreenshotMetadata();
-        },
         onOpenUgcPhotosFolder: () => {
             commit(() => openUGCPhotosFolder(prefs.userGeneratedContentPath));
         },

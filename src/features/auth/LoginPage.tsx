@@ -83,17 +83,10 @@ export function LoginPage() {
                         onRestoreProfileBackup={
                             utilities.onRestoreProfileBackup
                         }
-                        showLegacyMigration={utilities.showLegacyMigration}
-                        onMigrateLegacyVrcxData={
-                            utilities.onMigrateLegacyVrcxData
-                        }
                     />
                 </div>
             </div>
-            <LoginPageFooter
-                onOpenGithub={actions.openGithub}
-                onOpenDiscord={actions.openDiscord}
-            />
+            <LoginPageFooter onOpenGithub={actions.openGithub} />
             <LoginProxySettingsDialog
                 open={proxyDialog.open}
                 enabled={proxyDialog.enabled}

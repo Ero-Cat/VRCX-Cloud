@@ -8,19 +8,16 @@ import { Switch } from '@/ui/shadcn/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/shadcn/tooltip';
 
 import { SettingsCard } from '../SettingsCard';
-import { Field, JsonTreeView, SettingsSectionHeading } from '../SettingsField';
+import { Field, SettingsSectionHeading } from '../SettingsField';
 import type {
     SettingsAdvancedAction,
     SettingsAdvancedPrefs
 } from './settingsAdvancedTypes';
 
-type DiagnosticAction = 'config' | 'online' | 'tables';
+type DiagnosticAction = 'online' | 'tables';
 
 type AdvancedTroubleshootingGroupProps = {
-    configTreeData: Record<string, unknown>;
-    onClearConfigTreeData: () => void;
     onLogResourceLoadChange: (checked: boolean) => void;
-    onRefreshConfigTreeData: SettingsAdvancedAction;
     onRefreshOnlineVisits: SettingsAdvancedAction;
     onRefreshSqliteTableSizes: SettingsAdvancedAction;
     onUdonExceptionLoggingChange: (checked: boolean) => void;
@@ -31,10 +28,7 @@ type AdvancedTroubleshootingGroupProps = {
 };
 
 export function AdvancedTroubleshootingGroup({
-    configTreeData,
-    onClearConfigTreeData,
     onLogResourceLoadChange,
-    onRefreshConfigTreeData,
     onRefreshOnlineVisits,
     onRefreshSqliteTableSizes,
     onUdonExceptionLoggingChange,
@@ -47,7 +41,6 @@ export function AdvancedTroubleshootingGroup({
     const [pendingAction, setPendingAction] = useState<DiagnosticAction | null>(
         null
     );
-    const hasConfig = Object.keys(configTreeData).length > 0;
     const hasTableSizes = Object.keys(sqliteTableSizes).length > 0;
 
     async function runAction(
@@ -66,7 +59,7 @@ export function AdvancedTroubleshootingGroup({
     }
 
     function renderRefreshButton(
-        actionName: 'online' | 'tables',
+        actionName: DiagnosticAction,
         action: SettingsAdvancedAction,
         label: string
     ) {
@@ -181,39 +174,6 @@ export function AdvancedTroubleshootingGroup({
                     )}
                 </div>
             </Field>
-            <Field
-                label={t(
-                    'view.settings.advanced.advanced_ui.troubleshooting.vrchat_config'
-                )}
-            >
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={pendingAction !== null}
-                    onClick={() => {
-                        if (hasConfig) {
-                            onClearConfigTreeData();
-                            return;
-                        }
-                        runAction('config', onRefreshConfigTreeData);
-                    }}
-                >
-                    {pendingAction === 'config' ? (
-                        <Spinner data-icon="inline-start" />
-                    ) : null}
-                    {t(
-                        hasConfig
-                            ? 'view.settings.advanced.advanced_ui.troubleshooting.hide_config'
-                            : 'view.settings.advanced.advanced_ui.troubleshooting.view_config'
-                    )}
-                </Button>
-            </Field>
-            {hasConfig ? (
-                <div className="bg-muted/30 max-h-[32rem] overflow-auto rounded-lg border p-3">
-                    <JsonTreeView data={configTreeData} />
-                </div>
-            ) : null}
         </SettingsCard>
     );
 }

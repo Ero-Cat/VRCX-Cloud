@@ -73,7 +73,6 @@ function controllerValue(hasSavedAccounts: boolean) {
     const noop = () => undefined;
     return {
         actions: {
-            openDiscord: noop,
             openForgotPassword: noop,
             openGithub: noop,
             openRegister: noop

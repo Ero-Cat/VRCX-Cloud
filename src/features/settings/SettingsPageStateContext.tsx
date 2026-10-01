@@ -107,12 +107,6 @@ function createSettingsPageStateSnapshot(
             sourceRef,
             previous?.media
         ),
-        integrations: createSectionSnapshot(
-            'integrations',
-            source.integrations,
-            sourceRef,
-            previous?.integrations
-        ),
         social: createSectionSnapshot(
             'social',
             source.social,
@@ -125,7 +119,6 @@ function createSettingsPageStateSnapshot(
             sourceRef,
             previous?.notifications
         ),
-        vr: createSectionSnapshot('vr', source.vr, sourceRef, previous?.vr),
         advanced: createSectionSnapshot(
             'advanced',
             source.advanced,
@@ -144,10 +137,8 @@ function createSettingsPageStateSnapshot(
         next.system === previous.system &&
         next.interface === previous.interface &&
         next.media === previous.media &&
-        next.integrations === previous.integrations &&
         next.social === previous.social &&
         next.notifications === previous.notifications &&
-        next.vr === previous.vr &&
         next.advanced === previous.advanced &&
         next.dialogs === previous.dialogs
         ? previous

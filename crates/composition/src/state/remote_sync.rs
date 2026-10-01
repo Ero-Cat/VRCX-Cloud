@@ -214,6 +214,7 @@ impl RemoteSyncHost {
 
     /// One-off connection probe for the settings dialog. An empty password
     /// falls back to the stored one so the UI never needs to resend secrets.
+    #[allow(clippy::too_many_arguments)]
     pub async fn test_connection(
         &self,
         host: &str,

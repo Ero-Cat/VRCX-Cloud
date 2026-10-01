@@ -1,10 +1,4 @@
-import {
-    ClockIcon,
-    Minimize2Icon,
-    MinusIcon,
-    NetworkIcon,
-    PlusIcon
-} from 'lucide-react';
+import { ClockIcon, MinusIcon, NetworkIcon, PlusIcon } from 'lucide-react';
 import { forwardRef, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -54,7 +48,6 @@ import {
 import { isFriendProfileLoadStatusVisible } from './statusBarFriendProfileLoad';
 import { StatusDot, StatusSegment } from './StatusBarParts';
 import { resolveProxyIndicatorState } from './statusBarProxy';
-import { STATUS_BAR_TOGGLE_IDLE } from './statusBarToggle';
 import type {
     StatusBarFooterProps,
     StatusBarFriendProfileLoad,
@@ -215,7 +208,6 @@ export const StatusBarFooter = forwardRef<HTMLElement, StatusBarFooterProps>(
             onCopyMediaLink,
             onOpenMediaLink,
             onOpenStatusPage,
-            onStartBackgroundMode,
             onProxyDraftEnabledChange,
             onProxyDraftServerChange,
             onProxyEditorOpenChange,
@@ -308,35 +300,7 @@ export const StatusBarFooter = forwardRef<HTMLElement, StatusBarFooterProps>(
             </>
         );
 
-        const sessionActions = (
-            <>
-                <DoNotDisturbMenu />
-                <Tooltip>
-                    <TooltipTrigger
-                        render={
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label={t(
-                                    'status_bar.start_background_mode'
-                                )}
-                                className={cn(
-                                    'size-6 shrink-0 rounded-none',
-                                    STATUS_BAR_TOGGLE_IDLE
-                                )}
-                                onClick={onStartBackgroundMode}
-                            >
-                                <Minimize2Icon data-icon="icon" />
-                            </Button>
-                        }
-                    />
-                    <TooltipContent>
-                        {t('status_bar.start_background_mode_tooltip')}
-                    </TooltipContent>
-                </Tooltip>
-            </>
-        );
+        const sessionActions = <DoNotDisturbMenu />;
 
         if (sidebarWindowMode) {
             return (

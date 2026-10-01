@@ -1,1 +1,0 @@
-export const UPDATE_READY_TOAST_DURATION_MS = 4000;

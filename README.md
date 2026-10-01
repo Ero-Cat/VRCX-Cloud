@@ -1,67 +1,302 @@
-# VRCX-Cloud
+<div align="center">
 
-Self-hosted **web** companion for VRChat — a single-binary Rust server that
-runs a complete VRCX runtime (VRChat realtime session, feed history,
-favorites, notifications, stats) and serves the full VRCX-0 web UI from
-your own machine. Built for **single-account, LAN-first private
-deployment**.
+# <img src="images/logo.svg" alt="VRCX-Cloud logo" width="110"> VRCX-Cloud
+
+### Your VRChat social life, served from your own server.
+
+**Self-hosted, single-account web companion for VRChat** — the full VRCX-0
+experience in a browser, powered by one Rust binary that runs beside your
+desktop VRCX-0 and converges with it over a PostgreSQL sync mesh.
+
+[![CI](https://img.shields.io/github/actions/workflow/Ero-Cat/VRCX-Cloud/ci.yml?branch=master&style=flat-square&label=CI&logo=github)](https://github.com/Ero-Cat/VRCX-Cloud/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Ero-Cat/VRCX-Cloud?style=flat-square&color=blue&label=version)](https://github.com/Ero-Cat/VRCX-Cloud/releases)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
+[![Rust](https://img.shields.io/badge/backend-Rust%201-dea584?style=flat-square&logo=rust)](Cargo.toml)
+[![Frontend](https://img.shields.io/badge/frontend-React%2019-61dafb?style=flat-square&logo=react)](package.json)
+[![PostgreSQL](https://img.shields.io/badge/sync-PostgreSQL-336791?style=flat-square&logo=postgresql)](docker-compose.yml)
+
+**[Quickstart](#-quickstart) · [Features](#-features) · [Install](#-installation) · [Usage](#-usage-manual) · [Philosophy](#%EF%B8%8F-why-another-vrcx) · [FAQ](#-faq)**
+
+</div>
+
+---
+
+## 📑 Table of Contents
+
+- [What is it?](#-what-is-it)
+- [✨ Features](#-features)
+- [🚀 Quickstart](#-quickstart)
+- [📦 Installation](#-installation)
+    - [Docker Compose (recommended)](#docker-compose-recommended)
+    - [Bare metal](#bare-metal)
+    - [Configuration reference](#%EF%B8%8F-configuration-reference)
+- [📖 Usage manual](#-usage-manual)
+    - [First login](#first-login)
+    - [Pairing your desktop VRCX-0](#pairing-your-desktop-vrcx-0)
+    - [Desktop-aware realtime handoff](#desktop-aware-realtime-handoff)
+    - [Day-to-day](#day-to-day)
+- [🎥 Demo](#-demo)
+- [🏗 Architecture](#%EF%B8%8F-architecture)
+- [🤔 Why another VRCX?](#%EF%B8%8F-why-another-vrcx)
+- [❓ FAQ](#-faq)
+- [🔒 Security notes](#-security-notes)
+- [🤝 Credits](#-credits)
+
+---
+
+## 🌥 What is it?
 
 ```
-浏览器 ──HTTP/WS──▶ vrcx-0-server ──直连──▶ PostgreSQL ◀──双向同步── 桌面端 VRCX-0
+ ┌──────────┐  HTTP/WS   ┌────────────────┐            ┌────────────┐
+ │ Browser  │───────────▶│ vrcx-0-server  │──sync─────▶│ PostgreSQL │
+ │ (anywhere│            │  · VRChat live │◀──sync─────│   (yours)  │
+ │  on LAN) │            │  · full data   │            └─────▲──────┘
+ └──────────┘            └────────────────┘                  │ sync
+                                        ┌───────────────────┴─────┐
+                                        │  Desktop VRCX-0 (games, │
+                                        │  logs, screenshots)     │
+                                        └─────────────────────────┘
 ```
 
-桌面端 [VRCX-0](https://github.com/Map1en/VRCX-0) 通过其内置的
-SQLite↔PostgreSQL 数据同步与服务器收敛到同一个数据库——服务器就是同步
-网格里的第二台设备：桌面端产生的游戏日志/实时 feed 经同步到达服务端，
-服务端自有的 VRChat 会话提供真·实时的好友状态与 API 操作能力。
+VRCX-Cloud runs a **complete VRCX runtime as a server**: it keeps its own
+VRChat realtime session, serves the entire VRCX-0 web UI, and syncs every
+row with your desktop VRCX-0 through the built-in SQLite↔PostgreSQL
+protocol. Game logs recorded on your PC show up on the web; memos you
+write on the web land on your desktop — within one sync interval.
 
-## 特性
+## ✨ Features
 
-- **完整 Web UI**：VRCX-0 前端原样运行（feed、好友、收藏、通知、
-  游戏日志、统计图谱、AI 助手），桌面专属功能经主机能力门控自动隐藏。
-- **服务端 VRChat 会话**：在网页里登录（含 2FA）后，服务端保持自己的
-  实时 WebSocket 与 API 直连；桌面端离线时 Web 依然实时。
-- **数据同步**：复用 VRCX-0 的 op-log 双向同步协议（HLC 仲裁、幂等、
-  断线续传），与桌面端互为副本。
-- **单密码 Web 认证**：cookie 会话 + 登录限流；可信内网可显式关闭。
-- **轻量**：单个二进制 + 可选 docker-compose（含 PostgreSQL）。
+|     | Feature                           | Notes                                                                                                                                                               |
+| --- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🖥   | **Full VRCX-0 UI in the browser** | feed, friends, game-log history, favorites, notifications, stats graphs, AI assistant — the same React app, served by the server                                    |
+| ⚡  | **Server-side VRChat session**    | login (incl. 2FA) once in the browser; the server keeps a realtime websocket so the web stays live even with the desktop off                                        |
+| 🔁  | **Bidirectional sync mesh**       | op-log protocol with HLC conflict arbitration, idempotent pushes, resume-after-restart — shared with desktop VRCX-0                                                 |
+| 🤝  | **Desktop-aware handoff**         | while your desktop VRCX-0 is actively syncing, the server pauses its own VRChat session and lets the desktop collect — no doubled API traffic, no doubled feed rows |
+| 🧠  | **344-command API**               | the exact desktop command surface over `POST /api/invoke` + WebSocket events                                                                                        |
+| 🔐  | **Single-password web auth**      | cookie sessions, login rate-limit, explicit LAN-open mode                                                                                                           |
+| 🐳  | **One container**                 | server + PostgreSQL via docker-compose; single binary for bare metal                                                                                                |
+| 🧩  | **Graceful degradation**          | desktop-only features (game launch, VR overlay, tray) are reported unsupported and hidden automatically                                                             |
 
-## 快速开始
+## 🚀 Quickstart
 
 ```bash
-cp .env.example .env          # 设置 Web 与数据库密码
-docker compose up -d --build  # http://<服务器IP>:8800
+git clone https://github.com/Ero-Cat/VRCX-Cloud.git
+cd VRCX-Cloud
+
+echo "VRCX_WEB_PASSWORD=change-me" > .env          # web login password
+docker compose up -d --build
+
+open http://localhost:8800
 ```
 
-详见[部署指南](docs/DEPLOY.zh-CN.md)（配置项、桌面端同步接入、安全须知）。
+You will see the login gate → after signing in, the VRChat login page.
+Enter your VRChat credentials (2FA supported) and the server takes over
+the session. That's it — [pair your desktop](#pairing-your-desktop-vrcx-0)
+whenever you're ready.
 
-## 架构
+## 📦 Installation
 
-| 组件                         | 说明                                                                                                                   |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `crates/server`              | axum Web 服务：`/api/invoke` 命令分发、`/api/events` WebSocket 实时事件、`/api/img` 图片缓存、SPA 静态托管、单密码认证 |
-| `crates/runtime-host-server` | 服务端运行时门面（composition `RuntimeHostState` + Server profile）                                                    |
-| `crates/application-sync`    | SQLite↔PostgreSQL 双向同步引擎（与桌面端共用协议）                                                                     |
-| `src/`                       | VRCX-0 React 前端，`src/platform/tauri/webTransport.ts` 在浏览器模式下自动切换 HTTP/WS 传输                            |
-
-命令面与桌面端完全同名（`app__*`，camelCase 参数），桌面专属命令返回
-结构化 `unsupportedOnWeb` 供前端优雅降级。
-
-## 开发
+### Docker Compose (recommended)
 
 ```bash
-npm ci && npm run build                    # 前端
-cargo build -p vrcx-0-server               # 服务端
-cargo test --workspace && npm run test     # 测试
+cp .env.example .env      # set VRCX_WEB_PASSWORD (required) and VRCX_PG_PASSWORD
+docker compose up -d --build
 ```
 
-本地运行：
+Services started:
+
+| Service    | Address                            | Purpose               |
+| ---------- | ---------------------------------- | --------------------- |
+| `app`      | `http://<host>:8800`               | VRCX-Cloud web server |
+| `postgres` | `127.0.0.1:5432` (host-local only) | sync database         |
+
+### Bare metal
+
+Requirements: Rust 1.85+, Node 24, a PostgreSQL server.
 
 ```bash
-VRCX_CLOUD_WEB_PASSWORD=dev VRCX_CLOUD_LISTEN=127.0.0.1:8800 \
-VRCX_CLOUD_DIST_DIR=./dist ./target/debug/vrcx-0-server
+npm ci && npm run build                    # frontend -> dist/
+cargo build --release -p vrcx-0-server
+
+VRCX_CLOUD_DATA_DIR=/var/lib/vrcx-cloud \
+VRCX_CLOUD_WEB_PASSWORD=... \
+VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_USER=vrcx \
+VRCX_CLOUD_SYNC_PASSWORD=... VRCX_CLOUD_SYNC_DATABASE=vrcx \
+./target/release/vrcx-0-server
 ```
 
-## License
+### ⚙️ Configuration reference
 
-GPL-3.0（继承自 VRCX-0 / VRCX）。
+Environment variables (or `server.toml`, path via `VRCX_CLOUD_CONFIG`):
+
+| Env                                                | TOML                      | Default                  | Meaning                                                                 |
+| -------------------------------------------------- | ------------------------- | ------------------------ | ----------------------------------------------------------------------- |
+| `VRCX_CLOUD_DATA_DIR`                              | `[server] data_dir`       | `<config>/VRCX-0-Server` | SQLite profile + image cache                                            |
+| `VRCX_CLOUD_LISTEN`                                | `[server] listen_addr`    | `0.0.0.0:8800`           | HTTP listen address                                                     |
+| `VRCX_CLOUD_WEB_PASSWORD`                          | `[web] password`          | — (open)                 | web login password                                                      |
+| `VRCX_CLOUD_WEB_AUTH_DISABLED`                     | `[web] auth_disabled`     | `false`                  | disable auth (trusted LAN)                                              |
+| `VRCX_CLOUD_DIST_DIR`                              | `[web] dist_dir`          | `./dist`                 | frontend static files                                                   |
+| `VRCX_CLOUD_SYNC_HOST/PORT/USER/PASSWORD/DATABASE` | `[sync] …`                | —                        | remote sync DSN, seeded at boot                                         |
+| `VRCX_CLOUD_SYNC_INTERVAL_SEC`                     | `[sync] interval_sec`     | `60`                     | sync cadence (5–3600)                                                   |
+| `VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT`                  | `[sync] allow_plaintext`  | `false`                  | allow unencrypted PG (LAN)                                              |
+| `VRCX_CLOUD_REALTIME_MODE`                         | `[realtime] mode`         | `auto`                   | `auto`: pause server session while desktop active; `always`: keep it on |
+| `VRCX_CLOUD_FEED_LOGGING`                          | `[realtime] feed_logging` | `true`                   | `false`: server never records feed rows (desktop is recorder)           |
+
+## 📖 Usage manual
+
+### First login
+
+1. Open `http://<server>:8800`, enter the web password.
+2. On the VRChat login page, sign in with your account (TOTP / email OTP
+   supported). The server stores the session encrypted at rest.
+3. The app opens on your feed. Data that existed only on your desktop
+   arrives after [pairing](#pairing-your-desktop-vrcx-0).
+
+### Pairing your desktop VRCX-0
+
+Desktop VRCX-0 ships the same sync engine:
+
+1. Desktop VRCX-0 → **Settings → Data Sync**.
+2. Enter the PostgreSQL connection your server uses:
+   host `<server>`, port `5432`, user/password/database from your `.env`.
+   Tick _allow unencrypted connection_ on trusted LANs without TLS.
+3. Press **Test connection**, then enable. First sync does a full
+   bootstrap; afterwards both directions converge every interval.
+
+> Order doesn't matter: server-first or desktop-first both converge.
+
+### Desktop-aware realtime handoff
+
+With `[realtime] mode = auto` (default), the server watches sync-device
+activity:
+
+- **Desktop active** (pushed/pulled within ~90 s) → the server closes its
+  own VRChat websocket and idles. Zero duplicate sessions, zero duplicate
+  feed rows; the web keeps working off synced data.
+- **Desktop quiet** → the server reconnects its own session and the web
+  goes fully realtime again (e.g. desktop shut down for the night).
+
+Set `mode = "always"` if you want the server session on at all times, or
+`feed_logging = false` if the desktop should forever remain the recorder.
+
+### Day to day
+
+- **Feed / friends / history** — realtime while the server session is on;
+  synced-latency (≤ your sync interval) otherwise.
+- **Game logs** (join/leave, video plays, on-play player lists) are
+  recorded by the desktop from VRChat's log files and appear on the web.
+- **Favorites, invites, notifications** — the web talks to VRChat's API
+  directly through the server session.
+- **Data Sync panel** (Settings → Sync) shows every device, its last
+  push/pull, and a _Sync now_ button — on both web and desktop.
+
+## 🎥 Demo
+
+A first-boot walkthrough (login gate → VRChat login → feed):
+
+```
+$ docker compose up -d --build
+ ✔ Container vrcx-cloud-postgres-1  Healthy
+ ✔ Container vrcx-cloud-app-1        Started
+
+$ curl -s localhost:8800/healthz
+{"ok":true,"phase":"Running","authStatus":"Authenticated",...}
+
+Browser → http://localhost:8800
+ ├─ sign in with web password
+ ├─ VRChat login (2FA) … done — session restored on restart
+ ├─ Settings → Data Sync → desktop device "PC-Win11" last pull: 12s ago
+ └─ desktop joins a world → 15s later the web feed shows it
+```
+
+> Real screencast coming with the first tagged release.
+
+## 🏗 Architecture
+
+| Piece                                            | What it is                                                                                                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crates/server`                                  | axum binary: auth, `POST /api/invoke` dispatcher (344 commands), `/api/events` WebSocket, `/api/img` cache, SPA hosting, realtime gate supervisor |
+| `crates/runtime-host-server`                     | server runtime facade over the composition root (`RuntimeHostProfile::Server`)                                                                    |
+| `crates/application-sync`                        | the op-log sync engine shared with desktop VRCX-0                                                                                                 |
+| `crates/*` (application, realtime, persistence…) | the VRCX domain core, unchanged from VRCX-0                                                                                                       |
+| `src/`                                           | the VRCX-0 React app; `webTransport.ts` switches invoke/events to HTTP/WS in browsers                                                             |
+
+Desktop-only subsystems (game-log watcher, VR overlay, tray, updater,
+registry backup, TTS) were removed rather than disabled — the server tree
+contains no dead desktop code.
+
+## 🤔 Why another VRCX?
+
+- **VRCX and VRCX-0 are desktop apps.** If your PC is off — or you just
+  want to check a friend's world from your phone — there was no story.
+  VRCX-Cloud makes the _server_ the always-on device.
+- **One account, many screens.** This is deliberately _not_ multi-tenant
+  SaaS: it's your data, your box, your LAN (or tailnet). No accounts
+  service, no analytics, no public exposure by design.
+- **Don't fight the desktop — join it.** Instead of porting VRCX's
+  storage to PostgreSQL, VRCX-Cloud reuses VRCX-0's own sync engine, so
+  desktop and server are always peers in one mesh, and the heavier
+  desktop-only duties (game logs, screenshots) stay where they belong.
+- **Rust all the way.** The entire backend is the battle-tested VRCX-0
+  codebase (~250k lines) with a new axum shell — not a rewrite.
+
+## ❓ FAQ
+
+**Does the web work while my PC is off?**
+Yes — that's the point. The server keeps its own VRChat session
+(`realtime mode = auto` hands off when the desktop _is_ active and takes
+over when it isn't).
+
+**Will two sessions get my VRChat account flagged?**
+Possibly — any automation carries risk. Keep `[realtime] mode = auto` so
+the server idles while you play; consider an outbound proxy if your
+server's IP differs wildly from your usual one. First login from a new IP
+may hit a captcha (there is no auto-solve).
+
+**Where does my data live?**
+Server data dir (SQLite + image cache, encrypted VRChat session at rest)
+and your PostgreSQL. Nothing leaves your network; telemetry is compiled
+out.
+
+**Multiple VRChat accounts?**
+One server = one account, by design. Run a second compose stack for a
+second account.
+
+**Can I expose it to the internet?**
+Behind a VPN (Tailscale/WireGuard), sure. Directly? Please don't — the
+web layer fronts your full VRChat session.
+
+**How do upgrades work?**
+`git pull && docker compose up -d --build`. The sync protocol is
+version-guarded; desktop and server versions can differ briefly.
+
+## 🔒 Security notes
+
+- Web auth: single password, constant-time compare, session cookies
+  (`HttpOnly`, `SameSite=Lax`), login rate-limiting. LAN-only posture;
+  use TLS via a reverse proxy if needed.
+- PostgreSQL: per-deployment credentials, TLS optional for trusted LANs,
+  never exposed publicly by the compose file.
+- VRChat session cookie: encrypted at rest with a machine-derived key.
+- Keep server + desktop NTP-synced — sync arbitration uses hybrid logical
+  clocks.
+
+## 🤝 Credits
+
+- **[VRCX-0](https://github.com/Map1en/VRCX-0)** by Map1en — the Rust
+  rewrite this project is forked from, and the sync engine both sides
+  share.
+- **[VRCX](https://github.com/vrcx-team/VRCX)** — the original Electron
+  companion, and its community.
+- VRChat is a trademark of VRChat Inc. This project is not affiliated
+  with or endorsed by VRChat Inc.
+
+---
+
+<div align="center">
+
+**[⬆ back to top](#-table-of-contents)**
+
+GPL-3.0 · forked with ❤️ from VRCX-0
+
+</div>

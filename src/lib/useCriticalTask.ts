@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 
-import { restoreNormalWindowModeForIntent } from '@/services/windowModeService';
 import {
     useCriticalTaskStore,
     type CriticalTaskId
@@ -13,7 +12,6 @@ export function useCriticalTask(taskId: CriticalTaskId, active: boolean): void {
         }
         const { setCriticalTaskActive } = useCriticalTaskStore.getState();
         setCriticalTaskActive(taskId, true);
-        restoreNormalWindowModeForIntent();
         return () => setCriticalTaskActive(taskId, false);
     }, [taskId, active]);
 }

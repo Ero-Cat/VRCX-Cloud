@@ -47,14 +47,13 @@ function createSections(purgeDialogOpen: boolean): SettingsPageStateSections {
             settingsTabs: []
         },
         system: {
-            saveBoolPreference: action
+            savePreferenceValue: action,
+            setProxyEnabledPreference: action
         },
         interface: {},
         media: {},
-        integrations: {},
         social: {},
         notifications: {},
-        vr: {},
         advanced: {},
         dialogs: { purgeDialogOpen }
     } as unknown as SettingsPageStateSections;

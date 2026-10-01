@@ -20,16 +20,10 @@ import {
     applyBackgroundImageProjectionEvent,
     initializeBackgroundImage
 } from './background-image/backgroundImageService';
-import { handleAppUpdateStatusEvent } from './backgroundMaintenanceUpdateService';
 import {
     applyCommunityThemeProjectionEvent,
     initializeCommunityThemes
 } from './community-theme/installedThemes';
-import { bindDeepLinkEvents, drainPendingDeepLinks } from './deepLinkService';
-import {
-    bindDesktopNotificationActivationEvents,
-    takePendingDesktopNotificationActivation
-} from './desktopNotificationActivationService';
 import {
     handleFavoriteImportStatusEvent,
     hydrateFavoriteImportRuntimeStatus
@@ -79,11 +73,6 @@ import type {
 } from './runtime-event-bridge/types';
 import { handleScreenshotExportProgressEvent } from './screenshotExportService';
 import { handleScreenshotLibraryScanStatusEvent } from './screenshotLibraryScanService';
-import {
-    handleAppUpdateDownloadProgressEvent,
-    handleAppUpdateDownloadStatusSnapshot,
-    handleAppUpdateInstalledEvent
-} from './updateInstallService';
 import { applyVrcStatusSnapshot } from './vrcStatusService';
 
 function reconcilePendingBackendRealtimeProjectionEvents(): void {
@@ -122,24 +111,8 @@ function handleRuntimeEvent(event: RuntimeEvent): void {
         return;
     }
 
-    if (event.name === 'appUpdateStatus') {
-        void handleAppUpdateStatusEvent(event.payload);
-        void runForegroundUpdateRegistryBackupMaintenance();
-        return;
-    }
-
     if (event.name === 'appLauncherSnapshot') {
         handleAppLauncherSnapshotEvent(event.payload);
-        return;
-    }
-
-    if (event.name === 'appUpdateDownloadProgress') {
-        handleAppUpdateDownloadProgressEvent(event.payload);
-        return;
-    }
-
-    if (event.name === 'appUpdateInstalled') {
-        handleAppUpdateInstalledEvent(event.payload);
         return;
     }
 
@@ -384,9 +357,6 @@ async function hydrateAncillaryRuntimeState(): Promise<void> {
                 );
             }
         ),
-        hydrateRuntimeState('Failed to hydrate app update status:', () =>
-            handleAppUpdateStatusEvent(snapshot.appUpdateStatus)
-        ),
         hydrateRuntimeState(
             'Failed to hydrate debug logging status:',
             async () => {
@@ -430,15 +400,7 @@ async function hydrateAncillaryRuntimeState(): Promise<void> {
             useRuntimeStore
                 .getState()
                 .setPrivacyLock(snapshot.privacyLockState);
-        }),
-        hydrateRuntimeState(
-            'Failed to hydrate app update download status:',
-            async () => {
-                handleAppUpdateDownloadStatusSnapshot(
-                    snapshot.appUpdateDownloadStatus
-                );
-            }
-        )
+        })
     ]);
 }
 
@@ -450,9 +412,6 @@ export async function bindRuntimeEvents(): Promise<() => void> {
         'addGameLogEvent',
         'authenticatedSessionProjection',
         'authenticatedRuntimePhase',
-        'appUpdateStatus',
-        'appUpdateDownloadProgress',
-        'appUpdateInstalled',
         'appLauncherSnapshot',
         'backendRuntimeTelemetry',
         'backgroundImageState',
@@ -574,20 +533,6 @@ export async function bindRuntimeEvents(): Promise<() => void> {
         console.warn('Failed to hydrate authenticated runtime phase:', error);
     }
     await hydrateAncillaryRuntimeState();
-    try {
-        unsubscribers.push(await bindDeepLinkEvents());
-        unsubscribers.push(await bindDesktopNotificationActivationEvents());
-        await Promise.all([
-            drainPendingDeepLinks(),
-            takePendingDesktopNotificationActivation()
-        ]);
-    } catch (error) {
-        resetBackendRealtimeProjectionState();
-        resetAuthenticatedRuntimeMirror();
-        unsubscribeRuntimeEvents(unsubscribers);
-        useSessionStore.getState().setTransportStatus('disconnected');
-        throw error;
-    }
     void requestGroupInstancesRefresh(
         'runtime event binding after backend snapshot hydration'
     );

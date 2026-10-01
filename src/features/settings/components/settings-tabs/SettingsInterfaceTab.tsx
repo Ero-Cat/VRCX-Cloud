@@ -7,7 +7,6 @@ import { useSettingsPageSection } from '../../SettingsPageStateContext';
 import { SettingsTabContent } from '../SettingsViewParts';
 import { SettingsInterfaceAppearanceCard } from './SettingsInterfaceAppearanceCard';
 import { SettingsInterfaceDisplayCards } from './SettingsInterfaceDisplayCards';
-import { SettingsInterfaceThemesCard } from './SettingsInterfaceThemesCard';
 import { SettingsInterfaceUserColorsCard } from './SettingsInterfaceUserColorsCard';
 
 export function SettingsInterfaceTab() {
@@ -16,10 +15,6 @@ export function SettingsInterfaceTab() {
         useShallow((state) => ({
             appFontFamily: state.appFontFamily,
             appCjkFontPack: state.appCjkFontPack,
-            customFontFamily: state.customFontFamily,
-            customFontPrimary: state.customFontPrimary,
-            customFontSecondary: state.customFontSecondary,
-            customFontOverride: state.customFontOverride,
             notificationLayout: state.notificationLayout,
             notificationIconDot: state.notificationIconDot,
             taskbarIconDot: state.taskbarIconDot,
@@ -100,7 +95,6 @@ export function SettingsInterfaceTab() {
                 }
                 onReducedMotionAndBlurChange={onReducedMotionAndBlurChange}
             />
-            <SettingsInterfaceThemesCard />
             <SettingsInterfaceDisplayCards
                 prefs={prefs}
                 onShowInstanceIdInLocationChange={

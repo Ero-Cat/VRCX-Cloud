@@ -3,9 +3,9 @@ import { Outlet, useLocation } from 'react-router';
 
 import { SidePanel } from '@/components/sidebar/SidePanel';
 import { cn } from '@/lib/utils';
-import { restoreNormalWindowModeForIntent } from '@/services/windowModeService';
 import { useShellStore } from '@/state/shellStore';
 
+import { AppMenuBar } from './AppMenuBar';
 import { AppSidebar } from './AppSidebar';
 import { AppStatusBar } from './AppStatusBar';
 import { useRightSidePanelVisibility } from './useRightSidePanelVisibility';
@@ -38,7 +38,6 @@ export function AppShellLayout() {
     const sidePanelWidthRef = useRef(sidePanelWidth);
     const sidePanelElementRef = useRef<HTMLDivElement | null>(null);
     const resizeCleanupRef = useRef<((commit?: boolean) => void) | null>(null);
-    const previousPathnameRef = useRef(location.pathname);
     const sidePanelVisible = sidebarWindowMode || sidePanelOpen;
 
     useEffect(() => {
@@ -60,18 +59,6 @@ export function AppShellLayout() {
             resizeCleanupRef.current?.(false);
         }
     }, [sidePanelVisible, sidebarWindowMode]);
-
-    useEffect(() => {
-        const previousPathname = previousPathnameRef.current;
-        previousPathnameRef.current = location.pathname;
-        if (
-            sidebarWindowMode &&
-            previousPathname !== '/' &&
-            previousPathname !== location.pathname
-        ) {
-            restoreNormalWindowModeForIntent();
-        }
-    }, [location.pathname, sidebarWindowMode]);
 
     function applySidePanelWidth(width: number) {
         const nextWidth = clampSidePanelWidth(width);
@@ -142,6 +129,12 @@ export function AppShellLayout() {
 
     return (
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+            <header
+                data-vrcx-0-surface="app-menu-bar"
+                className="bg-background/80 flex h-8 shrink-0 items-center border-b backdrop-blur"
+            >
+                <AppMenuBar />
+            </header>
             <div className="flex min-h-0 min-w-0 flex-1">
                 <AppSidebar sidebarWindowMode={sidebarWindowMode}>
                     <div

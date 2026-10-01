@@ -180,7 +180,7 @@ export function WebhookSettingsGroup({
 
     return (
         <SettingsCard
-            cardId="integrations.webhook"
+            cardId="notifications.webhook"
             title={t(
                 'view.settings.notifications.notifications.webhook.header'
             )}

@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/lib/dateTime';
 import { STATUS_BAR_CONFIG_KEYS } from '@/repositories/configKeys';
 import configRepository from '@/repositories/configRepository';
-import { startBackgroundModeForCurrentSession } from '@/services/backgroundModeService';
 import { copyTextToClipboard } from '@/services/clipboardService';
 import { wasMutualGraphFetchStartedInThisSession } from '@/services/mutualGraphFetchService';
 import { loadPreferenceSnapshot } from '@/services/preferencesService';
@@ -763,21 +762,6 @@ export function AppStatusBar({
         });
     }
 
-    function startBackgroundMode() {
-        startBackgroundModeForCurrentSession().catch((error: unknown) => {
-            console.warn('Failed to start background mode:', error);
-            toast.add({
-                type: 'error',
-                title:
-                    error instanceof Error
-                        ? error.message
-                        : t(
-                              'component.app_status_bar.toast.failed_to_start_background_mode'
-                          )
-            });
-        });
-    }
-
     function setQueuedZoomLevel(nextZoom: number) {
         queueZoomLevelPreference(nextZoom, { onError: showZoomError });
     }
@@ -852,7 +836,6 @@ export function AppStatusBar({
             });
         },
         onOpenStatusPage: openStatusPage,
-        onStartBackgroundMode: startBackgroundMode,
         onProxyDraftEnabledChange: setProxyDraftEnabled,
         onProxyDraftServerChange: setProxyDraftServer,
         onProxyEditorOpenChange: setProxyEditorOpenValue,

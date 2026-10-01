@@ -6,15 +6,7 @@ type ShellSectionInput = SettingsSectionInput<
 >;
 
 type SystemSectionInput = SettingsSectionInput<
-    | 'savePreferenceValue'
-    | 'saveBoolPreference'
-    | 'setProxyEnabledPreference'
-    | 'setStartAtWindowsStartupPreference'
-    | 'setStartAsMinimizedPreference'
-    | 'setCloseToTrayPreference'
-    | 'setSystemWindowFramePreference'
-    | 'promptAutoLoginDelaySeconds'
-    | 'promptBackgroundModeDelayMinutes'
+    'savePreferenceValue' | 'setProxyEnabledPreference'
 >;
 
 export function buildShellSection({
@@ -30,24 +22,10 @@ export function buildShellSection({
 
 export function buildSystemSection({
     savePreferenceValue,
-    saveBoolPreference,
-    setProxyEnabledPreference,
-    setStartAtWindowsStartupPreference,
-    setStartAsMinimizedPreference,
-    setCloseToTrayPreference,
-    setSystemWindowFramePreference,
-    promptAutoLoginDelaySeconds,
-    promptBackgroundModeDelayMinutes
+    setProxyEnabledPreference
 }: SystemSectionInput) {
     return {
         savePreferenceValue,
-        saveBoolPreference,
-        setProxyEnabledPreference,
-        setStartAtWindowsStartupPreference,
-        setStartAsMinimizedPreference,
-        setCloseToTrayPreference,
-        setSystemWindowFramePreference,
-        promptAutoLoginDelaySeconds,
-        promptBackgroundModeDelayMinutes
+        setProxyEnabledPreference
     };
 }

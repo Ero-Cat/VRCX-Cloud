@@ -17,7 +17,6 @@ export function useLoginPageController() {
 
     return {
         actions: {
-            openDiscord: () => page.openExternalLink(links.discord),
             openForgotPassword: () =>
                 page.openExternalLink(links.vrchatPassword),
             openGithub: () => page.openExternalLink(links.github),
@@ -51,7 +50,6 @@ export function useLoginPageController() {
         utilities: {
             disabled: page.isAuthBusy,
             isValidatingRestore: page.isValidatingRestore,
-            onMigrateLegacyVrcxData: page.migrateLegacyVrcxData,
             onOpenProxyDialog: page.openProxyDialog,
             onRestoreProfileBackup: page.restoreProfileBackup,
             showLegacyMigration: page.showLegacyMigrationAction

@@ -1,4 +1,4 @@
-import { ArchiveRestoreIcon, DatabaseIcon, NetworkIcon } from 'lucide-react';
+import { ArchiveRestoreIcon, NetworkIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/shadcn/button';
@@ -7,19 +7,15 @@ import { Spinner } from '@/ui/shadcn/spinner';
 type LoginPageUtilitiesProps = {
     disabled: boolean;
     isValidatingRestore: boolean;
-    onMigrateLegacyVrcxData: () => void;
     onOpenProxyDialog: () => void;
     onRestoreProfileBackup: () => void;
-    showLegacyMigration: boolean;
 };
 
 export function LoginPageUtilities({
     disabled,
     isValidatingRestore,
-    onMigrateLegacyVrcxData,
     onOpenProxyDialog,
-    onRestoreProfileBackup,
-    showLegacyMigration
+    onRestoreProfileBackup
 }: LoginPageUtilitiesProps) {
     const { t } = useTranslation();
 
@@ -42,20 +38,6 @@ export function LoginPageUtilities({
                 )}
                 {t('profile_backup.restore_from_backup')}
             </Button>
-            {showLegacyMigration ? (
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="sm:col-span-2"
-                    disabled={disabled}
-                    onClick={onMigrateLegacyVrcxData}
-                >
-                    <DatabaseIcon data-icon="inline-start" />
-                    {t(
-                        'view.settings.advanced.advanced.database_cleanup.legacy_migration'
-                    )}
-                </Button>
-            ) : null}
         </div>
     );
 }

@@ -10,23 +10,9 @@ import {
 } from 'react-router';
 
 import { GlobalHosts } from '@/app/GlobalHosts';
-import { AppTitleBar } from '@/components/layout/AppTitleBar';
-import { MacNativeMenuActionHost } from '@/components/layout/MacNativeMenuActionHost';
-import { MacOverlayTitleBar } from '@/components/layout/MacOverlayTitleBar';
 import { QuickSearchProvider } from '@/components/layout/QuickSearchProvider';
 import { useGlobalKeyboardShortcuts } from '@/components/layout/useGlobalKeyboardShortcuts';
-import { useSidebarAutoHide } from '@/components/layout/useSidebarAutoHide';
-import { useTrayShortcut } from '@/components/layout/useTrayShortcut';
-import { WindowResizeHandles } from '@/components/layout/WindowResizeHandles';
-import { cn } from '@/lib/utils';
 import { recordRouteEnter } from '@/services/telemetry/telemetryPageReach';
-import {
-    initializeWindowAlwaysOnTop,
-    initializeWindowDisplayMode,
-    leaveSidebarWindowModeForLogin,
-    restoreSidebarWindowModeAfterLogin,
-    subscribeSidebarModeToggle
-} from '@/services/windowModeService';
 import { useNavigationCacheStore } from '@/state/navigationCacheStore';
 import { useRuntimeStore } from '@/state/runtimeStore';
 import { useSessionStore } from '@/state/sessionStore';
@@ -118,10 +104,6 @@ function AppShellRoute() {
 }
 
 function AppRouterContent() {
-    const hostPlatform = useRuntimeStore(
-        (state) => state.hostCapabilities.platform
-    );
-    const isMacHost = hostPlatform === 'macos';
     const { pathname, search, hash } = useLocation();
     const sessionReady = useSessionStore(
         (state) => state.sessionPhase === 'ready'
@@ -133,86 +115,20 @@ function AppRouterContent() {
         }
     }, [pathname, search, hash, sessionReady]);
     useGlobalKeyboardShortcuts();
-    useTrayShortcut();
-    useSidebarAutoHide();
-    useEffect(() => {
-        let disposed = false;
-        let unsubscribe: (() => void) | undefined;
-        void subscribeSidebarModeToggle()
-            .then((dispose) => {
-                if (disposed) {
-                    dispose();
-                    return;
-                }
-                unsubscribe = dispose;
-            })
-            .catch((error: unknown) => {
-                console.warn('Failed to watch the sidebar mode toggle:', error);
-            });
-        return () => {
-            disposed = true;
-            unsubscribe?.();
-        };
-    }, []);
-    useEffect(() => {
-        void initializeWindowDisplayMode().catch((error: unknown) => {
-            console.warn(
-                'Failed to initialize the window display mode:',
-                error
-            );
-        });
-        void initializeWindowAlwaysOnTop().catch((error: unknown) => {
-            console.warn(
-                'Failed to restore the always-on-top window state:',
-                error
-            );
-        });
-    }, []);
     useEffect(() => {
         recordRouteEnter(pathname);
     }, [pathname]);
-    useEffect(() => {
-        if (pathname === '/login') {
-            leaveSidebarWindowModeForLogin();
-        } else {
-            restoreSidebarWindowModeAfterLogin();
-        }
-    }, [pathname]);
-    useEffect(() => {
-        if (!isMacHost) {
-            return undefined;
-        }
-
-        const handleContextMenu = (event: MouseEvent) => {
-            event.preventDefault();
-        };
-
-        document.addEventListener('contextmenu', handleContextMenu);
-        return () => {
-            document.removeEventListener('contextmenu', handleContextMenu);
-        };
-    }, [isMacHost]);
-
-    const isWindowsHost = hostPlatform === 'windows';
-    const hasCustomWindowFrame =
-        isWindowsHost && !window.__VRCX_SYSTEM_WINDOW_FRAME__;
 
     return (
         <QuickSearchProvider enabled={sessionReady}>
             <div
                 data-vrcx-0-surface="app-root"
-                className={cn(
-                    'vrcx-0-app-root flex min-h-0 w-full flex-col overflow-hidden',
-                    hasCustomWindowFrame
-                        ? 'vrcx-0-custom-window-frame h-full'
-                        : 'h-screen'
-                )}
+                className="vrcx-0-app-root flex h-screen min-h-0 w-full flex-col overflow-hidden"
             >
                 <div
                     aria-hidden="true"
                     className="vrcx-0-background-image-transition-layer"
                 />
-                {isMacHost ? <MacOverlayTitleBar /> : <AppTitleBar />}
                 <div
                     data-vrcx-0-surface="route-host"
                     className="vrcx-0-route-host min-h-0 flex-1 overflow-hidden"
@@ -257,9 +173,7 @@ function AppRouterContent() {
                     </RouteErrorBoundary>
                 </div>
                 <GlobalHosts />
-                <MacNativeMenuActionHost />
             </div>
-            {hasCustomWindowFrame ? <WindowResizeHandles /> : null}
         </QuickSearchProvider>
     );
 }

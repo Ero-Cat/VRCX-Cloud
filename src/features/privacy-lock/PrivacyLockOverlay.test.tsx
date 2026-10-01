@@ -14,8 +14,7 @@ import type { PrivacyLockOutcome } from '@/platform/tauri/bindings';
 const mocks = vi.hoisted(() => ({
     unlock: vi.fn<(password: string) => Promise<PrivacyLockOutcome>>(),
     clear: vi.fn<(password: string) => Promise<PrivacyLockOutcome>>(),
-    logout: vi.fn<() => Promise<boolean>>(),
-    background: vi.fn<() => Promise<unknown>>()
+    logout: vi.fn<() => Promise<boolean>>()
 }));
 vi.mock('@/platform/tauri/bindings', () => ({
     commands: {
@@ -25,9 +24,6 @@ vi.mock('@/platform/tauri/bindings', () => ({
 }));
 vi.mock('@/services/authExecutionService', () => ({
     logoutWithoutConfirmation: mocks.logout
-}));
-vi.mock('@/services/backgroundModeService', () => ({
-    startBackgroundModeForCurrentSession: mocks.background
 }));
 vi.mock('@/services/entityMediaService', () => ({
     userImage: () => ''

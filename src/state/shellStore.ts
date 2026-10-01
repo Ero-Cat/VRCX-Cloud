@@ -31,19 +31,6 @@ function saveWindowDisplayMode(windowDisplayMode: WindowDisplayMode): void {
     localStorage.setItem(WINDOW_DISPLAY_MODE_STORAGE_KEY, windowDisplayMode);
 }
 
-const WINDOW_ALWAYS_ON_TOP_STORAGE_KEY = 'vrcx-main-window-always-on-top';
-
-function loadWindowAlwaysOnTop(): boolean {
-    return localStorage.getItem(WINDOW_ALWAYS_ON_TOP_STORAGE_KEY) === 'true';
-}
-
-function saveWindowAlwaysOnTop(windowAlwaysOnTop: boolean): void {
-    localStorage.setItem(
-        WINDOW_ALWAYS_ON_TOP_STORAGE_KEY,
-        String(windowAlwaysOnTop)
-    );
-}
-
 type ShellStore = {
     sidebarOpen: boolean;
     rightSidebarOpen: boolean;
@@ -54,7 +41,6 @@ type ShellStore = {
     tableDensity: TableDensity;
     notificationLayout: NotificationLayout;
     windowDisplayMode: WindowDisplayMode;
-    windowAlwaysOnTop: boolean;
     notificationIconDot: boolean;
     taskbarIconDot: boolean;
     hideNicknames: boolean;
@@ -83,7 +69,6 @@ type ShellStore = {
         windowDisplayMode: WindowDisplayMode,
         remember?: boolean
     ): void;
-    setWindowAlwaysOnTop(windowAlwaysOnTop: boolean): void;
     setNotificationIconDot(notificationIconDot: boolean): void;
     setTaskbarIconDot(taskbarIconDot: boolean): void;
     setAppearancePreferences(options?: { hideNicknames?: boolean }): void;
@@ -116,7 +101,6 @@ type ShellStoreState = Omit<
     | 'setTableDensity'
     | 'setNotificationLayout'
     | 'setWindowDisplayMode'
-    | 'setWindowAlwaysOnTop'
     | 'setNotificationIconDot'
     | 'setTaskbarIconDot'
     | 'setAppearancePreferences'
@@ -142,7 +126,6 @@ const initialState: ShellStoreState = {
     tableDensity: 'standard',
     notificationLayout: 'notification-center',
     windowDisplayMode: loadWindowDisplayMode(),
-    windowAlwaysOnTop: loadWindowAlwaysOnTop(),
     notificationIconDot: true,
     taskbarIconDot: true,
     hideNicknames: false,
@@ -244,10 +227,6 @@ export const useShellStore = create<ShellStore>((set, get) => ({
             saveWindowDisplayMode(windowDisplayMode);
         }
         set({ windowDisplayMode });
-    },
-    setWindowAlwaysOnTop(windowAlwaysOnTop) {
-        saveWindowAlwaysOnTop(windowAlwaysOnTop);
-        set({ windowAlwaysOnTop });
     },
     setNotificationIconDot(notificationIconDot) {
         set({ notificationIconDot });

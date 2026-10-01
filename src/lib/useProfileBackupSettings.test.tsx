@@ -130,7 +130,9 @@ describe('useProfileBackupSettings', () => {
 
         expect(mocks.selectSaveFile).toHaveBeenCalledWith(
             'D:\\Backups',
-            expect.stringMatching(/^VRCX-0-backup-\d{8}-\d{6}\.vrcx0backup$/),
+            expect.stringMatching(
+                /^VRCX-Cloud-backup-\d{8}-\d{6}\.vrcx0backup$/
+            ),
             '.vrcx0backup',
             'profile_backup.file_filter (*.vrcx0backup)|*.vrcx0backup'
         );

@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { ChevronDownIcon, Settings2Icon } from 'lucide-react';
+import { ChevronDownIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { getLanguageName, languageCodes } from '@/localization/index';
@@ -50,10 +50,6 @@ type SettingsOptionItem = {
 type FontPreferencePrefs = {
     appFontFamily: string;
     appCjkFontPack: string;
-    customFontFamily?: string;
-    customFontPrimary?: string;
-    customFontSecondary?: string;
-    customFontOverride?: string;
 };
 
 type AppearancePrefs = FontPreferencePrefs & {
@@ -115,9 +111,6 @@ function getFontFamilyLabel(t: TFunction, value: string) {
     if (value === 'system_ui') {
         return t('view.settings.appearance.appearance.font_family_system_ui');
     }
-    if (value === 'custom') {
-        return t('view.settings.appearance.appearance.font_family_custom');
-    }
     return t('view.settings.appearance.appearance.font_family_geist');
 }
 
@@ -128,35 +121,11 @@ function getCjkFontPackLabel(t: TFunction, value: string) {
     );
 }
 
-function getCustomFontDisplayText(t: TFunction, prefs: FontPreferencePrefs) {
-    const override = (prefs.customFontOverride ?? '').trim();
-    if (override) {
-        return override;
-    }
-
-    const selectedFonts = [
-        (prefs.customFontPrimary ?? '').trim(),
-        (prefs.customFontSecondary ?? '').trim()
-    ].filter(Boolean);
-    if (selectedFonts.length) {
-        return selectedFonts.join(' / ');
-    }
-
-    return (
-        (prefs.customFontFamily ?? '').trim() ||
-        t('view.settings.appearance.appearance.font_family_custom')
-    );
-}
-
 function getFontDropdownDisplayText(
     t: TFunction,
     prefs: FontPreferencePrefs,
     showCjkFontPack: boolean
 ) {
-    if (prefs.appFontFamily === 'custom') {
-        return getCustomFontDisplayText(t, prefs);
-    }
-
     const fontLabel = getFontFamilyLabel(
         t,
         prefs.appFontFamily || APP_FONT_DEFAULT_KEY
@@ -185,7 +154,6 @@ function FontFamilyPreferenceField({
 }) {
     const { t } = useTranslation();
     const showCjkFontPack = supportsConfigurableCjkFontPack(locale);
-    const customActive = prefs.appFontFamily === 'custom';
 
     return (
         <Field
@@ -222,7 +190,7 @@ function FontFamilyPreferenceField({
                     <DropdownMenuContent align="end">
                         <DropdownMenuGroup>
                             <DropdownMenuRadioGroup
-                                value={customActive ? '' : prefs.appFontFamily}
+                                value={prefs.appFontFamily}
                                 onValueChange={onFontFamilyChange}
                             >
                                 {westernFontDropdownOptions.map((value) => (
@@ -235,7 +203,7 @@ function FontFamilyPreferenceField({
                                 ))}
                             </DropdownMenuRadioGroup>
                         </DropdownMenuGroup>
-                        {showCjkFontPack && !customActive ? (
+                        {showCjkFontPack ? (
                             <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
@@ -257,17 +225,6 @@ function FontFamilyPreferenceField({
                         ) : null}
                     </DropdownMenuContent>
                 </DropdownMenu>
-                <Button
-                    type="button"
-                    variant={customActive ? 'secondary' : 'outline'}
-                    size="sm"
-                    onClick={() => onFontFamilyChange('custom')}
-                >
-                    <Settings2Icon data-icon="inline-start" />
-                    {t(
-                        'view.settings.appearance.appearance.font_family_custom'
-                    )}
-                </Button>
             </div>
         </Field>
     );

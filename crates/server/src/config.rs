@@ -67,6 +67,7 @@ pub struct ServerConfig {
     pub web: WebSettings,
     /// None = default (feed logging on).
     pub feed_logging: Option<bool>,
+    pub realtime_auto_gate: bool,
 }
 
 /// Sync settings resolved from file+env; `None` fields are not seeded.
@@ -150,10 +151,22 @@ impl ServerConfig {
                 .unwrap_or_else(|| PathBuf::from("dist")),
         };
 
-        let feed_logging = file
-            .realtime
-            .and_then(|section| section.feed_logging)
+        let realtime_section = file.realtime.unwrap_or_default();
+        let feed_logging = realtime_section
+            .feed_logging
             .or(env_bool("VRCX_CLOUD_FEED_LOGGING"));
+        let mode = env_non_empty("VRCX_CLOUD_REALTIME_MODE")
+            .or(realtime_section.mode)
+            .unwrap_or_else(|| "auto".to_string());
+        let realtime_auto_gate = match mode.as_str() {
+            "always" => false,
+            "auto" => true,
+            other => {
+                return Err(format!(
+                    "invalid [realtime] mode `{other}` (expected `auto` or `always`)"
+                ))
+            }
+        };
 
         Ok(Self {
             data_dir,
@@ -161,6 +174,7 @@ impl ServerConfig {
             sync,
             web,
             feed_logging,
+            realtime_auto_gate,
         })
     }
 }
@@ -173,6 +187,11 @@ pub struct RealtimeSection {
     /// feed rows from two simultaneous realtime sessions (the desktop's
     /// rows still arrive via remote sync).
     pub feed_logging: Option<bool>,
+    /// `auto` (default): the server pauses its own VRChat realtime
+    /// websocket while a desktop device is actively syncing, and takes
+    /// over when the desktop goes quiet. `always`: the server always
+    /// keeps its own session regardless of desktop activity.
+    pub mode: Option<String>,
 }
 
 /// Web UI access settings.

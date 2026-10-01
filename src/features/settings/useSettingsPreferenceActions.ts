@@ -3,24 +3,13 @@ import type {
     BoolConfigPreferenceKey,
     StringConfigPreferenceKey
 } from '@/services/preferencesService';
-import {
-    consumeSystemFontsUnavailableWarning,
-    loadSystemFonts
-} from '@/services/systemFontsService';
 import type { AppToastOptions } from '@/services/toastService';
-import { loadVrchatConfigSnapshot } from '@/services/vrchatConfigService';
 import type { OverlayActivityTypeDefinition } from '@/shared/constants/overlayActivityFilters';
 import type {
     PreferencesSnapshot,
     PreferencesStoreState,
     TrustColorKey
 } from '@/state/preferencesStore';
-
-import {
-    composeCustomFontFamily,
-    createCustomFontDraftFromPrefs,
-    type CustomFontDraft
-} from './settingsValues';
 
 type PreferenceKey = Extract<keyof PreferencesSnapshot, string>;
 type NormalizedConfigKey<Key extends string> = Key extends `VRCX_${infer Name}`
@@ -55,8 +44,6 @@ type SettingsPreferenceActionsDeps = {
     configRepository: {
         setMany(entries: Array<[string, string]>): Promise<void>;
     };
-    customFontDraft: CustomFontDraft;
-    isValidFontFamilyList: (value: string) => boolean;
     loadTrustColorPreference: () => Promise<PreferencesSnapshot['trustColor']>;
     localFavoriteFriendsGroups: string[];
     normalizeAppCjkFontPack: (value: string) => string;
@@ -70,11 +57,6 @@ type SettingsPreferenceActionsDeps = {
         key: BoolConfigPreferenceKey,
         value: boolean
     ) => Promise<void>;
-    setConfigTreeData: (value: Record<string, unknown>) => void;
-    setCustomFontDialogOpen: (value: boolean) => void;
-    setCustomFontDraft: (value: CustomFontDraft) => void;
-    setCustomFontOptions: (value: string[]) => void;
-    setCustomFontOptionsLoading: (value: boolean) => void;
     setLocalFavoriteFriendsGroups: (value: string[]) => void;
     setLocalFavoriteFriendsGroupsPreference: (
         value: string[]
@@ -101,26 +83,9 @@ type SettingsPreferenceActionsDeps = {
         key: TrustColorKey,
         value: string
     ) => Promise<PreferencesSnapshot['trustColor']>;
-    setOverlayActivityFiltersPreference: (
-        value: PreferencesSnapshot['overlayActivityFilters'],
-        definitions?: OverlayActivityTypeDefinition[]
-    ) => Promise<PreferencesSnapshot['overlayActivityFilters']>;
-    setVrNotificationActivityFiltersPreference: (
-        value: PreferencesSnapshot['vrNotificationActivityFilters']
-    ) => Promise<PreferencesSnapshot['vrNotificationActivityFilters']>;
-    setHmdNotificationActivityFiltersPreference: (
-        value: PreferencesSnapshot['hmdNotificationActivityFilters']
-    ) => Promise<PreferencesSnapshot['hmdNotificationActivityFilters']>;
-    setDesktopNotificationActivityFiltersPreference: (
-        value: PreferencesSnapshot['desktopNotificationActivityFilters']
-    ) => Promise<PreferencesSnapshot['desktopNotificationActivityFilters']>;
     setWebhookActivityFiltersPreference: (
         value: PreferencesSnapshot['webhookActivityFilters']
     ) => Promise<PreferencesSnapshot['webhookActivityFilters']>;
-    setTtsNotificationActivityFiltersPreference: (
-        value: PreferencesSnapshot['ttsNotificationActivityFilters']
-    ) => Promise<PreferencesSnapshot['ttsNotificationActivityFilters']>;
-    setWristOverlayEnabledPreference: (value: boolean) => Promise<boolean>;
     t: (key: string) => string;
     tableLimitsDraft: {
         maxTableSize: string;
@@ -131,7 +96,7 @@ type SettingsPreferenceActionsDeps = {
         add(options: AppToastOptions): void;
     };
     usePreferencesStore: {
-        getState(): Pick<PreferencesStoreState, 'proxyServer' | 'tableLimits'>;
+        getState(): Pick<PreferencesStoreState, 'tableLimits'>;
     };
     vrchatAuthRepository: {
         getOnlineVisits(): Promise<{ json: unknown }>;
@@ -144,19 +109,6 @@ type FontPreferencesInput = Partial<{
     fontFamily: string;
 }>;
 
-type ActivityFilterSurfaceField =
-    | 'overlayActivityFilters'
-    | 'vrNotificationActivityFilters'
-    | 'hmdNotificationActivityFilters'
-    | 'desktopNotificationActivityFilters'
-    | 'webhookActivityFilters'
-    | 'ttsNotificationActivityFilters';
-
-type ActivityFilterSurfaceSetter<Field extends ActivityFilterSurfaceField> = (
-    value: PreferencesSnapshot[Field],
-    definitions?: OverlayActivityTypeDefinition[]
-) => Promise<PreferencesSnapshot[Field]>;
-
 export function useSettingsPreferenceActions({
     APP_FONT_DEFAULT_KEY,
     DEFAULT_MAX_TABLE_SIZE,
@@ -165,8 +117,6 @@ export function useSettingsPreferenceActions({
     auth,
     commit,
     configRepository,
-    customFontDraft,
-    isValidFontFamilyList,
     loadTrustColorPreference,
     localFavoriteFriendsGroups,
     normalizeAppCjkFontPack,
@@ -175,11 +125,6 @@ export function useSettingsPreferenceActions({
     prefs,
     resetTrustColorsPreference,
     setBoolConfigPreference,
-    setConfigTreeData,
-    setCustomFontDialogOpen,
-    setCustomFontDraft,
-    setCustomFontOptions,
-    setCustomFontOptionsLoading,
     setLocalFavoriteFriendsGroups,
     setLocalFavoriteFriendsGroupsPreference,
     setOnlineVisitCount,
@@ -192,13 +137,7 @@ export function useSettingsPreferenceActions({
     setTableLimitsPreference,
     setTablePageSizesDialogOpen,
     setTrustColorPreference,
-    setOverlayActivityFiltersPreference,
-    setVrNotificationActivityFiltersPreference,
-    setHmdNotificationActivityFiltersPreference,
-    setDesktopNotificationActivityFiltersPreference,
     setWebhookActivityFiltersPreference,
-    setTtsNotificationActivityFiltersPreference,
-    setWristOverlayEnabledPreference,
     t,
     tableLimitsDraft,
     tableLimitsSaveDisabled,
@@ -283,96 +222,6 @@ export function useSettingsPreferenceActions({
             cjkFontPack
         });
     }
-    function openCustomFontDialog() {
-        setCustomFontDraft(createCustomFontDraftFromPrefs(prefs));
-        setCustomFontDialogOpen(true);
-        setCustomFontOptionsLoading(true);
-        loadSystemFonts()
-            .then((fonts) => {
-                setCustomFontOptions(fonts);
-                if (consumeSystemFontsUnavailableWarning(fonts)) {
-                    toast.add({
-                        type: 'warning',
-                        title: t(
-                            'view.settings.appearance.appearance.font_family_custom_detection_unavailable_toast'
-                        )
-                    });
-                }
-            })
-            .finally(() => {
-                setCustomFontOptionsLoading(false);
-            });
-    }
-    async function saveCustomFontFamily(
-        value: CustomFontDraft = customFontDraft
-    ) {
-        const draft = value;
-        const nextDraft: CustomFontDraft = {
-            primary: String(draft.primary ?? '').trim(),
-            secondary: String(draft.secondary ?? '').trim(),
-            override: String(draft.override ?? '').trim()
-        };
-        const nextValue = composeCustomFontFamily(nextDraft);
-        if (!isValidFontFamilyList(nextValue)) {
-            toast.add({
-                type: 'error',
-                title: t(
-                    'view.settings.appearance.appearance.font_family_custom_invalid'
-                )
-            });
-            return;
-        }
-        const previousFontFamily = prefs.appFontFamily;
-        const previousCustomFontFamily = prefs.customFontFamily;
-        const previousCustomFontPrimary = prefs.customFontPrimary;
-        const previousCustomFontSecondary = prefs.customFontSecondary;
-        const previousCustomFontOverride = prefs.customFontOverride;
-        const saved = await commit(
-            () =>
-                configRepository.setMany([
-                    ['customFontPrimary', nextDraft.primary],
-                    ['customFontSecondary', nextDraft.secondary],
-                    ['customFontOverride', nextDraft.override],
-                    ['customFontFamily', nextValue],
-                    ['VRCX_fontFamily', 'custom']
-                ]),
-            () => {
-                setPrefs((current) => ({
-                    ...current,
-                    appFontFamily: 'custom',
-                    customFontFamily: nextValue,
-                    customFontPrimary: nextDraft.primary,
-                    customFontSecondary: nextDraft.secondary,
-                    customFontOverride: nextDraft.override
-                }));
-                applyAppFontPreferences({
-                    fontFamily: 'custom',
-                    customFontFamily: nextValue,
-                    cjkFontPack: prefs.appCjkFontPack
-                });
-                return () => {
-                    setPrefs((current) => ({
-                        ...current,
-                        appFontFamily: previousFontFamily,
-                        customFontFamily: previousCustomFontFamily,
-                        customFontPrimary: previousCustomFontPrimary,
-                        customFontSecondary: previousCustomFontSecondary,
-                        customFontOverride: previousCustomFontOverride
-                    }));
-                    applyAppFontPreferences({
-                        fontFamily: previousFontFamily,
-                        customFontFamily: previousCustomFontFamily,
-                        cjkFontPack: prefs.appCjkFontPack
-                    });
-                };
-            }
-        );
-        if (!saved) {
-            return;
-        }
-        setCustomFontDialogOpen(false);
-        toast.add({ type: 'success', title: t('common.settings_saved') });
-    }
     async function restorePersistedTrustColors() {
         const persisted = await loadTrustColorPreference();
         setPrefs((current) => ({
@@ -445,20 +294,6 @@ export function useSettingsPreferenceActions({
                         : t(
                               'view.settings.toast.failed_to_refresh_sqlite_table_sizes'
                           )
-            });
-        }
-    }
-    async function refreshConfigTreeData() {
-        try {
-            const snapshot = await loadVrchatConfigSnapshot({ force: true });
-            setConfigTreeData(snapshot || {});
-        } catch (error) {
-            toast.add({
-                type: 'error',
-                title:
-                    error instanceof Error
-                        ? error.message
-                        : t('view.settings.toast.failed_to_refresh_config_json')
             });
         }
     }
@@ -541,83 +376,26 @@ export function useSettingsPreferenceActions({
             }
         );
     }
-    function makeSaveActivityFilterSurface<
-        Field extends ActivityFilterSurfaceField
-    >(field: Field, setPreference: ActivityFilterSurfaceSetter<Field>) {
-        return async function saveActivityFilterSurface(
-            value: PreferencesSnapshot[Field],
-            definitions?: OverlayActivityTypeDefinition[]
-        ) {
-            let savedFilters = prefs[field];
-            const previousFilters = prefs[field];
-            const saved = await commit(
-                async () => {
-                    savedFilters = await setPreference(value, definitions);
-                },
-                () => {
-                    setPrefs((current) => ({
-                        ...current,
-                        [field]: value
-                    }));
-                    return () =>
-                        setPrefs((current) => ({
-                            ...current,
-                            [field]: previousFilters
-                        }));
-                }
-            );
-            if (!saved) {
-                return null;
-            }
-            setPrefs((current) => ({
-                ...current,
-                [field]: savedFilters
-            }));
-            toast.add({ type: 'success', title: t('common.settings_saved') });
-            return savedFilters;
-        };
-    }
-    const saveOverlayActivityFilters = makeSaveActivityFilterSurface(
-        'overlayActivityFilters',
-        setOverlayActivityFiltersPreference
-    );
-    const saveVrNotificationActivityFilters = makeSaveActivityFilterSurface(
-        'vrNotificationActivityFilters',
-        setVrNotificationActivityFiltersPreference
-    );
-    const saveHmdNotificationActivityFilters = makeSaveActivityFilterSurface(
-        'hmdNotificationActivityFilters',
-        setHmdNotificationActivityFiltersPreference
-    );
-    const saveDesktopNotificationActivityFilters =
-        makeSaveActivityFilterSurface(
-            'desktopNotificationActivityFilters',
-            setDesktopNotificationActivityFiltersPreference
-        );
-    const saveWebhookActivityFilters = makeSaveActivityFilterSurface(
-        'webhookActivityFilters',
-        setWebhookActivityFiltersPreference
-    );
-    const saveTtsNotificationActivityFilters = makeSaveActivityFilterSurface(
-        'ttsNotificationActivityFilters',
-        setTtsNotificationActivityFiltersPreference
-    );
-    async function saveWristOverlayEnabled(value: boolean) {
-        let savedValue = value === true;
-        const previousValue = prefs.wristOverlayEnabled;
+    async function saveWebhookActivityFilters(
+        value: PreferencesSnapshot['webhookActivityFilters'],
+        definitions?: OverlayActivityTypeDefinition[]
+    ) {
+        void definitions;
+        let savedFilters = prefs.webhookActivityFilters;
+        const previousFilters = prefs.webhookActivityFilters;
         const saved = await commit(
             async () => {
-                savedValue = await setWristOverlayEnabledPreference(savedValue);
+                savedFilters = await setWebhookActivityFiltersPreference(value);
             },
             () => {
                 setPrefs((current) => ({
                     ...current,
-                    wristOverlayEnabled: savedValue
+                    webhookActivityFilters: value
                 }));
                 return () =>
                     setPrefs((current) => ({
                         ...current,
-                        wristOverlayEnabled: previousValue
+                        webhookActivityFilters: previousFilters
                     }));
             }
         );
@@ -626,25 +404,10 @@ export function useSettingsPreferenceActions({
         }
         setPrefs((current) => ({
             ...current,
-            wristOverlayEnabled: savedValue
+            webhookActivityFilters: savedFilters
         }));
-        return savedValue;
-    }
-    function speakNotificationTts(
-        text: string,
-        voiceId: string = prefs.notificationTTSVoiceNative
-    ) {
-        commands
-            .appHostTtsSpeak(text, voiceId || null, prefs.notificationTTSVolume)
-            .catch((error) => {
-                console.warn('Failed to play notification TTS', error);
-                toast.add({
-                    type: 'warning',
-                    title: t(
-                        'view.settings.notifications.notifications.text_to_speech.tts_test_failed'
-                    )
-                });
-            });
+        toast.add({ type: 'success', title: t('common.settings_saved') });
+        return savedFilters;
     }
     return {
         commit,
@@ -653,25 +416,15 @@ export function useSettingsPreferenceActions({
         saveStringPreference,
         saveFontFamilyPreference,
         selectCjkFontPack,
-        openCustomFontDialog,
-        saveCustomFontFamily,
         saveTrustColor,
         resetTrustColors,
         refreshSqliteTableSizes,
-        refreshConfigTreeData,
         refreshOnlineVisits,
         setProxyEnabledPreference,
         openTablePageSizesDialog,
         openTableLimitsDialog,
         saveTableLimitsDialog,
         toggleLocalFavoriteFriendsGroup,
-        saveOverlayActivityFilters,
-        saveVrNotificationActivityFilters,
-        saveHmdNotificationActivityFilters,
-        saveDesktopNotificationActivityFilters,
-        saveWebhookActivityFilters,
-        saveTtsNotificationActivityFilters,
-        saveWristOverlayEnabled,
-        speakNotificationTts
+        saveWebhookActivityFilters
     };
 }

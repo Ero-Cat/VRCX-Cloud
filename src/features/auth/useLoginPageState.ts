@@ -19,7 +19,6 @@ import {
     refreshSavedAuthSnapshot
 } from '@/services/authSnapshotService';
 import { openExternalLink } from '@/services/entityMediaService';
-import { promptLegacyVrcxForceMigration } from '@/services/legacyVrcxMigrationService';
 import {
     loadPreferenceSnapshot,
     setAppLanguagePreference
@@ -31,7 +30,6 @@ import {
     testProxySettings as testProxySettingsConnectivity
 } from '@/services/proxySettingsService';
 import { toast } from '@/services/toastService';
-import { useModalStore } from '@/state/modalStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useSessionStore } from '@/state/sessionStore';
 import { useShellStore } from '@/state/shellStore';
@@ -58,8 +56,6 @@ export function useLoginPageState() {
     const locale = useShellStore((state) => state.locale);
     const proxyEnabled = usePreferencesStore((state) => state.proxyEnabled);
     const proxyServer = usePreferencesStore((state) => state.proxyServer);
-    const alert = useModalStore((state) => state.alert);
-    const confirm = useModalStore((state) => state.confirm);
     const preferencesHydrated = usePreferencesStore(
         (state) => state.preferencesHydrated
     );
@@ -182,11 +178,6 @@ export function useLoginPageState() {
         setProxyEnabledInput(usePreferencesStore.getState().proxyEnabled);
         setProxyInput(usePreferencesStore.getState().proxyServer || '');
         setIsProxyDialogOpen(true);
-    }
-
-    async function migrateLegacyVrcxData() {
-        cancelPendingAutoLogin();
-        await promptLegacyVrcxForceMigration({ alert, confirm, t, toast });
     }
 
     async function restoreProfileBackup() {
@@ -432,7 +423,6 @@ export function useLoginPageState() {
         locale,
         loginErrors,
         loginForm,
-        migrateLegacyVrcxData,
         openExternalLink,
         openProxyDialog,
         prepareSavedAccountLogin,

@@ -2,10 +2,6 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import {
-    restoreNormalWindowModeForIntent,
-    runAfterRestoringNormalWindow
-} from '@/services/windowModeService';
-import {
     NAV_SHORTCUT_POSITION_LIMIT,
     publishNavShortcutRequested
 } from '@/shared/events/navLayoutEvents';
@@ -138,9 +134,7 @@ export function useGlobalKeyboardShortcuts() {
                 ) {
                     return;
                 }
-                runAfterRestoringNormalWindow(() => {
-                    publishNavShortcutRequested(navShortcutPosition);
-                });
+                publishNavShortcutRequested(navShortcutPosition);
                 return;
             }
 
@@ -149,7 +143,6 @@ export function useGlobalKeyboardShortcuts() {
             }
             if (key === '/') {
                 event.preventDefault();
-                restoreNormalWindowModeForIntent();
                 const keyboardShortcutsOpen =
                     useRuntimeStore.getState().systemHosts
                         .keyboardShortcutsOpen;

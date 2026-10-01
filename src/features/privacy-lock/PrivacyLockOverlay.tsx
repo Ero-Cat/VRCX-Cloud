@@ -8,7 +8,6 @@ import { StatusDot } from '@/components/layout/status-bar/StatusBarParts';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
 import type { PrivacyLockOutcome } from '@/platform/tauri/bindings';
 import { logoutWithoutConfirmation } from '@/services/authExecutionService';
-import { startBackgroundModeForCurrentSession } from '@/services/backgroundModeService';
 import { userImage } from '@/services/entityMediaService';
 import {
     clearPrivacyLockPassword,
@@ -68,17 +67,12 @@ function LockedPanel() {
             !state.vrcStatus.indicator || state.vrcStatus.indicator === 'none'
     );
     const [recovering, setRecovering] = useState(false);
-    const [pendingAction, setPendingAction] = useState<
-        'background' | 'logout' | null
-    >(null);
+    const [pendingAction, setPendingAction] = useState<'logout' | null>(null);
     const [actionError, setActionError] = useState('');
     const avatarUrl = userImage(currentUser, 128);
 
-    async function runAction(
-        action: 'background' | 'logout',
-        run: () => Promise<unknown>
-    ) {
-        setPendingAction(action);
+    async function runAction(run: () => Promise<unknown>) {
+        setPendingAction('logout');
         setActionError('');
         try {
             await run();
@@ -123,26 +117,7 @@ function LockedPanel() {
                     variant="outline"
                     size="sm"
                     disabled={pendingAction !== null}
-                    onClick={() =>
-                        void runAction(
-                            'background',
-                            startBackgroundModeForCurrentSession
-                        )
-                    }
-                >
-                    {pendingAction === 'background' ? (
-                        <Spinner data-icon="inline-start" />
-                    ) : null}
-                    {t('privacy_lock.action.background_mode')}
-                </Button>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={pendingAction !== null}
-                    onClick={() =>
-                        void runAction('logout', logoutWithoutConfirmation)
-                    }
+                    onClick={() => void runAction(logoutWithoutConfirmation)}
                 >
                     {pendingAction === 'logout' ? (
                         <Spinner data-icon="inline-start" />

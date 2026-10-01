@@ -63,7 +63,7 @@ function WebLoginGate(): React.ReactElement {
             createElement(
                 'h1',
                 { style: { fontSize: '18px', margin: 0, textAlign: 'center' } },
-                'VRCX Server'
+                'VRCX-Cloud'
             ),
             createElement('input', {
                 type: 'password',

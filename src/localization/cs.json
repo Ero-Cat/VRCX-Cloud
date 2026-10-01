@@ -5,7 +5,7 @@
         "theme_catalog_title": "Momentálně nejsou dostupné žádné motivy",
         "theme_catalog_description": "Komunitní motivy se zde zobrazí, jakmile bude katalog dostupný.",
         "installed_themes_title": "Zatím nejsou nainstalované žádné komunitní motivy",
-        "installed_themes_description": "Vyberte si motiv z katalogu a dejte VRCX-0 nový vzhled.",
+        "installed_themes_description": "Vyberte si motiv z katalogu a dejte VRCX-Cloud nový vzhled.",
         "browse_themes": "Procházet motivy",
         "app_launcher_title": "Vyberte, co se spustí s VRChatem",
         "app_launcher_description": "Přidejte aplikaci nebo zástupce a určete, kdy se má otevřít.",
@@ -182,7 +182,7 @@
                 "title": "Importovat kolekci světů?",
                 "description": "„{title}“ od {author} · {count} světů",
                 "worlds_preview": "Obsahuje: {names}",
-                "confirm": "Importovat do VRCX-0",
+                "confirm": "Importovat do VRCX-Cloud",
                 "cancel": "Zrušit"
             },
             "toast": {
@@ -200,7 +200,7 @@
         "title": "Změnit složku s daty",
         "description": "Vyberte, která data chcete v nové složce používat.",
         "completed_title": "Dokončete změnu restartem",
-        "completed_description": "Restartujte VRCX-0, aby začal používat novou složku.",
+        "completed_description": "Restartujte VRCX-Cloud, aby začal používat novou složku.",
         "error_short": "Složku s daty se nepodařilo změnit",
         "start": "Zkopírovat a přepnout",
         "restart_now": "Restartovat nyní",
@@ -217,8 +217,8 @@
         },
         "target": {
             "empty": "Vybraná složka je prázdná.",
-            "existingProfile": "Data VRCX-0 v této složce budou nahrazena. Před nahrazením se uchová jejich kopie.",
-            "foreignContent": "Tato složka obsahuje i další soubory. VRCX-0 změní pouze své vlastní soubory."
+            "existingProfile": "Data VRCX-Cloud v této složce budou nahrazena. Před nahrazením se uchová jejich kopie.",
+            "foreignContent": "Tato složka obsahuje i další soubory. VRCX-Cloud změní pouze své vlastní soubory."
         },
         "phase": {
             "preparing": "Příprava dat…",
@@ -232,14 +232,14 @@
             "databaseUnavailable": "Data teď nelze zkopírovat. Zkuste to později.",
             "pendingRestore": "Nejprve dokončete nebo zrušte čekající obnovení.",
             "pendingLegacyMigration": "Nejprve dokončete čekající převod starých dat.",
-            "pendingMigration": "Čeká změna datové složky. Restartujte VRCX-0.",
+            "pendingMigration": "Čeká změna datové složky. Restartujte VRCX-Cloud.",
             "cleanupConflict": "Před návratem do této složky nejprve vyřešte stará data.",
             "insufficientSpace": "Pro přesun dat není dostatek volného místa.",
-            "invalidAdoptionTarget": "V této složce nejsou žádná použitelná data VRCX-0. Vyberte jinou složku.",
-            "invalidFreshStartTarget": "Tato složka již obsahuje data VRCX-0. Pokud chcete začít znovu, vyberte jinou složku.",
-            "copyFailed": "Data se nepodařilo zkopírovat. VRCX-0 stále používá původní složku.",
-            "commitFailed": "Zkopírovaná data se nepodařilo uložit. VRCX-0 stále používá původní složku.",
-            "pointerCommitFailed": "Novou datovou složku se nepodařilo aktivovat. Restartujte VRCX-0 a zkuste to bezpečně znovu.",
+            "invalidAdoptionTarget": "V této složce nejsou žádná použitelná data VRCX-Cloud. Vyberte jinou složku.",
+            "invalidFreshStartTarget": "Tato složka již obsahuje data VRCX-Cloud. Pokud chcete začít znovu, vyberte jinou složku.",
+            "copyFailed": "Data se nepodařilo zkopírovat. VRCX-Cloud stále používá původní složku.",
+            "commitFailed": "Zkopírovaná data se nepodařilo uložit. VRCX-Cloud stále používá původní složku.",
+            "pointerCommitFailed": "Novou datovou složku se nepodařilo aktivovat. Restartujte VRCX-Cloud a zkuste to bezpečně znovu.",
             "io": "Soubor v datové složce se nepodařilo přečíst nebo zapsat."
         },
         "warning": {
@@ -250,27 +250,27 @@
         "result": {
             "succeeded": "Složka s daty změněna",
             "failed_title": "Novou datovou složku nebylo možné použít",
-            "database_open_failed": "VRCX-0 nadále používá původní složku. Vaše data nebyla ovlivněna.",
+            "database_open_failed": "VRCX-Cloud nadále používá původní složku. Vaše data nebyla ovlivněna.",
             "interrupted_title": "Změna složky byla přerušena",
-            "interrupted": "VRCX-0 nadále používá původní složku. Můžete to zkusit znovu."
+            "interrupted": "VRCX-Cloud nadále používá původní složku. Můžete to zkusit znovu."
         },
         "cleanup": {
             "ready_title": "Složka s daty změněna",
             "ready_description": "Stará data jsou stále v {path}.",
             "action": "Vyčistit stará data",
             "action_with_size": "Vyčistit stará data ({size})",
-            "confirm_title": "Trvale odstranit stará data VRCX-0?",
-            "confirm_description": "Z {path} se odstraní přibližně {size} známých souborů VRCX-0. Neznámé soubory zůstanou zachovány. Tuto akci nelze vrátit.",
-            "completed": "Stará data VRCX-0 byla vyčištěna",
+            "confirm_title": "Trvale odstranit stará data VRCX-Cloud?",
+            "confirm_description": "Z {path} se odstraní přibližně {size} známých souborů VRCX-Cloud. Neznámé soubory zůstanou zachovány. Tuto akci nelze vrátit.",
+            "completed": "Stará data VRCX-Cloud byla vyčištěna",
             "freed": "Uvolněno {size}.",
             "completed_with_skipped": "Uvolněno {size}; {count} položek se nepodařilo odstranit.",
             "settings_title": "Stará data lze vyčistit",
-            "settings_description": "Stará data VRCX-0 jsou stále v {path} ({size} bajtů).",
+            "settings_description": "Stará data VRCX-Cloud jsou stále v {path} ({size} bajtů).",
             "dismiss": "Ponechat a již nepřipomínat",
             "dismissed": "Připomínky čištění byly vypnuty"
         },
         "running_title": "Probíhá změna složky",
-        "running_description": "Nezavírejte VRCX-0, dokud se změna nedokončí.",
+        "running_description": "Nezavírejte VRCX-Cloud, dokud se změna nedokončí.",
         "start_existing": "Použít stávající data",
         "start_fresh": "Použít novou složku",
         "new_folder": "Nová složka",
@@ -282,7 +282,7 @@
     },
     "profile_backup": {
         "header": "Zálohování a obnovení",
-        "tools_description": "Záloha a obnova dat VRCX-0",
+        "tools_description": "Záloha a obnova dat VRCX-Cloud",
         "automatic": "Automatické zálohy",
         "automatic_description": "Pravidelně ukládejte zálohy do vybrané složky.",
         "automatic_on": "Zapnuto",
@@ -305,9 +305,9 @@
         "backup_now": "Zálohovat nyní",
         "backup_now_confirm": "Vytvořit zálohu",
         "restore": "Obnovit data",
-        "restore_description": "Vyberte záložní soubor VRCX-0 k obnovení. VRCX-0 ho zkontroluje a restartuje se.",
+        "restore_description": "Vyberte záložní soubor VRCX-Cloud k obnovení. VRCX-Cloud ho zkontroluje a restartuje se.",
         "restore_from_backup": "Obnovit ze zálohy",
-        "file_filter": "Zálohy VRCX-0",
+        "file_filter": "Zálohy VRCX-Cloud",
         "automatic_running": "Probíhá automatické zálohování",
         "manual_running": "Probíhá zálohování",
         "retryable_short": "Záloha nebyla uložena",
@@ -318,19 +318,19 @@
         "discard_backup": "Zahodit tuto zálohu",
         "dismiss_error": "Skrýt",
         "validating_restore": "Probíhá kontrola zálohy",
-        "restore_validation_description": "VRCX-0 kopíruje a kontroluje zálohu před jejím obnovením.",
+        "restore_validation_description": "VRCX-Cloud kopíruje a kontroluje zálohu před jejím obnovením.",
         "restore_progress_copy": "Kopírování zálohy",
         "restore_progress_extract": "Rozbalování databáze",
         "restore_progress_database_check": "Kontrola integrity databáze",
         "restore_progress_verify_staging": "Ověřování připravených dat",
         "preparing_restore": "Příprava obnovení",
-        "restore_prepare_description": "VRCX-0 před restartováním kontroluje připravená data.",
+        "restore_prepare_description": "VRCX-Cloud před restartováním kontroluje připravená data.",
         "restore_confirm_title": "Obnovit data z této zálohy?",
-        "restore_confirm_description": "Vaše současná data budou nahrazena a VRCX-0 se restartuje. Kopie se ponechá pro případ, že by se něco pokazilo.",
+        "restore_confirm_description": "Vaše současná data budou nahrazena a VRCX-Cloud se restartuje. Kopie se ponechá pro případ, že by se něco pokazilo.",
         "restore_and_restart": "Obnovit a restartovat",
-        "restarting_to_restore": "VRCX-0 se restartuje a obnoví data ze zálohy",
+        "restarting_to_restore": "VRCX-Cloud se restartuje a obnoví data ze zálohy",
         "created_at": "Vytvořeno",
-        "app_version": "Verze VRCX-0",
+        "app_version": "Verze VRCX-Cloud",
         "database_version": "Verze databáze",
         "source_file": "Soubor zálohy",
         "backup_verified": "Záloha ověřena",
@@ -347,22 +347,22 @@
         "rollback_cleanup_succeeded": "Zachovaná data byla odstraněna",
         "restore_failed_title": "Zálohu se nepodařilo obnovit",
         "restore_failed_unchanged": "Vaše současná data nebyla změněna.",
-        "restore_failed_rolled_back": "VRCX-0 se vrátil k datům před obnovením.",
+        "restore_failed_rolled_back": "VRCX-Cloud se vrátil k datům před obnovením.",
         "settings_load_failed": "Nastavení zálohování se nepodařilo načíst",
         "settings_save_failed": "Nastavení zálohování se nepodařilo uložit",
         "folder_selection_failed": "Složku pro zálohy se nepodařilo vybrat",
         "file_selection_failed": "Soubor zálohy se nepodařilo vybrat",
         "backup_start_failed": "Zálohování se nepodařilo spustit",
         "restore_validation_failed": "Zálohu se nepodařilo zkontrolovat",
-        "restore_request_failed": "VRCX-0 se nepodařilo restartovat kvůli obnovení zálohy",
+        "restore_request_failed": "VRCX-Cloud se nepodařilo restartovat kvůli obnovení zálohy",
         "action_failed": "Operaci se zálohou se nepodařilo dokončit",
         "error": {
             "busy": "Již probíhá jiné zálohování nebo obnovení.",
             "delivery_pending": "Předchozí záloha stále čeká na uložení. Před spuštěním nové zálohy ji zopakujte, nebo ji zahoďte.",
-            "pending_restore": "Obnovení je připravené a dokončí se po restartu VRCX-0.",
+            "pending_restore": "Obnovení je připravené a dokončí se po restartu VRCX-Cloud.",
             "directory_unavailable": "Umístění záloh není dostupné. Zkontrolujte disk nebo síťové připojení.",
-            "permission_denied": "VRCX-0 nemá oprávnění ukládat do tohoto umístění. Vyberte jinou složku.",
-            "local_disk_full": "V umístění dat VRCX-0 není dostatek volného místa pro vytvoření zálohy.",
+            "permission_denied": "VRCX-Cloud nemá oprávnění ukládat do tohoto umístění. Vyberte jinou složku.",
+            "local_disk_full": "V umístění dat VRCX-Cloud není dostatek volného místa pro vytvoření zálohy.",
             "target_disk_full": "V umístění záloh není dostatek volného místa.",
             "device_removed": "Umístění záloh bylo odpojeno. Připojte disk a zkuste to znovu.",
             "already_exists": "Záloha se stejným názvem již existuje. Zkuste to za chvíli znovu.",
@@ -371,14 +371,14 @@
             "package_failed": "Soubor zálohy se nepodařilo vytvořit.",
             "io": "Soubor zálohy se nepodařilo přečíst nebo zapsat.",
             "unknown": "Při zálohování došlo k neočekávané chybě.",
-            "invalid_archive": "Tento soubor není platná záloha VRCX-0.",
-            "unsupported_manifest": "Tato verze VRCX-0 nepodporuje formát této zálohy.",
+            "invalid_archive": "Tento soubor není platná záloha VRCX-Cloud.",
+            "unsupported_manifest": "Tato verze VRCX-Cloud nepodporuje formát této zálohy.",
             "checksum_mismatch": "Záloha je poškozená nebo byla změněna.",
             "validation_expired": "Ověřená data pro obnovení již nejsou dostupná. Vyberte zálohu znovu.",
-            "newer_app_version": "Tato záloha byla vytvořena v novější verzi VRCX-0. Aktualizujte VRCX-0 a zkuste to znovu.",
-            "newer_database_version": "Tato záloha používá novější formát databáze. Aktualizujte VRCX-0 a zkuste to znovu.",
+            "newer_app_version": "Tato záloha byla vytvořena v novější verzi VRCX-Cloud. Aktualizujte VRCX-Cloud a zkuste to znovu.",
+            "newer_database_version": "Tato záloha používá novější formát databáze. Aktualizujte VRCX-Cloud a zkuste to znovu.",
             "database_corrupt": "Databáze v této záloze je poškozená.",
-            "not_vrcx0_profile": "Tento soubor neobsahuje zálohu dat VRCX-0."
+            "not_vrcx0_profile": "Tento soubor neobsahuje zálohu dat VRCX-Cloud."
         },
         "rollback_error": {
             "busy": "Probíhá jiná operace zálohování nebo obnovení. Zkuste to znovu po jejím dokončení.",
@@ -500,7 +500,7 @@
     },
     "nativeShell": {
         "tray": {
-            "open": "Otevřít VRCX-0",
+            "open": "Otevřít VRCX-Cloud",
             "backgroundMode": "Režim na pozadí",
             "lock": "Zamknout",
             "doNotDisturb": "Nerušit",
@@ -516,7 +516,7 @@
         "notification": {
             "backgroundModeStarted": {
                 "title": "Režim na pozadí spuštěn",
-                "body": "VRCX-0 běží v režimu na pozadí."
+                "body": "VRCX-Cloud běží v režimu na pozadí."
             },
             "authFailure": {
                 "title": "Přihlášení do VRChat vypršelo",
@@ -525,13 +525,13 @@
         },
         "menu": {
             "app": {
-                "about": "O aplikaci VRCX-0",
+                "about": "O aplikaci VRCX-Cloud",
                 "settings": "Nastavení...",
                 "checkUpdates": "Zkontrolovat aktualizace",
-                "restart": "Restartovat VRCX-0",
+                "restart": "Restartovat VRCX-Cloud",
                 "startBackgroundMode": "Přepnout do režimu na pozadí",
                 "logout": "Odhlásit se",
-                "quit": "Ukončit VRCX-0"
+                "quit": "Ukončit VRCX-Cloud"
             },
             "view": {
                 "title": "Zobrazit",
@@ -572,7 +572,7 @@
                 "reportIssue": "Nahlásit problém",
                 "qqGroup": "QQ skupina",
                 "openDevtools": "Otevřít DevTools",
-                "supportVrcx": "Podpořte VRCX-0"
+                "supportVrcx": "Podpořte VRCX-Cloud"
             }
         }
     },
@@ -721,10 +721,10 @@
         "devkit_build_badge": "Vývojářská sada",
         "settings": "Nastavení...",
         "check_updates": "Zkontrolovat aktualizace",
-        "restart": "Restartovat VRCX-0",
+        "restart": "Restartovat VRCX-Cloud",
         "start_background_mode": "Přepnout do režimu na pozadí",
         "logout": "Odhlásit se",
-        "quit": "Ukončit VRCX-0",
+        "quit": "Ukončit VRCX-Cloud",
         "quick_search": "Rychlé vyhledávání",
         "keyboard_shortcuts": "Klávesové zkratky",
         "show_friends_sidebar": "Zobrazit postranní panel přátel",
@@ -739,11 +739,11 @@
         "report_issue": "Nahlásit problém",
         "community": "Komunita",
         "open_source_licenses": "Licence třetích stran",
-        "about": "O aplikaci VRCX-0",
+        "about": "O aplikaci VRCX-Cloud",
         "messages": {
             "zoom_failed": "Nepodařilo se použít přiblížení",
-            "logout_failed": "Nepodařilo se odhlásit z VRCX-0",
-            "restart_failed": "Nepodařilo se restartovat VRCX-0",
+            "logout_failed": "Nepodařilo se odhlásit z VRCX-Cloud",
+            "restart_failed": "Nepodařilo se restartovat VRCX-Cloud",
             "open_devtools_failed": "Nepodařilo se otevřít DevTools"
         },
         "label": {
@@ -766,8 +766,8 @@
             "checking": "Kontrola zkratky…",
             "background_hint": "Při skrytí se použije nastavení režimu na pozadí a zpoždění.",
             "global": "Globální",
-            "title": "Zobrazit / Skrýt VRCX-0",
-            "description": "Zobrazte nebo skryjte VRCX-0 z libovolné aplikace. Po skrytí VRCX-0 běží dál na pozadí.",
+            "title": "Zobrazit / Skrýt VRCX-Cloud",
+            "description": "Zobrazte nebo skryjte VRCX-Cloud z libovolné aplikace. Po skrytí VRCX-Cloud běží dál na pozadí.",
             "configure": "Nastavit globální zkratku",
             "unset": "Nenastaveno",
             "inactive": "Neaktivní",
@@ -821,18 +821,18 @@
         },
         "setup": {
             "create_title": "Nastavit heslo zámku",
-            "create_description": "Zámek skryje VRCX-0 za tento 4místný kód, zatímco záznam pokračuje. Nejde o šifrování – jen zabrání někomu u vašeho PC, aby se v aplikaci hrabal.",
+            "create_description": "Zámek skryje VRCX-Cloud za tento 4místný kód, zatímco záznam pokračuje. Nejde o šifrování – jen zabrání někomu u vašeho PC, aby se v aplikaci hrabal.",
             "change_title": "Změnit heslo zámku",
             "change_description": "Zadejte aktuální heslo zámku a poté zvolte nové.",
             "clear_title": "Odebrat heslo zámku",
-            "clear_description": "Zadejte heslo k účtu VRChat, aby se kód zámku odebral. Porovnává se pouze s heslem uloženým lokálně ve VRCX-0; na servery VRChat se nic neposílá."
+            "clear_description": "Zadejte heslo k účtu VRChat, aby se kód zámku odebral. Porovnává se pouze s heslem uloženým lokálně ve VRCX-Cloud; na servery VRChat se nic neposílá."
         },
         "recover": {
-            "description": "Zadejte heslo k účtu VRChat, aby se zámek odebral. Porovnává se pouze s heslem uloženým lokálně ve VRCX-0; na servery VRChat se nic neposílá."
+            "description": "Zadejte heslo k účtu VRChat, aby se zámek odebral. Porovnává se pouze s heslem uloženým lokálně ve VRCX-Cloud; na servery VRChat se nic neposílá."
         },
         "settings": {
             "label": "Zámek soukromí",
-            "description": "Skryje okno za heslo zámku, zatímco VRCX-0 dál zaznamenává. Zamknout lze z nabídky v oznamovací oblasti nebo z nabídky účtu v postranním panelu.",
+            "description": "Skryje okno za heslo zámku, zatímco VRCX-Cloud dál zaznamenává. Zamknout lze z nabídky v oznamovací oblasti nebo z nabídky účtu v postranním panelu.",
             "status_set": "Heslo nastaveno",
             "status_unset": "Bez hesla"
         },
@@ -1007,8 +1007,8 @@
         }
     },
     "support_vrcx": {
-        "title": "Podpořte VRCX-0",
-        "description": "Podpořte budoucí vývoj VRCX-0 přes GitHub Sponsors nebo Ko-fi."
+        "title": "Podpořte VRCX-Cloud",
+        "description": "Podpořte budoucí vývoj VRCX-Cloud přes GitHub Sponsors nebo Ko-fi."
     },
     "view": {
         "login": {
@@ -1534,7 +1534,7 @@
                     "listed_description": "Umožní ostatním objevit tuto sbírku na domovské stránce. Po vypnutí ji lze stále zobrazit pomocí odkazu ke sdílení.",
                     "include_notes": "Zahrnout moje poznámky",
                     "include_notes_description": "Zkopírovat místní poznámky ke světům na sdílenou stránku jako komentáře. Později je lze upravit na webu.",
-                    "account_connection": "Sdílení jsou propojena s účtem VRChat, který je právě přihlášený ve VRCX-0. Další přihlášení na webu není potřeba; sdílení poskytuje VRCX-0, nikoli VRChat.",
+                    "account_connection": "Sdílení jsou propojena s účtem VRChat, který je právě přihlášený ve VRCX-Cloud. Další přihlášení na webu není potřeba; sdílení poskytuje VRCX-Cloud, nikoli VRChat.",
                     "worlds": "Ke sdílení připraveno {count}/{total} světů",
                     "truncated": "Nahraje se pouze prvních {cap} světů.",
                     "share_url": "Odkaz ke sdílení",
@@ -1969,7 +1969,7 @@
             "export": {
                 "header": "Export",
                 "export_notes": "Export lokálních poznámek uživatelů",
-                "export_notes_description": "Exportujte své poznámky VRCX-0 do poznámek VRChat",
+                "export_notes_description": "Exportujte své poznámky VRCX-Cloud do poznámek VRChat",
                 "discord_names": "Discord Jména",
                 "export_friend_list": "Exportovat seznam přátel",
                 "export_own_avatars": "Exportovat vlastní avatary"
@@ -1991,8 +1991,8 @@
             },
             "shortcuts": {
                 "header": "Složky",
-                "vrcx_data": "Data VRCX-0",
-                "vrcx_data_description": "Otevřít datovou složku VRCX-0",
+                "vrcx_data": "Data VRCX-Cloud",
+                "vrcx_data_description": "Otevřít datovou složku VRCX-Cloud",
                 "vrchat_data": "Data VRChat",
                 "vrchat_data_description": "Otevřít datovou složku VRChat",
                 "crash_dumps": "Výpisy pádů",
@@ -2227,8 +2227,8 @@
             "llm_endpoints": {
                 "title": "LLM endpointy",
                 "description": "Sdílená připojení kompatibilní s OpenAI pro Social AI a překlad.",
-                "follow_custom_proxy": "Používat vlastní proxy VRCX-0",
-                "follow_custom_proxy_description": "Je-li ve VRCX-0 nastavená vlastní proxy, požadavky LLM ji použijí; jinak se použije systémová proxy.",
+                "follow_custom_proxy": "Používat vlastní proxy VRCX-Cloud",
+                "follow_custom_proxy_description": "Je-li ve VRCX-Cloud nastavená vlastní proxy, požadavky LLM ji použijí; jinak se použije systémová proxy.",
                 "add": "Přidat endpoint",
                 "empty_description": "Přidejte endpoint kompatibilní s OpenAI pro Social AI a překlad kompatibilní s OpenAI.",
                 "preset": "Předvolba",
@@ -2374,7 +2374,7 @@
                 },
                 "test_mode": {
                     "header": "Test overlaye",
-                    "description": "Vynutí v zápěstním overlayi a v oznámení v headsetu zobrazení testovací karty, abys mohl s nasazeným headsetem zkontrolovat pozici, velikost a průhlednost. Nastavení se neukládá a po restartu VRCX-0 se vypne.",
+                    "description": "Vynutí v zápěstním overlayi a v oznámení v headsetu zobrazení testovací karty, abys mohl s nasazeným headsetem zkontrolovat pozici, velikost a průhlednost. Nastavení se neukládá a po restartu VRCX-Cloud se vypne.",
                     "force_display": "Vynutit zobrazení overlaye",
                     "requires_steamvr": "Vyžaduje spuštěný SteamVR."
                 }
@@ -2391,7 +2391,7 @@
             "integrations": {
                 "mcp_server": {
                     "header": "MCP Server",
-                    "description": "Umožní důvěryhodným MCP klientům přístup k datům VRCX-0. Ve výchozím nastavení pouze localhost.",
+                    "description": "Umožní důvěryhodným MCP klientům přístup k datům VRCX-Cloud. Ve výchozím nastavení pouze localhost.",
                     "enable": "Povolit MCP server",
                     "enable_description": "Spustí MCP server chráněný tokenem na localhost.",
                     "allow_vrchat_writes": "Povolit zápis do účtu VRChat",
@@ -2423,7 +2423,7 @@
                 },
                 "integration_api": {
                     "header": "Integrační API",
-                    "description": "Sdílí vybrané informace z VRCX-0 s důvěryhodnými aplikacemi. Server naslouchá pouze při spuštěném VRChatu.",
+                    "description": "Sdílí vybrané informace z VRCX-Cloud s důvěryhodnými aplikacemi. Server naslouchá pouze při spuštěném VRChatu.",
                     "enable": "Povolit integrační API",
                     "enable_description": "Při spuštěném VRChatu spustí WebSocket stream chráněný tokenem.",
                     "information_types": "Sdílené informace",
@@ -2481,13 +2481,13 @@
                     "header": "Aplikace",
                     "startup": "Spustit při startu Windows",
                     "startup_system": "Spustit při startu systému",
-                    "startup_system_description": "Vytvoří položku automatického spouštění na ploše, která spustí VRCX-0 s parametrem --autostart.",
+                    "startup_system_description": "Vytvoří položku automatického spouštění na ploše, která spustí VRCX-Cloud s parametrem --autostart.",
                     "minimized": "Spustit minimalizované",
                     "tray": "Minimalizovat do systémové lišty při zavření",
                     "tray_description": "Při zavření minimalizovat do systémové lišty místo ukončení.",
                     "system_window_frame": "Režim kompatibility okna",
                     "system_window_frame_description": "Použije standardní systémový styl okna. Zapněte, pokud okno bliká nebo skrz něj prosvítá plocha.",
-                    "system_window_frame_saved": "Uloženo. Restartujte VRCX-0, aby se změna projevila.",
+                    "system_window_frame_saved": "Uloženo. Restartujte VRCX-Cloud, aby se změna projevila.",
                     "system_window_frame_restart_now": "Restartovat nyní",
                     "background_mode": "Režim na pozadí v liště",
                     "background_mode_description": "Šetří ~90 % paměti v liště. Po obnovení se stav některých stránek může resetovat.",
@@ -2498,11 +2498,11 @@
                     "auto_install_updates_on_startup_description": "Automaticky stáhne a nainstaluje aktualizace při spuštění.",
                     "check_for_updates_and_update": "Vyhledat a nainstalovat aktualizace",
                     "update_check_disabled": "Vypnuto",
-                    "update_check_disabled_build_description": "V této speciální verzi je kontrola aktualizací vypnutá. VRCX-0 aktualizujte pomocí správce balíčků nebo se obraťte na správce balíčku.",
+                    "update_check_disabled_build_description": "V této speciální verzi je kontrola aktualizací vypnutá. VRCX-Cloud aktualizujte pomocí správce balíčků nebo se obraťte na správce balíčku.",
                     "proxy": "Nastavení proxy"
                 },
                 "favorites": {
-                    "header": "VRCX-0 Oblíbení přátelé",
+                    "header": "VRCX-Cloud Oblíbení přátelé",
                     "header_tooltip": "Když je ve Feedu, Záznamu hry, na stránce Oznámení nebo v VR overlayi zapnutý filtr oblíbených, zobrazí se pouze položky z vybraných skupin",
                     "group_placeholder": "Vybrat skupiny"
                 },
@@ -2537,7 +2537,7 @@
                     "font_family_custom_secondary": "Náhradní písmo (volitelné)",
                     "font_family_custom_secondary_description": "Použije se, pokud písmo aplikace neobsahuje daný znak.",
                     "font_family_custom_detection_unavailable_title": "Nainstalovaná písma nejsou dostupná",
-                    "font_family_custom_detection_unavailable": "VRCX-0 nemohl načíst písma nainstalovaná v tomto zařízení. Zadejte místo nich zásobník písem CSS.",
+                    "font_family_custom_detection_unavailable": "VRCX-Cloud nemohl načíst písma nainstalovaná v tomto zařízení. Zadejte místo nich zásobník písem CSS.",
                     "font_family_custom_detection_unavailable_toast": "Nainstalovaná písma nejsou dostupná. Použijte zásobník písem CSS.",
                     "font_family_custom_mode_label": "Zdroj písma",
                     "font_family_custom_mode_installed": "Nainstalovaná písma",
@@ -2574,7 +2574,7 @@
                     "table_page_sizes_error": "Velikost stránky musí být číslo mezi 1 a 1000",
                     "show_notification_icon_dot": "Tečka oznámení v liště",
                     "show_taskbar_icon_dot": "Tečka oznámení na hlavním panelu",
-                    "show_taskbar_icon_dot_description": "Zobrazí červenou tečku na tlačítku VRCX-0 na hlavním panelu, dokud jsou nepřečtená oznámení.",
+                    "show_taskbar_icon_dot_description": "Zobrazí červenou tečku na tlačítku VRCX-Cloud na hlavním panelu, dokud jsou nepřečtená oznámení.",
                     "striped_data_table_mode": "Pruhované tabulky",
                     "reduced_motion_and_blur": "Omezit efekty",
                     "reduced_motion_and_blur_description": "Vypne animace, přechody a rozmazání pozadí pro lepší výkon na slabších zařízeních.",
@@ -2638,8 +2638,8 @@
                     "additional_information": "Další informace",
                     "vrchat_notes": "VRChat poznámky",
                     "vrchat_notes_description": "Zobrazuje poznámky uložené ve VRChat",
-                    "vrcx_memos": "VRCX-0 poznámky",
-                    "vrcx_memos_description": "Zobrazuje lokální poznámky uložené ve VRCX-0",
+                    "vrcx_memos": "VRCX-Cloud poznámky",
+                    "vrcx_memos_description": "Zobrazuje lokální poznámky uložené ve VRCX-Cloud",
                     "recent_action_cooldown": "Ikona nedávné akce",
                     "recent_action_cooldown_description": "Zobrazí ikonu hodin u nedávných akcí pozvání a žádostí."
                 },
@@ -2675,7 +2675,7 @@
                     "post_update_changelog_prompt_description": "Zobrazí novinky po instalaci aktualizace.",
                     "do_not_disturb": {
                         "header": "Nerušit",
-                        "description": "Dočasně pozastaví oznámení na ploše, TTS, XSOverlay, OVR Toolkit a vyskakovací oznámení VRCX-0 v headsetu. Webhooky, aktivita na zápěstí a historie oznámení pokračují.",
+                        "description": "Dočasně pozastaví oznámení na ploše, TTS, XSOverlay, OVR Toolkit a vyskakovací oznámení VRCX-Cloud v headsetu. Webhooky, aktivita na zápěstí a historie oznámení pokračují.",
                         "end_on_game_start": "Vypnout při spuštění VRChat",
                         "end_on_game_start_description": "Platí pouze při přechodu VRChat z vypnutého do spuštěného stavu. Během hraní lze režim Nerušit znovu zapnout."
                     },
@@ -2709,7 +2709,7 @@
                         "header": "Oznámení webhooku",
                         "enabled": "Povolit doručování přes webhook",
                         "auth_events_enabled": "Posílat oznámení o selhání automatického přihlášení",
-                        "auth_events_description": "Pošle oznámení, když VRCX-0 nedokáže automaticky obnovit přerušené přihlášení na pozadí.",
+                        "auth_events_description": "Pošle oznámení, když VRCX-Cloud nedokáže automaticky obnovit přerušené přihlášení na pozadí.",
                         "url": "URL webhooku",
                         "url_placeholder": "https://example.com/webhook",
                         "format": "Formát payloadu",
@@ -2729,10 +2729,10 @@
                         "delivery_contract_title": "Pravidla doručení",
                         "delivery_contract_http": "Za úspěch se považuje pouze stav HTTP 2xx. Každý pokus vyprší po 10 sekundách, tělo odpovědi je omezeno na 64 KiB a dočasná selhání se opakují nejvýše dvakrát.",
                         "delivery_contract_auth": "Výběr polí a filtry aktivit platí pouze pro oznámení o aktivitě. Selhání automatického přihlášení používají pevně daný bezpečný payload a samostatný přepínač.",
-                        "delivery_contract_queue": "Doručování používá omezené fronty v paměti bez trvalého úložiště pro opakování. Události mohou být zahozeny a stav doručení se po restartu VRCX-0 vynuluje.",
-                        "delivery_contract_secret": "Adresy URL webhooků často obsahují přihlašovací údaje. Zacházejte s touto adresou jako s tajným údajem a chraňte místní profil VRCX-0 i jeho zálohy.",
+                        "delivery_contract_queue": "Doručování používá omezené fronty v paměti bez trvalého úložiště pro opakování. Události mohou být zahozeny a stav doručení se po restartu VRCX-Cloud vynuluje.",
+                        "delivery_contract_secret": "Adresy URL webhooků často obsahují přihlašovací údaje. Zacházejte s touto adresou jako s tajným údajem a chraňte místní profil VRCX-Cloud i jeho zálohy.",
                         "examples_title": "Pole a příklady payloadu webhooku",
-                        "examples_description": "Vyberte pole obecného JSON a prohlédněte si, co VRCX-0 odesílá pro jednotlivé formáty payloadu webhooku.",
+                        "examples_description": "Vyberte pole obecného JSON a prohlédněte si, co VRCX-Cloud odesílá pro jednotlivé formáty payloadu webhooku.",
                         "comments_note": "Příklady ukazují tvar těla požadavku; poznámky k polím zde vysvětlují jejich použití a samy se neodesílají.",
                         "generic_example": "Příklad obecného JSON",
                         "discord_example": "Příklad pro Discord",
@@ -2809,12 +2809,12 @@
                         "quit_description": "Po ukončení VRChatu zavře všechny procesy VRChatu, které stále běží.",
                         "focus_on_join_header": "Přepnout na VRChat",
                         "focus_on_join_description": "Při připojení k instanci přepne na VRChat. Pouze v režimu desktop.",
-                        "deep_link_registration": "Otevírání odkazů VRCX-0",
-                        "deep_link_registered": "Odkazy VRCX-0 se pro tohoto uživatele otevírají v aplikaci VRCX-0.",
-                        "deep_link_not_registered": "Nastavení systému pro otevírání odkazů VRCX-0 chybí nebo odkazuje na neplatnou instalaci.",
+                        "deep_link_registration": "Otevírání odkazů VRCX-Cloud",
+                        "deep_link_registered": "Odkazy VRCX-Cloud se pro tohoto uživatele otevírají v aplikaci VRCX-Cloud.",
+                        "deep_link_not_registered": "Nastavení systému pro otevírání odkazů VRCX-Cloud chybí nebo odkazuje na neplatnou instalaci.",
                         "deep_link_repair": "Opravit",
-                        "deep_link_repair_success": "Otevírání odkazů VRCX-0 bylo opraveno",
-                        "deep_link_repair_failed": "Otevírání odkazů VRCX-0 se nepodařilo opravit"
+                        "deep_link_repair_success": "Otevírání odkazů VRCX-Cloud bylo opraveno",
+                        "deep_link_repair_failed": "Otevírání odkazů VRCX-Cloud se nepodařilo opravit"
                     },
                     "storage": {
                         "header": "Úložiště a čištění",
@@ -2825,7 +2825,7 @@
                         "cache_header": "Automaticky čistit mezipaměť VRChat",
                         "cache_description": "Při ukončení VRChatu odstraní stará data z mezipaměti prostředků.",
                         "keep_avatar_data": "Uchovávat data avatarů po dobu",
-                        "avatar_cleanup_description": "Kontroluje se týdně při spuštění VRCX-0."
+                        "avatar_cleanup_description": "Kontroluje se týdně při spuštění VRCX-Cloud."
                     },
                     "troubleshooting": {
                         "header": "Řešení potíží",
@@ -2846,13 +2846,13 @@
                     "import_recovery": {
                         "header": "Import a obnovení",
                         "import_from_vrcx": "Importovat z VRCX",
-                        "description": "Nahradí aktuální konfiguraci a databázi VRCX-0 daty z pevné datové složky VRCX.",
+                        "description": "Nahradí aktuální konfiguraci a databázi VRCX-Cloud daty z pevné datové složky VRCX.",
                         "review": "Zkontrolovat import…"
                     },
                     "usage_data": {
                         "header": "Údaje o používání",
                         "share": "Sdílet anonymní údaje o používání",
-                        "description": "Sdílet pouze anonymní informace potřebné ke zlepšování VRCX-0."
+                        "description": "Sdílet pouze anonymní informace potřebné ke zlepšování VRCX-Cloud."
                     },
                     "danger": {
                         "avatar_history": "Historie avatarů",
@@ -2875,11 +2875,11 @@
                         "description": "Auto delete old versions from cache"
                     },
                     "improvement": {
-                        "header": "Pomozte zlepšit VRCX-0"
+                        "header": "Pomozte zlepšit VRCX-Cloud"
                     },
                     "anonymous_usage_telemetry": {
                         "header": "Shromažďovat anonymní informace o používání",
-                        "description": "Shromažďuje pouze nezbytné anonymní informace, které pomáhají zlepšovat VRCX-0."
+                        "description": "Shromažďuje pouze nezbytné anonymní informace, které pomáhají zlepšovat VRCX-Cloud."
                     },
                     "save_instance_prints_to_file": {
                         "header": "Save Instance Prints To File",
@@ -2897,7 +2897,7 @@
                     },
                     "delete_all_screenshot_metadata": {
                         "button": "Odstranit metadata snímků obrazovky",
-                        "ask": "Opravdu chcete odstranit veškerá metadata snímků obrazovky VRChat a VRCX-0 ze složky VRChat Pictures?",
+                        "ask": "Opravdu chcete odstranit veškerá metadata snímků obrazovky VRChat a VRCX-Cloud ze složky VRChat Pictures?",
                         "confirm": "Odstranění veškerých metadat snímků obrazovky je velmi destruktivní akce a nelze ji vrátit zpět! Týká se to všech tisků, podsložek a dalších nesouvisejících obrázků ve složce VRChat Pictures. Pokud jsou pro vás tyto fotografie cenné, před pokračováním si je prosím zálohujte.",
                         "confirm_yes": "Ano",
                         "confirm_no": "Ne"
@@ -2937,17 +2937,17 @@
                         "choose": "Vybrat složku",
                         "reset": "Obnovit výchozí",
                         "restart": "Restartovat",
-                        "restart_hint": "Změny se projeví po restartu VRCX-0.",
+                        "restart_hint": "Změny se projeví po restartu VRCX-Cloud.",
                         "source_cli": "Přepsáno příkazovým řádkem",
                         "source_persisted": "vlastní složka",
                         "source_default": "výchozí složka",
                         "cli_override": "Toto spuštění používá parametr --data-dir. Chcete-li změnit uložený adresář, spusťte aplikaci bez tohoto přepsání příkazovým řádkem.",
-                        "saved_restart_required": "Datový adresář uložen. Restartujte VRCX-0, aby se změna projevila.",
-                        "reset_saved": "Datový adresář obnoven na výchozí. Restartujte VRCX-0, aby se změna projevila.",
+                        "saved_restart_required": "Datový adresář uložen. Restartujte VRCX-Cloud, aby se změna projevila.",
+                        "reset_saved": "Datový adresář obnoven na výchozí. Restartujte VRCX-Cloud, aby se změna projevila.",
                         "failed_to_load": "Nepodařilo se načíst nastavení datového adresáře."
                     },
                     "cache_debug": {
-                        "header": "VRCX-0 Instance Cache/Debug",
+                        "header": "VRCX-Cloud Instance Cache/Debug",
                         "udon_exception_logging": "Záznam výjimek Udon",
                         "disable_gamelog": "Vypnout GameLog",
                         "disable_gamelog_notice": "(pravděpodobně způsobí problémy)",
@@ -2989,19 +2989,19 @@
                         "purge_confirm_title": "Vymazat data zdroje avatarů",
                         "purge_confirm_description_1": "Tímto trvale odstraníte záznamy o změnách avatarů z databáze a uvolníte místo na disku.",
                         "purge_confirm_description_2": "Tuto akci nelze vrátit zpět!",
-                        "purge_confirm_description_3": "Po dokončení operace se VRCX-0 restartuje.",
+                        "purge_confirm_description_3": "Po dokončení operace se VRCX-Cloud restartuje.",
                         "purge_confirm_alert": "Před pokračováním se důrazně doporučuje zálohovat soubor databáze!",
                         "purge_confirm_button": "Vymazat a restartovat",
                         "purge_complete": "Data avatarů byla úspěšně vymazána. Restartuji",
                         "purge_failed": "Mazání se nezdařilo: {error}",
                         "purge_optimization_failed": "Data avatarů byla vymazána, ale databázi se nepodařilo optimalizovat: {error}",
                         "legacy_migration": "Migrovat data VRCX",
-                        "legacy_migration_description": "Nahradí aktuální konfiguraci a databázi VRCX-0 daty z pevné datové složky VRCX.",
-                        "legacy_migration_confirm_title": "Nahradit data VRCX-0 daty z VRCX?",
-                        "legacy_migration_confirm_description": "Tímto se odstraní a nahradí aktuální nastavení a místní databáze VRCX-0 daty nalezenými na {path}. VRCX-0 se pro dokončení migrace restartuje. Původní data VRCX zůstanou nezměněna.",
+                        "legacy_migration_description": "Nahradí aktuální konfiguraci a databázi VRCX-Cloud daty z pevné datové složky VRCX.",
+                        "legacy_migration_confirm_title": "Nahradit data VRCX-Cloud daty z VRCX?",
+                        "legacy_migration_confirm_description": "Tímto se odstraní a nahradí aktuální nastavení a místní databáze VRCX-Cloud daty nalezenými na {path}. VRCX-Cloud se pro dokončení migrace restartuje. Původní data VRCX zůstanou nezměněna.",
                         "legacy_migration_confirm": "Migrovat a restartovat",
                         "legacy_migration_not_available": "Nebyla nalezena žádná podporovaná databáze VRCX.",
-                        "legacy_migration_restart_manually": "Migrace je připravena. Restartujte VRCX-0, aby se dokončila.",
+                        "legacy_migration_restart_manually": "Migrace je připravena. Restartujte VRCX-Cloud, aby se dokončila.",
                         "legacy_migration_failed": "Nepodařilo se spustit migraci VRCX: {error}"
                     },
                     "user_content": {
@@ -3158,8 +3158,8 @@
                 "no_players_reconstructed_for_this_instance_yet": "Zatím nebyli nalezeni žádní aktuální hráči",
                 "enable_game_log_ingestion_in_settings_before_current_players_can_be_reconstructed": "Chcete-li zobrazit aktuální hráče, povolte v nastavení záznam hry.",
                 "start_vrchat_and_let_vrcx_receive_game_log_events_before_this_page_can_rebuild_the_current_instance": "Spusťte VRChat a připojte se k instanci. Hráči ve stejné instanci se zobrazí zde a seznam se automaticky aktualizuje, když se někdo připojí nebo odejde.",
-                "stay_in_the_instance_until_local_join_leave_events_are_recorded": "Zůstaňte v instanci, dokud VRCX-0 nezaznamená aktivitu hráčů. Seznam se aktualizuje automaticky.",
-                "current_players_follow_live_instance_locations": "Aktuální hráči se zobrazí, až VRCX-0 zjistí vaši další lokaci.",
+                "stay_in_the_instance_until_local_join_leave_events_are_recorded": "Zůstaňte v instanci, dokud VRCX-Cloud nezaznamená aktivitu hráčů. Seznam se aktualizuje automaticky.",
+                "current_players_follow_live_instance_locations": "Aktuální hráči se zobrazí, až VRCX-Cloud zjistí vaši další lokaci.",
                 "local_join_leave_history_has_no_current_players": "Místní historie připojení/odchodů zatím neobsahuje žádné aktuální hráče pro aktivní lokaci."
             },
             "label": {
@@ -3453,7 +3453,7 @@
             },
             "source": {
                 "built_in": "Výchozí",
-                "built_in_description": "Použít výchozí světlý a tmavý motiv VRCX-0.",
+                "built_in_description": "Použít výchozí světlý a tmavý motiv VRCX-Cloud.",
                 "background": "Obrázek na pozadí",
                 "community": "Komunitní motiv"
             },
@@ -3683,8 +3683,8 @@
             "run_error_elevation_required": "Je vyžadováno oprávnění správce (chyba Windows {code}). Zapněte „Spustit jako správce“.",
             "run_error_elevation_cancelled": "Požadavek na oprávnění správce byl zrušen (chyba Windows {code}).",
             "run_error_failed": "Aplikaci se nepodařilo spustit.",
-            "stop_locked_steam": "Spouští ji Steam; VRCX-0 ji nemůže zavřít.",
-            "stop_locked_admin": "Běží jako správce; VRCX-0 ji nemůže zavřít.",
+            "stop_locked_steam": "Spouští ji Steam; VRCX-Cloud ji nemůže zavřít.",
+            "stop_locked_admin": "Běží jako správce; VRCX-Cloud ji nemůže zavřít.",
             "remove_app": "Odebrat aplikaci",
             "remove_confirm": "Odebrat {name} z App Launcheru?",
             "name_required": "Název je povinný",
@@ -3712,7 +3712,7 @@
                 "hidden": "Skryto",
                 "visible": "Viditelný",
                 "visibility": "Viditelnost",
-                "developer": "Vývojář VRCX-0"
+                "developer": "Vývojář VRCX-Cloud"
             },
             "actions": {
                 "invite": "Pozvat",
@@ -4163,8 +4163,8 @@
                 "copy_url": "Zkopírovat URL",
                 "url": "Odkaz na VRChat",
                 "vrcx_url": "Odkaz ke sdílení",
-                "vrcx_url_description": "Tento odkaz otevře přímo aplikaci VRCX-0",
-                "vrcx_share_text": "Otevřít svět „{name}“ ve VRCX-0: {url}",
+                "vrcx_url_description": "Tento odkaz otevře přímo aplikaci VRCX-Cloud",
+                "vrcx_share_text": "Otevřít svět „{name}“ ve VRCX-Cloud: {url}",
                 "copy_vrcx_url": "Zkopírovat odkaz ke sdílení",
                 "youtube_preview": "Náhled YouTube",
                 "author_tags": "Štítky autora",
@@ -4371,8 +4371,8 @@
                 "url": "Odkaz na VRChat",
                 "copy_url": "Zkopírovat URL",
                 "vrcx_url": "Odkaz ke sdílení",
-                "vrcx_url_description": "Tento odkaz otevře přímo aplikaci VRCX-0",
-                "vrcx_share_text": "Otevřít avatara „{name}“ ve VRCX-0: {url}",
+                "vrcx_url_description": "Tento odkaz otevře přímo aplikaci VRCX-Cloud",
+                "vrcx_share_text": "Otevřít avatara „{name}“ ve VRCX-Cloud: {url}",
                 "copy_vrcx_url": "Zkopírovat odkaz ke sdílení",
                 "created_at": "Vytvořeno",
                 "last_updated": "Naposledy aktualizováno",
@@ -4759,7 +4759,7 @@
             "header": "Spustit",
             "short_url": "Krátká URL",
             "share": "Sdílet",
-            "share_description": "Zkopíruje odkaz VRCX-0. Kdo ho otevře, uvidí náhled a může instanci otevřít v klientu.",
+            "share_description": "Zkopíruje odkaz VRCX-Cloud. Kdo ho otevře, uvidí náhled a může instanci otevřít v klientu.",
             "more_copy_options": "Další možnosti kopírování",
             "invite": "Pozvat",
             "open_ingame": "Otevřít ve hře",
@@ -4879,14 +4879,14 @@
         },
         "note_export": {
             "header": "Export poznámek",
-            "description1": "This process will export all of your VRCX-0 memos and import them into VRChat notes.",
+            "description1": "This process will export all of your VRCX-Cloud memos and import them into VRChat notes.",
             "description2": "Mějte na paměti následující omezení:",
             "description3": "- API endpoint má limit počtu požadavků, mezi kterými je nutná dlouhá prodleva.",
             "description4": "- Limit 256 znaků na poznámku.",
             "description5": "- Filtr sprostých slov (žádná legrace).",
             "description6": "- Bez nových řádků (budou nahrazeny mezerou).",
             "description7": "- Toto přepíše veškeré existující VRChat poznámky u těchto uživatelů.",
-            "description8": "- Any edits made here wont affect VRCX-0 memos but will affect VRChat notes once exported.",
+            "description8": "- Any edits made here wont affect VRCX-Cloud memos but will affect VRChat notes once exported.",
             "refresh": "Obnovit",
             "export": "Exportovat",
             "cancel": "Zrušit",
@@ -5426,13 +5426,13 @@
             "failed_to_load_emojis": "Nepodařilo se načíst emoji"
         },
         "vrcx_updater": {
-            "latest_version": "VRCX-0 is up to date.",
+            "latest_version": "VRCX-Cloud is up to date.",
             "ready_for_update": "Aktualizace {value} je připravena",
             "channel": {
                 "label": "Kanál aktualizací",
                 "stable": "Stabilní",
                 "beta": "Beta",
-                "description": "VRCX-0 kontroluje aktualizace pouze v nainstalovaném kanálu.",
+                "description": "VRCX-Cloud kontroluje aktualizace pouze v nainstalovaném kanálu.",
                 "switch_description": "Chcete-li přejít na kanál {channel}, stáhněte a nainstalujte jeho nejnovější verzi.",
                 "download_stable": "Stáhnout nejnovější stabilní verzi",
                 "download_beta": "Stáhnout nejnovější beta verzi",
@@ -5441,7 +5441,7 @@
         },
         "change_log": {
             "header": "Seznam změn",
-            "support_title": "Pokud vám VRCX-0 pomáhá",
+            "support_title": "Pokud vám VRCX-Cloud pomáhá",
             "support_description": "Nejjednodušší způsob, jak podpořit projekt, je hvězdička na GitHubu.",
             "star_on_github": "Dát hvězdičku na GitHubu",
             "support_development": "Podpořit vývoj",
@@ -5549,7 +5549,7 @@
         },
         "system": {
             "label": {
-                "vrcx_0_update": "Aktualizace VRCX-0",
+                "vrcx_0_update": "Aktualizace VRCX-Cloud",
                 "fps_144": "--fps=144"
             },
             "action": {
@@ -5691,13 +5691,13 @@
             "description": "Enter proxy server address and port",
             "restart": "Restart",
             "enabled": "Povolit proxy",
-            "enabled_description": "Když je povoleno bez zadané adresy, VRCX-0 se připojuje přímo a přepínač proxy zůstává zapnutý.",
+            "enabled_description": "Když je povoleno bez zadané adresy, VRCX-Cloud se připojuje přímo a přepínač proxy zůstává zapnutý.",
             "address": "Adresa proxy",
             "address_description": "Ponechte prázdné pro přímé připojení při zachování zapnutého přepínače proxy.",
             "test": "Test",
             "configure": "Nastavit",
             "configure_empty": "Nastavit adresu",
-            "saved_restart_required": "Nastavení proxy uloženo. Restartujte VRCX-0, aby se změny síťové proxy projevily.",
+            "saved_restart_required": "Nastavení proxy uloženo. Restartujte VRCX-Cloud, aby se změny síťové proxy projevily.",
             "test_success": "Test proxy byl úspěšný (HTTP {status}).",
             "test_failed": "Test proxy selhal: {message}"
         },
@@ -5730,7 +5730,7 @@
             "auto_login_success": "Automaticky přihlášeno",
             "auto_login_failed": "Automatické přihlášení se nezdařilo",
             "session_expired": "Relace VRChat vypršela. Návrat na přihlašovací obrazovku.",
-            "session_restore_available": "Pokud je k dispozici uložený účet, VRCX-0 se pokusí znovu automaticky přihlásit.",
+            "session_restore_available": "Pokud je k dispozici uložený účet, VRCX-Cloud se pokusí znovu automaticky přihlásit.",
             "offline": "Jste offline"
         },
         "vrcx_updater": {
@@ -5757,14 +5757,14 @@
         },
         "database": {
             "migration_found_title": "Zjištěna existující databáze VRCX",
-            "migration_found_description": "V tomto počítači byla nalezena existující databáze VRCX. Chcete ji migrovat do VRCX-0? Původní data VRCX nebudou změněna",
+            "migration_found_description": "V tomto počítači byla nalezena existující databáze VRCX. Chcete ji migrovat do VRCX-Cloud? Původní data VRCX nebudou změněna",
             "legacy_vrcx_running_title": "VRCX je stále spuštěný",
-            "legacy_vrcx_running_description": "VRCX-0 zjistil, že VRCX je stále spuštěný. Ukončete jej a potom vyberte „Zkusit znovu“. Vynucená migrace může selhat.",
+            "legacy_vrcx_running_description": "VRCX-Cloud zjistil, že VRCX je stále spuštěný. Ukončete jej a potom vyberte „Zkusit znovu“. Vynucená migrace může selhat.",
             "legacy_vrcx_check_again": "Zkusit znovu",
             "legacy_vrcx_force_migration": "Vynutit migraci",
             "migration_skip": "Přeskočit",
             "migration_restarting_title": "Migrace dat",
-            "migration_restarting": "VRCX-0 se restartuje, aby dokončil migraci...",
+            "migration_restarting": "VRCX-Cloud se restartuje, aby dokončil migraci...",
             "upgrade_in_progress_title": "Probíhá aktualizace databáze",
             "maintenance_in_progress_title": "Probíhá údržba databáze",
             "maintenance_in_progress_description": "Uvolňuje se místo na disku. Přístup k databázi je pozastaven, dokud operace neskončí.",
@@ -5794,12 +5794,12 @@
             "database_upload_warning": "Tato databáze může obsahovat soukromé údaje o účtu a aktivitě. Nenahrávejte ji na GitHub.",
             "use_new_database": "Použít novou databázi",
             "fresh_start_confirm_title": "Použít novou databázi?",
-            "fresh_start_confirm_description": "VRCX-0 zachová současnou databázi a soubory neúspěšné aktualizace ve složce pro obnovení a poté se restartuje s novou prázdnou databází. Nastavení, místní historie a uložené údaje účtů se do nové databáze nepřenesou.",
-            "fresh_start_restarting": "Současná databáze se archivuje a VRCX-0 se restartuje...",
+            "fresh_start_confirm_description": "VRCX-Cloud zachová současnou databázi a soubory neúspěšné aktualizace ve složce pro obnovení a poté se restartuje s novou prázdnou databází. Nastavení, místní historie a uložené údaje účtů se do nové databáze nepřenesou.",
+            "fresh_start_restarting": "Současná databáze se archivuje a VRCX-Cloud se restartuje...",
             "fresh_start_failed": "Novou databázi se nepodařilo vytvořit.",
-            "upgrade_keep_open": "Nechte VRCX-0 otevřené, dokud se aktualizace nedokončí.",
+            "upgrade_keep_open": "Nechte VRCX-Cloud otevřené, dokud se aktualizace nedokončí.",
             "failure_reason": "Důvod",
-            "restart_app": "Restartovat VRCX-0"
+            "restart_app": "Restartovat VRCX-Cloud"
         },
         "file": {
             "not_image": "Soubor není obrázek",
@@ -6267,7 +6267,7 @@
             "modal": {
                 "launch_vrchat": "Spustit VRChat",
                 "launch": "Spustit",
-                "vrchat_is_already_running_continue_launching_this_instance": "VRChat už běží. VRCX-0 odešle běžícímu klientovi další žádost o spuštění. Pokud je otevřeno více klientů, GameLog, aktuální poloha, seznam hráčů a některé služby na pozadí mohou být nespolehlivé. Pokračovat?"
+                "vrchat_is_already_running_continue_launching_this_instance": "VRChat už běží. VRCX-Cloud odešle běžícímu klientovi další žádost o spuštění. Pokud je otevřeno více klientů, GameLog, aktuální poloha, seznam hráčů a některé služby na pozadí mohou být nespolehlivé. Pokračovat?"
             },
             "dynamic": {
                 "value_copied": "{value} zkopírováno"
@@ -6352,15 +6352,15 @@
             },
             "error": {
                 "failed_upgrade_description": "Předchozí aktualizace databáze se nezdařila. Tuto databázi nelze použít, dokud nebude ručně opravena.",
-                "apply_upgrade_failed": "Aplikaci VRCX-0 se nepodařilo provést místní aktualizaci databáze",
-                "legacy_migration_restart_failed": "Aplikaci VRCX-0 se nepodařilo restartovat kvůli migraci stávajících dat VRCX. Můžete to zkusit znovu, nebo migraci přeskočit a pokračovat se stávající databází.",
-                "newer_schema_requires_newer_app": "Tato databáze používá verzi schématu {value}, ale tato verze VRCX-0 podporuje pouze verze do {value2}. Chcete-li ji otevřít, nainstalujte nejnovější verzi VRCX-0."
+                "apply_upgrade_failed": "Aplikaci VRCX-Cloud se nepodařilo provést místní aktualizaci databáze",
+                "legacy_migration_restart_failed": "Aplikaci VRCX-Cloud se nepodařilo restartovat kvůli migraci stávajících dat VRCX. Můžete to zkusit znovu, nebo migraci přeskočit a pokračovat se stávající databází.",
+                "newer_schema_requires_newer_app": "Tato databáze používá verzi schématu {value}, ale tato verze VRCX-Cloud podporuje pouze verze do {value2}. Chcete-li ji otevřít, nainstalujte nejnovější verzi VRCX-Cloud."
             },
             "success": {
                 "database_update_complete": "Aktualizace databáze dokončena"
             },
             "action": {
-                "refresh_config_failed_after_upgrade": "VRCX-0 databázi aktualizoval, ale nepodařilo se obnovit místní konfiguraci. Restartujte prosím aplikaci",
+                "refresh_config_failed_after_upgrade": "VRCX-Cloud databázi aktualizoval, ale nepodařilo se obnovit místní konfiguraci. Restartujte prosím aplikaci",
                 "requesting_legacy_migration": "Připravuje se migrace stávajících dat VRCX…",
                 "skipping_legacy_migration": "Migrace se přeskakuje, databáze se nastavuje…"
             }
@@ -6385,7 +6385,7 @@
         "background_maintenance": {
             "label": {
                 "vrchat_registry_backup": "Záloha registru VRChat",
-                "vrcx_update_available": "K dispozici je aktualizace VRCX-0"
+                "vrcx_update_available": "K dispozici je aktualizace VRCX-Cloud"
             },
             "description": {
                 "registry_backup_restore_description": "Složka registru VRChat chybí a je k dispozici uložená záloha registru. Před spuštěním VRChat obnovte zálohu"
@@ -6395,7 +6395,7 @@
     "repository": {
         "sqlite_repository": {
             "modal": {
-                "please_repair_or_delete_your_database_file_by_fo": "Opravte nebo odstraňte soubor databáze. Podrobnosti najdete v pokynech VRCX-0 k opravě databáze.",
+                "please_repair_or_delete_your_database_file_by_fo": "Opravte nebo odstraňte soubor databáze. Podrobnosti najdete v pokynech VRCX-Cloud k opravě databáze.",
                 "your_database_is_corrupted": "Vaše databáze je poškozená",
                 "disk_full_description": "Disk obsahující databázi je plný",
                 "disk_full_title": "Disk s databází je plný",
@@ -6494,11 +6494,11 @@
     },
     "linux_rendering": {
         "title": "Hardwarová akcelerace (experimentální)",
-        "description": "Projeví se po restartu VRCX-0. Po zapnutí potvrďte do 30 sekund od spuštění; jinak se akcelerace vypne a VRCX-0 se restartuje.",
-        "saved": "Uloženo. Restartujte VRCX-0, aby se změna projevila.",
+        "description": "Projeví se po restartu VRCX-Cloud. Po zapnutí potvrďte do 30 sekund od spuštění; jinak se akcelerace vypne a VRCX-Cloud se restartuje.",
+        "saved": "Uloženo. Restartujte VRCX-Cloud, aby se změna projevila.",
         "restart_now": "Restartovat nyní",
         "confirm_title": "Zobrazuje se rozhraní správně?",
-        "confirm_description": "Bez potvrzení do 30 sekund od spuštění VRCX-0 vypne hardwarovou akceleraci a restartuje se.",
+        "confirm_description": "Bez potvrzení do 30 sekund od spuštění VRCX-Cloud vypne hardwarovou akceleraci a restartuje se.",
         "restore": "Obnovit a restartovat",
         "keep": "Zobrazení je správné, ponechat",
         "failed": "Nepodařilo se změnit nastavení vykreslování. Zkus to znovu."

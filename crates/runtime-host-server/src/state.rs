@@ -118,6 +118,9 @@ pub struct ServerRuntimeHostOptions {
     pub app_version: String,
     pub database_maintenance_cache_dir: Option<std::path::PathBuf>,
     pub task_executor: Arc<dyn RuntimeTaskExecutor>,
+    /// Optional wrapper applied to the VRChat realtime transport (e.g.
+    /// the server's desktop-activity pause gate).
+    pub realtime_transport_wrapper: Option<vrcx_0_composition::RealtimeTransportWrapper>,
 }
 
 pub struct ServerRuntimeHostState {
@@ -160,6 +163,7 @@ impl ServerRuntimeHostState {
             app_version,
             database_maintenance_cache_dir,
             task_executor,
+            realtime_transport_wrapper,
         } = options;
         let builder = RuntimeHostStateBuilder::new(RuntimeHostOptions {
             realtime_origin,
@@ -199,6 +203,7 @@ impl ServerRuntimeHostState {
             group_order_source: Arc::new(UnavailableGroupOrderSource),
             friend_projection_observer: Some(friend_projection_observer),
             profile_extension: Some(extension),
+            realtime_transport_wrapper,
         })?;
         let current_user_mutations =
             crate::current_user_mutation::build_current_user_mutation_runtime(

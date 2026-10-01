@@ -1,14 +1,8 @@
 import { commands } from '@/platform/tauri/bindings';
 import type { AppDataDirState } from '@/platform/tauri/bindings';
-import { tauriClient } from '@/platform/tauri/client';
-import type { WindowResizeDirection } from '@/platform/tauri/webview';
 
 export async function openExternalLink(url: string): Promise<void> {
     await commands.appOpenLink(url);
-}
-
-export async function exitApplication(): Promise<void> {
-    await commands.appExitApplication();
 }
 
 export async function restartApplication(): Promise<void> {
@@ -141,30 +135,4 @@ export async function setVrchatUserModeration(
 
 export async function openDiscordProfile(discordId: string): Promise<void> {
     await commands.appOpenDiscordProfile(discordId);
-}
-
-export async function deleteAllScreenshotMetadata(): Promise<void> {
-    await commands.appDeleteAllScreenshotMetadata();
-}
-
-export async function isWindowMaximized(): Promise<boolean> {
-    return Boolean(await tauriClient.webview.isWindowMaximized());
-}
-
-export async function startResizeDraggingWindow(
-    direction: WindowResizeDirection
-): Promise<void> {
-    await tauriClient.webview.startResizeDraggingWindow(direction);
-}
-
-export async function minimizeWindow(): Promise<void> {
-    await tauriClient.webview.minimizeWindow();
-}
-
-export async function toggleMaximizeWindow(): Promise<void> {
-    await tauriClient.webview.toggleMaximizeWindow();
-}
-
-export async function closeWindow(): Promise<void> {
-    await tauriClient.webview.closeWindow();
 }

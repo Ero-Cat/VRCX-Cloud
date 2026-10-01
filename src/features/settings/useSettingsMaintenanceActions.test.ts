@@ -3,13 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AppToastOptions } from '@/services/toastService';
 
 import { createDefaultSettingsPrefs } from './settingsDefaultPrefs';
-import {
-    DEFAULT_HMD_NOTIFICATION_ACTIVITY_FILTERS,
-    DEFAULT_OVERLAY_ACTIVITY_FILTERS,
-    DEFAULT_TTS_NOTIFICATION_ACTIVITY_FILTERS,
-    DEFAULT_VR_NOTIFICATION_ACTIVITY_FILTERS,
-    DEFAULT_WEBHOOK_ACTIVITY_FILTERS
-} from './settingsValues';
+import { DEFAULT_WEBHOOK_ACTIVITY_FILTERS } from './settingsValues';
 import { createSettingsMaintenanceActions } from './useSettingsMaintenanceActions';
 
 function createMaintenanceActions({
@@ -20,7 +14,6 @@ function createMaintenanceActions({
     }),
     confirm,
     isGameRunning = false,
-    setGameLogPersistenceDisabledPreference = async () => undefined,
     setFeedPersistenceDisabledPreference = async () => undefined,
     setPurgeDialogOpen = () => undefined,
     toastWarning = () => undefined,
@@ -36,56 +29,34 @@ function createMaintenanceActions({
         description: string;
     }) => Promise<{ ok: boolean }>;
     isGameRunning?: boolean;
-    setGameLogPersistenceDisabledPreference?: (
-        disabled: boolean
-    ) => Promise<void>;
     setFeedPersistenceDisabledPreference?: (disabled: boolean) => Promise<void>;
     setPurgeDialogOpen?: (open: boolean) => void;
     toastWarning?: (options: AppToastOptions) => void;
     toastError?: (options: AppToastOptions) => void;
 }) {
+    void isGameRunning;
     const prefs = createDefaultSettingsPrefs();
     return createSettingsMaintenanceActions({
-        alert: async () => ({ ok: true, reason: 'ok' }),
         cleanupAvatarFeedHistory,
         commit: async () => true,
         confirm,
-        gameState: {
-            isGameRunning
-        },
         cropAllPrints: async () => null,
         getUgcPhotoLocation: async () => '',
         prefs: {
             ...prefs,
-            desktopNotificationActivityFilters:
-                DEFAULT_VR_NOTIFICATION_ACTIVITY_FILTERS,
-            hmdNotificationActivityFilters:
-                DEFAULT_HMD_NOTIFICATION_ACTIVITY_FILTERS,
-            notificationTTS: 'Never',
-            overlayActivityFilters: DEFAULT_OVERLAY_ACTIVITY_FILTERS,
-            ttsNotificationActivityFilters:
-                DEFAULT_TTS_NOTIFICATION_ACTIVITY_FILTERS,
-            vrNotificationActivityFilters:
-                DEFAULT_VR_NOTIFICATION_ACTIVITY_FILTERS,
             webhookActivityFilters: DEFAULT_WEBHOOK_ACTIVITY_FILTERS
         },
-        prompt: async () => ({ ok: false }),
         purgePeriod: '180',
         savePreferenceValue: async (_key, _value, action) => {
             await action();
             return true;
         },
-        saveStringPreference: async () => undefined,
-        setAppDataDirState: () => undefined,
         setCropInstancePrintsPreference: async () => undefined,
-        setGameLogPersistenceDisabledPreference,
         setFeedPersistenceDisabledPreference,
-        setIntConfigPreference: async () => 0,
         setPrefs: () => undefined,
         setPurgeDialogOpen,
         setPurgeInProgress: () => undefined,
         setUserGeneratedContentPathPreference: async () => '',
-        speakNotificationTts: async () => undefined,
         t: (key) => key,
         toast: {
             add: (options: AppToastOptions) => {
@@ -103,67 +74,6 @@ function createMaintenanceActions({
         }
     });
 }
-
-describe('handleGameLogDisabledChange', () => {
-    it('keeps GameLog enabled when disabling is not confirmed', async () => {
-        const confirm = vi.fn(async () => ({ ok: false }));
-        const setGameLogPersistenceDisabledPreference = vi.fn(
-            async () => undefined
-        );
-        const actions = createMaintenanceActions({
-            confirm,
-            setGameLogPersistenceDisabledPreference
-        });
-
-        await actions.handleGameLogDisabledChange(true);
-
-        expect(confirm).toHaveBeenCalledOnce();
-        expect(setGameLogPersistenceDisabledPreference).not.toHaveBeenCalled();
-    });
-
-    it('enables GameLog without showing the disable confirmation', async () => {
-        const confirm = vi.fn(async () => ({ ok: false }));
-        const setGameLogPersistenceDisabledPreference = vi.fn(
-            async () => undefined
-        );
-        const actions = createMaintenanceActions({
-            confirm,
-            setGameLogPersistenceDisabledPreference
-        });
-
-        await actions.handleGameLogDisabledChange(false);
-
-        expect(confirm).not.toHaveBeenCalled();
-        expect(setGameLogPersistenceDisabledPreference).toHaveBeenCalledWith(
-            false
-        );
-    });
-
-    it('rejects changes while VRChat is running', async () => {
-        const confirm = vi.fn(async () => ({ ok: true }));
-        const setGameLogPersistenceDisabledPreference = vi.fn(
-            async () => undefined
-        );
-        const toastError = vi.fn();
-        const actions = createMaintenanceActions({
-            confirm,
-            isGameRunning: true,
-            setGameLogPersistenceDisabledPreference,
-            toastError
-        });
-
-        await actions.handleGameLogDisabledChange(true);
-
-        expect(confirm).not.toHaveBeenCalled();
-        expect(setGameLogPersistenceDisabledPreference).not.toHaveBeenCalled();
-        expect(toastError).toHaveBeenCalledWith(
-            expect.objectContaining({
-                type: 'error',
-                title: 'message.gamelog.vrchat_must_be_closed'
-            })
-        );
-    });
-});
 
 describe('handleFeedPersistenceDisabledChange', () => {
     it('keeps Feed history enabled when disabling is not confirmed', async () => {
