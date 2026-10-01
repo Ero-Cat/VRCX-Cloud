@@ -1,0 +1,123 @@
+import { normalizeLanguageCode } from '@/localization/locales';
+import { commands } from '@/platform/tauri/bindings';
+import configRepository from '@/repositories/configRepository';
+import {
+    DEFAULT_TRANSLATION_ENDPOINT,
+    DEFAULT_TRANSLATION_MODEL
+} from '@/shared/constants/settings';
+import {
+    normalizeTranslationApiType,
+    type DiscordPreferenceKey
+} from '@/state/preferencesStore';
+
+import { DISCORD_BOOL_PREFERENCE_KEYS } from './preferencesConstants';
+import { patchPreferences, publishPreferenceChanged } from './preferencesCore';
+import type { TranslationApiConfigPreferenceInput } from './preferencesTypes';
+
+export async function setYoutubeApiEnabledPreference(value: boolean) {
+    await configRepository.setBool('youtubeAPI', value);
+    patchPreferences({ youtubeAPI: value });
+    publishPreferenceChanged('youtubeAPI', value);
+    return value;
+}
+
+export async function setYoutubeApiKeyPreference(value: string) {
+    const youtubeAPIKey = String(value ?? '').trim();
+    await configRepository.setString('youtubeAPIKey', youtubeAPIKey);
+    publishPreferenceChanged('youtubeAPIKey', youtubeAPIKey);
+    return youtubeAPIKey;
+}
+
+export async function setTranslationApiEnabledPreference(value: boolean) {
+    await configRepository.setBool('translationAPI', value);
+    patchPreferences({ translationAPI: value });
+    publishPreferenceChanged('translationAPI', value);
+    return value;
+}
+
+export async function setTranslationApiConfigPreference({
+    bioLanguage,
+    translationAPIType,
+    translationAPIKey,
+    translationEndpointId,
+    translationAPIEndpoint,
+    translationAPIModel,
+    translationAPIPrompt,
+    translationAPIReasoningEffort
+}: TranslationApiConfigPreferenceInput) {
+    const nextBioLanguage = normalizeLanguageCode(bioLanguage);
+    const nextType = normalizeTranslationApiType(translationAPIType);
+    const nextKey = String(translationAPIKey ?? '').trim();
+    const nextEndpointId = String(translationEndpointId ?? '').trim();
+    const nextEndpoint =
+        String(translationAPIEndpoint || DEFAULT_TRANSLATION_ENDPOINT).trim() ||
+        DEFAULT_TRANSLATION_ENDPOINT;
+    const nextModel =
+        String(translationAPIModel || DEFAULT_TRANSLATION_MODEL).trim() ||
+        DEFAULT_TRANSLATION_MODEL;
+    const nextPrompt = String(translationAPIPrompt ?? '');
+    const nextReasoningEffort = String(translationAPIReasoningEffort ?? '');
+    await configRepository.setMany([
+        ['bioLanguage', nextBioLanguage],
+        ['translationAPIType', nextType],
+        ['translationAPIKey', nextKey],
+        ['translationEndpointId', nextEndpointId],
+        ['translationAPIEndpoint', nextEndpoint],
+        ['translationAPIModel', nextModel],
+        ['translationAPIPrompt', nextPrompt],
+        ['translationAPIReasoningEffort', nextReasoningEffort]
+    ]);
+    patchPreferences({
+        bioLanguage: nextBioLanguage,
+        translationAPIType: nextType,
+        translationEndpointId: nextEndpointId,
+        translationAPIEndpoint: nextEndpoint,
+        translationAPIModel: nextModel,
+        translationAPIPrompt: nextPrompt,
+        translationAPIReasoningEffort: nextReasoningEffort
+    });
+    publishPreferenceChanged('bioLanguage', nextBioLanguage);
+    publishPreferenceChanged('translationAPIType', nextType);
+    publishPreferenceChanged('translationAPIKey', nextKey);
+    publishPreferenceChanged('translationEndpointId', nextEndpointId);
+    publishPreferenceChanged('translationAPIEndpoint', nextEndpoint);
+    publishPreferenceChanged('translationAPIModel', nextModel);
+    publishPreferenceChanged('translationAPIPrompt', nextPrompt);
+    publishPreferenceChanged(
+        'translationAPIReasoningEffort',
+        nextReasoningEffort
+    );
+    return {
+        bioLanguage: nextBioLanguage,
+        translationAPIType: nextType,
+        translationAPIKey: nextKey,
+        translationEndpointId: nextEndpointId,
+        translationAPIEndpoint: nextEndpoint,
+        translationAPIModel: nextModel,
+        translationAPIPrompt: nextPrompt,
+        translationAPIReasoningEffort: nextReasoningEffort
+    };
+}
+
+export async function setDiscordBoolPreference(
+    key: DiscordPreferenceKey,
+    value: boolean
+) {
+    if (!DISCORD_BOOL_PREFERENCE_KEYS.has(key)) {
+        throw new Error(`Unsupported Discord preference: ${key}`);
+    }
+    const enabled = value;
+    if (key === 'discordActive' && enabled) {
+        await commands.appDisableVrchatRichPresence();
+    }
+    await configRepository.setBool(key, enabled);
+    patchPreferences({ [key]: enabled });
+    publishPreferenceChanged(key, enabled);
+    commands.appRuntimeDiscordReconcileRequest().catch((error) => {
+        console.warn(
+            'Failed to reconcile Discord Rich Presence after setting change:',
+            error
+        );
+    });
+    return enabled;
+}

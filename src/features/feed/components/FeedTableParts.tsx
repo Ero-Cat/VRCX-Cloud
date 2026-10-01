@@ -1,0 +1,455 @@
+import {
+    CopyIcon,
+    EyeIcon,
+    EyeOffIcon,
+    ExternalLinkIcon,
+    GlobeIcon,
+    UserIcon,
+    UsersIcon
+} from 'lucide-react';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { DataTableSortButton } from '@/components/data-table/DataTableSortButton';
+import { FeedDetailCell } from '@/components/feed/FeedDetailCell';
+import {
+    canRequestInviteFromFeedFriend,
+    normalizeFeedId as normalizeId,
+    resolveFeedUserDisplayName,
+    resolveFeedUserId,
+    UNKNOWN_FEED_USER_DISPLAY_NAME
+} from '@/components/feed/feedRows';
+import type {
+    FeedFriendActions,
+    FeedFriendActionTarget,
+    FeedRow
+} from '@/components/feed/feedTypes';
+import { LaunchModeContextMenuGroup } from '@/components/launch/LaunchModeContextMenuGroup';
+import { resolveFriendPresenceLocation } from '@/domain/friends/presence';
+import { formatDateFilter, formatDateTime } from '@/lib/dateTime';
+import { useKnownUserFact } from '@/lib/useKnownUser';
+import { cn } from '@/lib/utils';
+import userProfileRepository from '@/repositories/userProfileRepository';
+import { copyTextToClipboard } from '@/services/clipboardService';
+import {
+    openGroupDialog,
+    openUserDialog,
+    openWorldDialog
+} from '@/services/dialogService';
+import { userImage } from '@/services/entityMediaService';
+import { parseLocation } from '@/shared/utils/location';
+import { useFriendRosterStore } from '@/state/friendRosterStore';
+import { useRuntimeStore } from '@/state/runtimeStore';
+import { Avatar, AvatarFallback, AvatarImage } from '@/ui/shadcn/avatar';
+import { Button } from '@/ui/shadcn/button';
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuGroup,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger
+} from '@/ui/shadcn/context-menu';
+
+import { FeedExpandedRow } from './FeedExpandedRow';
+
+function formatTimestampParts(value: string | null | undefined) {
+    if (!value) {
+        return { date: '-', time: '' };
+    }
+
+    const date = formatDateTime(value, { month: 'short', day: 'numeric' });
+    if (date === '-') {
+        return { date: '-', time: '' };
+    }
+
+    const time = formatDateTime(value, {
+        hour: 'numeric',
+        minute: '2-digit'
+    })
+        .replace(' AM', 'am')
+        .replace(' PM', 'pm');
+
+    return { date, time };
+}
+
+function formatTimestampLong(value: string | null | undefined) {
+    if (!value) {
+        return '-';
+    }
+
+    return formatDateFilter(value, 'long');
+}
+
+async function copyFeedText(text: string, successMessage: string) {
+    const value = text.trim();
+    if (!value) {
+        return;
+    }
+    await copyTextToClipboard(value, { successMessage });
+}
+
+function FeedUserLink({
+    actions,
+    avatarSize = 28,
+    cachedDisplayName = '',
+    className = '',
+    row,
+    showAvatar = false
+}: {
+    actions: FeedFriendActions;
+    avatarSize?: number;
+    cachedDisplayName?: string;
+    className?: string;
+    row: FeedRow;
+    showAvatar?: boolean;
+}) {
+    const { t } = useTranslation();
+    const userId = resolveFeedUserId(row);
+    const currentEndpoint = useRuntimeStore(
+        (state) => state.auth.currentUserEndpoint
+    );
+    const currentUserId = useRuntimeStore((state) => state.auth.currentUserId);
+    const friend = useFriendRosterStore((state) =>
+        userId ? state.friendsById[userId] || null : null
+    );
+    const knownUser = useKnownUserFact(userId, { endpoint: currentEndpoint });
+    const displayUser = friend
+        ? {
+              ...knownUser,
+              ...friend,
+              displayName: friend.displayName || knownUser?.displayName,
+              username: friend.username || knownUser?.username
+          }
+        : knownUser;
+    const displayName = resolveFeedUserDisplayName(
+        row,
+        displayUser,
+        cachedDisplayName
+    );
+    const location = resolveFriendPresenceLocation(friend || knownUser, {
+        preferTraveling: true
+    });
+    const parsedLocation = parseLocation(location);
+    const worldTarget = parsedLocation.worldId || '';
+    const worldDialogTarget =
+        parsedLocation.isRealInstance && parsedLocation.tag
+            ? parsedLocation.tag
+            : worldTarget;
+    const groupTarget = parsedLocation.groupId || '';
+    const isCurrentUser = Boolean(
+        userId && userId === normalizeId(currentUserId)
+    );
+    const canRequestInvite = canRequestInviteFromFeedFriend(friend);
+    const canUseFriendLocation = Boolean(
+        !isCurrentUser &&
+        parsedLocation.isRealInstance &&
+        parsedLocation.worldId &&
+        parsedLocation.instanceId &&
+        actions.canUseFeedFriendLocation(location)
+    );
+    const isHiddenFromFeed = actions.isFeedUserHidden(userId);
+
+    useEffect(() => {
+        if (!userId || displayName !== UNKNOWN_FEED_USER_DISPLAY_NAME) {
+            return;
+        }
+
+        userProfileRepository.getUserProfile({ userId }).catch(() => {});
+    }, [currentEndpoint, displayName, userId]);
+
+    const userLabel = displayName || UNKNOWN_FEED_USER_DISPLAY_NAME;
+    const imageUrl = showAvatar ? userImage(displayUser || null, 64) : '';
+    const actionTarget: FeedFriendActionTarget = friend || row;
+
+    return (
+        <ContextMenu>
+            <ContextMenuTrigger
+                render={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className={cn(
+                            'hover:text-content-primary h-auto max-w-full justify-start self-start p-0 text-left font-medium hover:bg-transparent',
+                            showAvatar && 'gap-2',
+                            className
+                        )}
+                        disabled={!userId}
+                        onClick={() =>
+                            openUserDialog({
+                                userId,
+                                title: userLabel,
+                                seedData: displayUser || null
+                            })
+                        }
+                    >
+                        {showAvatar ? (
+                            <Avatar
+                                size="default"
+                                style={{
+                                    height: avatarSize,
+                                    width: avatarSize
+                                }}
+                            >
+                                {imageUrl ? (
+                                    <AvatarImage src={imageUrl} alt="" />
+                                ) : null}
+                                <AvatarFallback
+                                    className={cn(
+                                        avatarSize >= 40
+                                            ? 'text-xs'
+                                            : 'text-[10px]'
+                                    )}
+                                >
+                                    <UserIcon
+                                        className={
+                                            avatarSize >= 40
+                                                ? 'size-4'
+                                                : 'size-3.5'
+                                        }
+                                    />
+                                </AvatarFallback>
+                            </Avatar>
+                        ) : null}
+                        <span
+                            className={cn(
+                                'truncate',
+                                showAvatar ? 'min-w-0 flex-1' : 'max-w-full'
+                            )}
+                        >
+                            {userLabel}
+                        </span>
+                    </Button>
+                }
+            />
+            <ContextMenuContent className="w-max max-w-[calc(100vw-1rem)] min-w-56">
+                <ContextMenuGroup>
+                    <ContextMenuItem
+                        disabled={!userId}
+                        onClick={() =>
+                            openUserDialog({
+                                userId,
+                                title: userLabel,
+                                seedData: displayUser || null
+                            })
+                        }
+                    >
+                        <UserIcon />
+                        {t('table.playerList.user')}
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        disabled={!worldTarget}
+                        onClick={() =>
+                            openWorldDialog({
+                                worldId: worldDialogTarget,
+                                title:
+                                    normalizeId(friend?.worldName) ||
+                                    worldTarget
+                            })
+                        }
+                    >
+                        <GlobeIcon />
+                        {t('table.playerList.location')}
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        disabled={!groupTarget}
+                        onClick={() =>
+                            openGroupDialog({
+                                groupId: groupTarget,
+                                title: undefined
+                            })
+                        }
+                    >
+                        <UsersIcon />
+                        {t('side_panel.groups')}
+                    </ContextMenuItem>
+                </ContextMenuGroup>
+                <ContextMenuSeparator />
+                <LaunchModeContextMenuGroup
+                    disabled={!canUseFriendLocation}
+                    errorMessage={t(
+                        'view.feed.toast.failed_to_launch_instance'
+                    )}
+                    location={location}
+                    shortName={parsedLocation.shortName || ''}
+                />
+                <ContextMenuSeparator />
+                <ContextMenuGroup>
+                    <ContextMenuItem
+                        disabled={!canUseFriendLocation}
+                        onClick={() => {
+                            actions.selfInviteFeedFriendLocation(location);
+                        }}
+                    >
+                        <ExternalLinkIcon />
+                        {t('dialog.launch.self_invite')}
+                    </ContextMenuItem>
+                </ContextMenuGroup>
+                <ContextMenuSeparator />
+                <ContextMenuGroup>
+                    <ContextMenuItem
+                        disabled={
+                            isCurrentUser || !actions.canSendInviteFromFeed
+                        }
+                        onClick={() => {
+                            actions.sendFeedFriendInvite(actionTarget);
+                        }}
+                    >
+                        <ExternalLinkIcon />
+                        {t('dialog.user.actions.invite')}
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        disabled={isCurrentUser || !canRequestInvite}
+                        onClick={() => {
+                            actions.requestFeedFriendInvite(actionTarget);
+                        }}
+                    >
+                        <ExternalLinkIcon />
+                        {t('dialog.user.actions.request_invite')}
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        disabled={isCurrentUser || !actions.canBoopFromFeed}
+                        onClick={() => {
+                            actions.sendFeedFriendBoop(actionTarget);
+                        }}
+                    >
+                        <ExternalLinkIcon />
+                        {t('dialog.user.actions.send_boop')}
+                    </ContextMenuItem>
+                </ContextMenuGroup>
+                <ContextMenuSeparator />
+                {!isCurrentUser ? (
+                    <>
+                        <ContextMenuGroup>
+                            <ContextMenuItem
+                                disabled={!userId}
+                                onClick={() => {
+                                    if (!userId) {
+                                        return;
+                                    }
+                                    if (isHiddenFromFeed) {
+                                        void actions.removeFeedHiddenUser(
+                                            userId
+                                        );
+                                        return;
+                                    }
+                                    void actions.addFeedHiddenUser(userId);
+                                }}
+                            >
+                                {isHiddenFromFeed ? (
+                                    <EyeIcon />
+                                ) : (
+                                    <EyeOffIcon />
+                                )}
+                                {t(
+                                    isHiddenFromFeed
+                                        ? 'view.feed.context.unhide_user'
+                                        : 'view.feed.context.hide_user'
+                                )}
+                            </ContextMenuItem>
+                        </ContextMenuGroup>
+                        <ContextMenuSeparator />
+                    </>
+                ) : null}
+                <ContextMenuGroup>
+                    <ContextMenuItem
+                        disabled={!displayName}
+                        onClick={() => {
+                            copyFeedText(
+                                displayName,
+                                t('view.feed.dynamic.value_copied', {
+                                    value: t('dialog.user.info.display_name')
+                                })
+                            );
+                        }}
+                    >
+                        <CopyIcon />
+                        {t('dialog.user.info.copy_display_name')}
+                    </ContextMenuItem>
+                </ContextMenuGroup>
+            </ContextMenuContent>
+        </ContextMenu>
+    );
+}
+
+function FeedUserAvatarButton({
+    avatarSize = 32,
+    className = '',
+    row
+}: {
+    avatarSize?: number;
+    className?: string;
+    row: FeedRow;
+}) {
+    const userId = resolveFeedUserId(row);
+    const currentEndpoint = useRuntimeStore(
+        (state) => state.auth.currentUserEndpoint
+    );
+    const friend = useFriendRosterStore((state) =>
+        userId ? state.friendsById[userId] || null : null
+    );
+    const knownUser = useKnownUserFact(userId, { endpoint: currentEndpoint });
+    const displayUser = friend
+        ? {
+              ...knownUser,
+              ...friend,
+              displayName: friend.displayName || knownUser?.displayName,
+              username: friend.username || knownUser?.username
+          }
+        : knownUser;
+    const displayName = resolveFeedUserDisplayName(row, displayUser);
+
+    useEffect(() => {
+        if (!userId || displayName !== UNKNOWN_FEED_USER_DISPLAY_NAME) {
+            return;
+        }
+
+        userProfileRepository.getUserProfile({ userId }).catch(() => {});
+    }, [currentEndpoint, displayName, userId]);
+
+    const userLabel = displayName || UNKNOWN_FEED_USER_DISPLAY_NAME;
+    const imageUrl = userImage(displayUser || null, 64);
+
+    return (
+        <Button
+            type="button"
+            variant="ghost"
+            className={cn('h-auto w-auto shrink-0 rounded-full p-0', className)}
+            disabled={!userId}
+            onClick={() =>
+                openUserDialog({
+                    userId,
+                    title: userLabel,
+                    seedData: displayUser || null
+                })
+            }
+        >
+            <Avatar
+                size="default"
+                style={{
+                    height: avatarSize,
+                    width: avatarSize
+                }}
+            >
+                {imageUrl ? <AvatarImage src={imageUrl} alt="" /> : null}
+                <AvatarFallback
+                    className={cn(avatarSize >= 40 ? 'text-xs' : 'text-[10px]')}
+                >
+                    <UserIcon
+                        className={avatarSize >= 40 ? 'size-4' : 'size-3.5'}
+                    />
+                </AvatarFallback>
+            </Avatar>
+        </Button>
+    );
+}
+
+export {
+    FeedDetailCell,
+    FeedExpandedRow,
+    FeedUserAvatarButton,
+    FeedUserLink,
+    DataTableSortButton as SortButton,
+    formatTimestampLong,
+    formatTimestampParts
+};

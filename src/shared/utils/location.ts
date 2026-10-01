@@ -1,0 +1,554 @@
+import { normalizeString } from './string';
+
+export interface ParsedLocation extends Record<string, unknown> {
+    tag: string;
+    isOffline: boolean;
+    isPrivate: boolean;
+    isTraveling: boolean;
+    isRealInstance: boolean;
+    worldId: string;
+    instanceId: string;
+    instanceName: string;
+    accessType: string;
+    accessTypeName: string;
+    region: string;
+    shortName: string;
+    userId: string | null;
+    hiddenId: string | null;
+    privateId: string | null;
+    friendsId: string | null;
+    groupId: string | null;
+    groupAccessType: string | null;
+    canRequestInvite: boolean;
+    strict: boolean;
+    ageGate: boolean;
+}
+
+interface LocationRecord extends Record<string, unknown> {
+    tag?: string | null;
+    location?: string | null;
+    ref?: LocationRecord | null;
+    $location?: LocationRecord | null;
+    worldId?: string | null;
+    world_id?: string | null;
+    instanceId?: string | null;
+    instance_id?: string | null;
+    id?: string | null;
+    isOffline?: boolean | null;
+    isPrivate?: boolean | null;
+    isTraveling?: boolean | null;
+}
+
+type ParsedStringField =
+    | 'tag'
+    | 'worldId'
+    | 'instanceId'
+    | 'instanceName'
+    | 'accessType'
+    | 'accessTypeName'
+    | 'region'
+    | 'shortName';
+
+type ParsedNullableStringField =
+    | 'userId'
+    | 'hiddenId'
+    | 'privateId'
+    | 'friendsId'
+    | 'groupId'
+    | 'groupAccessType';
+
+type ParsedBooleanField =
+    | 'isOffline'
+    | 'isPrivate'
+    | 'isTraveling'
+    | 'isRealInstance'
+    | 'canRequestInvite'
+    | 'strict'
+    | 'ageGate';
+
+const SHORT_NAME_QUALIFIER = '&shortName=';
+
+const PARSED_LOCATION_STRING_FIELDS: ParsedStringField[] = [
+    'tag',
+    'worldId',
+    'instanceId',
+    'instanceName',
+    'accessType',
+    'accessTypeName',
+    'region',
+    'shortName'
+];
+
+const PARSED_LOCATION_NULLABLE_STRING_FIELDS: ParsedNullableStringField[] = [
+    'userId',
+    'hiddenId',
+    'privateId',
+    'friendsId',
+    'groupId',
+    'groupAccessType'
+];
+
+const PARSED_LOCATION_BOOLEAN_FIELDS: ParsedBooleanField[] = [
+    'isOffline',
+    'isPrivate',
+    'isTraveling',
+    'isRealInstance',
+    'canRequestInvite',
+    'strict',
+    'ageGate'
+];
+
+function isLocationLike(value: unknown): value is LocationRecord {
+    return Boolean(value && typeof value === 'object');
+}
+
+function isNullableString(value: unknown): boolean {
+    return value === null || typeof value === 'string';
+}
+
+function isCompleteParsedLocation(value: unknown): value is LocationRecord {
+    if (!isLocationLike(value)) {
+        return false;
+    }
+    return (
+        PARSED_LOCATION_STRING_FIELDS.every(
+            (field) => typeof value[field] === 'string'
+        ) &&
+        PARSED_LOCATION_BOOLEAN_FIELDS.every(
+            (field) => typeof value[field] === 'boolean'
+        ) &&
+        PARSED_LOCATION_NULLABLE_STRING_FIELDS.every((field) =>
+            isNullableString(value[field])
+        )
+    );
+}
+
+function stringField(value: unknown): string {
+    return typeof value === 'string' ? value : '';
+}
+
+function nullableStringField(value: unknown): string | null {
+    return typeof value === 'string' ? value : null;
+}
+
+function parsedLocationFromObject(value: unknown): ParsedLocation | null {
+    if (!isCompleteParsedLocation(value)) {
+        return null;
+    }
+    return {
+        ...value,
+        tag: normalizeLaunchUrlTag(stringField(value.tag)),
+        isOffline: value.isOffline === true,
+        isPrivate: value.isPrivate === true,
+        isTraveling: value.isTraveling === true,
+        isRealInstance: value.isRealInstance === true,
+        worldId: stringField(value.worldId),
+        instanceId: stringField(value.instanceId),
+        instanceName: stringField(value.instanceName),
+        accessType: stringField(value.accessType),
+        accessTypeName: stringField(value.accessTypeName),
+        region: stringField(value.region),
+        shortName: stringField(value.shortName),
+        userId: nullableStringField(value.userId),
+        hiddenId: nullableStringField(value.hiddenId),
+        privateId: nullableStringField(value.privateId),
+        friendsId: nullableStringField(value.friendsId),
+        groupId: nullableStringField(value.groupId),
+        groupAccessType: nullableStringField(value.groupAccessType),
+        canRequestInvite: value.canRequestInvite === true,
+        strict: value.strict === true,
+        ageGate: value.ageGate === true
+    };
+}
+
+function displayLocation(
+    location: string,
+    worldName: string,
+    groupName: string = ''
+): string {
+    const L = parseLocation(location);
+    if (L.isOffline) {
+        return 'Offline';
+    }
+    if (L.isPrivate) {
+        return 'Private';
+    }
+    if (L.isTraveling) {
+        return 'Traveling';
+    }
+    if (!L.worldId) {
+        return worldName;
+    }
+    if (groupName) {
+        return `${worldName} ${L.accessTypeName}(${groupName})`;
+    }
+    if (!L.instanceId) {
+        return worldName;
+    }
+    return `${worldName} ${L.accessTypeName}`;
+}
+
+function appendShortName(tag: string, shortName: string): string {
+    if (!tag || !shortName || tag.includes('&shortName=')) {
+        return tag;
+    }
+    return `${tag}&shortName=${shortName}`;
+}
+
+function normalizeLaunchUrlTag(tag: string): string {
+    const trimmed = tag.trim();
+    if (!/^(https?:\/\/|vrchat:\/\/)/i.test(trimmed)) {
+        return tag;
+    }
+
+    try {
+        const url = new URL(trimmed);
+        const host = url.hostname.toLowerCase();
+        const shortName = url.searchParams.get('shortName')?.trim() || '';
+
+        if (
+            (url.protocol === 'https:' || url.protocol === 'http:') &&
+            (host === 'vrchat.com' || host.endsWith('.vrchat.com')) &&
+            url.pathname === '/home/launch'
+        ) {
+            const worldId = url.searchParams.get('worldId')?.trim() || '';
+            const instanceId = url.searchParams.get('instanceId')?.trim() || '';
+            if (worldId && instanceId) {
+                return appendShortName(`${worldId}:${instanceId}`, shortName);
+            }
+            return worldId || tag;
+        }
+
+        if (url.protocol === 'vrchat:' && host === 'launch') {
+            const launchId = url.searchParams.get('id')?.trim() || '';
+            return appendShortName(launchId, shortName) || tag;
+        }
+    } catch {
+        return tag;
+    }
+
+    return tag;
+}
+
+function normalizeLocationTag(tag: unknown): string {
+    if (typeof tag === 'string') {
+        return normalizeLaunchUrlTag(tag);
+    }
+    if (!isLocationLike(tag)) {
+        return String(tag || '');
+    }
+
+    const rawTag = normalizeLocationTag(
+        tag.tag || tag.location || tag.$location?.tag
+    );
+    if (rawTag) {
+        return rawTag;
+    }
+    const worldId = normalizeLocationTag(
+        tag.worldId || tag.world_id || tag.$location?.worldId
+    );
+    const instanceId = normalizeLocationTag(
+        tag.instanceId || tag.instance_id || tag.id || tag.$location?.instanceId
+    );
+    if (worldId && instanceId) {
+        return `${worldId}:${instanceId}`;
+    }
+    if (tag.isOffline) {
+        return 'offline';
+    }
+    if (tag.isPrivate) {
+        return 'private';
+    }
+    if (tag.isTraveling) {
+        return 'traveling';
+    }
+    return '';
+}
+
+function createParsedLocation(tag: string): ParsedLocation {
+    return {
+        tag,
+        isOffline: false,
+        isPrivate: false,
+        isTraveling: false,
+        isRealInstance: false,
+        worldId: '',
+        instanceId: '',
+        instanceName: '',
+        accessType: '',
+        accessTypeName: '',
+        region: '',
+        shortName: '',
+        userId: null,
+        hiddenId: null,
+        privateId: null,
+        friendsId: null,
+        groupId: null,
+        groupAccessType: null,
+        canRequestInvite: false,
+        strict: false,
+        ageGate: false
+    };
+}
+
+function applyInstanceTagPart(
+    ctx: ParsedLocation,
+    part: string,
+    index: number
+): void {
+    if (index === 0) {
+        ctx.instanceName = part;
+        return;
+    }
+    const openIndex = part.indexOf('(');
+    const closeIndex = openIndex >= 0 ? part.lastIndexOf(')') : -1;
+    const key = closeIndex >= 0 ? part.slice(0, openIndex) : part;
+    const value =
+        openIndex < closeIndex ? part.slice(openIndex + 1, closeIndex) : '';
+
+    switch (key) {
+        case 'hidden':
+            ctx.hiddenId = value;
+            break;
+        case 'private':
+            ctx.privateId = value;
+            break;
+        case 'friends':
+            ctx.friendsId = value;
+            break;
+        case 'canRequestInvite':
+            ctx.canRequestInvite = true;
+            break;
+        case 'region':
+            ctx.region = value;
+            break;
+        case 'group':
+            ctx.groupId = value;
+            break;
+        case 'groupAccessType':
+            ctx.groupAccessType = value;
+            break;
+        case 'strict':
+            ctx.strict = true;
+            break;
+        case 'ageGate':
+            ctx.ageGate = true;
+            break;
+    }
+}
+
+function applyAccessType(ctx: ParsedLocation): void {
+    ctx.accessType = 'public';
+    if (ctx.privateId !== null) {
+        if (ctx.canRequestInvite) {
+            ctx.accessType = 'invite+';
+        } else {
+            ctx.accessType = 'invite';
+        }
+        ctx.userId = ctx.privateId;
+    } else if (ctx.friendsId !== null) {
+        ctx.accessType = 'friends';
+        ctx.userId = ctx.friendsId;
+    } else if (ctx.hiddenId !== null) {
+        ctx.accessType = 'friends+';
+        ctx.userId = ctx.hiddenId;
+    } else if (ctx.groupId !== null) {
+        ctx.accessType = 'group';
+    }
+    ctx.accessTypeName = ctx.accessType;
+    if (ctx.groupAccessType === 'public') {
+        ctx.accessTypeName = 'groupPublic';
+    } else if (ctx.groupAccessType === 'plus') {
+        ctx.accessTypeName = 'groupPlus';
+    }
+}
+
+function parseLocationTag(tag: string): ParsedLocation {
+    let _tag = tag;
+    const ctx = createParsedLocation(_tag);
+    if (_tag === 'offline' || _tag === 'offline:offline') {
+        ctx.isOffline = true;
+    } else if (_tag === 'private' || _tag === 'private:private') {
+        ctx.isPrivate = true;
+    } else if (_tag === 'traveling' || _tag === 'traveling:traveling') {
+        ctx.isTraveling = true;
+    } else if (_tag && !_tag.startsWith('local')) {
+        ctx.isRealInstance = true;
+        const sep = _tag.indexOf(':');
+        const shortNameIndex = _tag.indexOf(SHORT_NAME_QUALIFIER);
+        if (shortNameIndex >= 0) {
+            ctx.shortName = _tag.slice(
+                shortNameIndex + SHORT_NAME_QUALIFIER.length
+            );
+            _tag = _tag.slice(0, shortNameIndex);
+        }
+        if (sep >= 0) {
+            ctx.worldId = _tag.slice(0, sep);
+            ctx.instanceId = _tag.slice(sep + 1);
+            ctx.instanceId.split('~').forEach((part, index) => {
+                applyInstanceTagPart(ctx, part, index);
+            });
+            applyAccessType(ctx);
+        } else {
+            ctx.worldId = _tag;
+        }
+    }
+    return ctx;
+}
+
+function parseLocation(tag: unknown): ParsedLocation {
+    const object = isLocationLike(tag) ? tag : null;
+    const parsedObject =
+        parsedLocationFromObject(object?.$location) ||
+        parsedLocationFromObject(tag);
+    if (parsedObject) {
+        return parsedObject;
+    }
+    return parseLocationTag(normalizeLocationTag(tag).trim());
+}
+
+function resolveRegion(L: ParsedLocation): string {
+    if (L.isOffline || L.isPrivate || L.isTraveling) {
+        return '';
+    }
+    if (L.region) {
+        return L.region;
+    }
+    if (L.instanceId) {
+        return 'us';
+    }
+    return '';
+}
+
+function translateAccessType(
+    accessTypeName: string,
+    t: (key: string) => string,
+    keyMap: Record<string, string>
+): string {
+    const key = keyMap[accessTypeName];
+    if (!key) {
+        return accessTypeName;
+    }
+    if (accessTypeName === 'groupPublic' || accessTypeName === 'groupPlus') {
+        const groupKey = keyMap['group'];
+        const groupLabel = t(groupKey);
+        const subtypeLabel = t(key);
+        return subtypeLabel.startsWith(groupLabel)
+            ? subtypeLabel
+            : `${groupLabel} ${subtypeLabel}`;
+    }
+    return t(key);
+}
+
+export { parseLocation, displayLocation, resolveRegion, translateAccessType };
+
+interface LocationTextOptions {
+    hint?: string;
+    worldName?: string;
+    accessTypeLabel: string;
+    t: (key: string) => string;
+}
+
+function normalizeLocationValue(value: unknown): string {
+    if (typeof value === 'string') {
+        return value.trim();
+    }
+    if (!value || typeof value !== 'object') {
+        return String(value ?? '').trim();
+    }
+    const location = value as LocationRecord;
+
+    const tag = normalizeLocationValue(
+        location.tag || location.location || location.$location?.tag
+    );
+    if (tag) {
+        return tag;
+    }
+    const worldId = normalizeLocationValue(
+        location.worldId || location.world_id || location.$location?.worldId
+    );
+    const instanceId = normalizeLocationValue(
+        location.instanceId ||
+            location.instance_id ||
+            location.id ||
+            location.$location?.instanceId
+    );
+    if (worldId && instanceId) {
+        return `${worldId}:${instanceId}`;
+    }
+    if (location.isOffline) {
+        return 'offline';
+    }
+    if (location.isPrivate) {
+        return 'private';
+    }
+    if (location.isTraveling) {
+        return 'traveling';
+    }
+    return '';
+}
+
+function normalizeLocationStatus(value: unknown): string {
+    const normalized = normalizeString(value).toLowerCase();
+    if (normalized === 'offline:offline') {
+        return 'offline';
+    }
+    if (normalized === 'private:private') {
+        return 'private';
+    }
+    if (normalized === 'traveling:traveling') {
+        return 'traveling';
+    }
+    return normalized;
+}
+
+const LOCATION_SENTINELS = ['offline', 'private', 'traveling'] as const;
+
+type LocationSentinel = (typeof LOCATION_SENTINELS)[number];
+
+function isLocationSentinel(value: string): value is LocationSentinel {
+    return LOCATION_SENTINELS.some((sentinel) => sentinel === value);
+}
+
+function locationSentinel(value: unknown): LocationSentinel | '' {
+    const status = normalizeLocationStatus(value);
+    return isLocationSentinel(status) ? status : '';
+}
+
+export { locationSentinel, normalizeLocationStatus, normalizeLocationValue };
+
+/**
+ * Get the display text for a location — synchronous, pure function.
+ * Does NOT handle async world name lookups (those stay in the component).
+ * @param {object} L - Parsed location object from parseLocation()
+ * @param {object} options
+ * @param {string} [options.hint] - Hint string (e.g. from props)
+ * @param {string|undefined} [options.worldName] - Cached world name, if available
+ * @param {string} options.accessTypeLabel - Translated access type label
+ * @param {Function} options.t - i18n translate function
+ * @returns {string} Display text for the location
+ */
+function getLocationText(
+    L: ParsedLocation,
+    { hint, worldName, accessTypeLabel, t }: LocationTextOptions
+): string {
+    if (L.isOffline) {
+        return t('location.offline');
+    }
+    if (L.isPrivate) {
+        return t('location.private');
+    }
+    if (L.isTraveling) {
+        return t('location.traveling');
+    }
+    if (typeof hint === 'string' && hint !== '') {
+        return L.instanceId ? `${hint} · ${accessTypeLabel}` : hint;
+    }
+    if (L.worldId) {
+        const name = worldName || L.worldId;
+        return L.instanceId ? `${name} · ${accessTypeLabel}` : name;
+    }
+    return '';
+}
+
+export { getLocationText };

@@ -1,0 +1,1 @@
+export { bootstrapFriendRoster } from './friendRosterBootstrapService';

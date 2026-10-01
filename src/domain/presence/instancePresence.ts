@@ -1,0 +1,290 @@
+import { normalizeLocationValue, parseLocation } from '@/shared/utils/location';
+import { isRecord } from '@/shared/utils/record';
+
+type InstancePresenceSource =
+    | 'seed'
+    | 'instance'
+    | 'playerSnapshot'
+    | 'friend'
+    | 'realtime'
+    | 'gameRuntime';
+
+interface InstancePresenceFactInput {
+    endpoint?: string;
+    location?: string;
+    source?: InstancePresenceSource;
+    ownerUserId?: string;
+    ownerGroupId?: string;
+    worldName?: string;
+    groupName?: string;
+    instanceName?: string;
+    players?: unknown[];
+    receivedAt?: string;
+}
+
+interface InstancePlayerFact {
+    id: string;
+    userId: string;
+    displayName: string;
+    joinedAt?: string;
+    locationAt?: string;
+}
+
+interface InstancePresenceFact {
+    endpoint: string;
+    location: string;
+    locationKey: string;
+    worldId: string;
+    instanceId: string;
+    ownerUserId: string;
+    ownerGroupId: string;
+    worldName: string;
+    groupName: string;
+    instanceName: string;
+    source: InstancePresenceSource;
+    receivedAt: string;
+    userIds: string[];
+    playersById: Record<string, InstancePlayerFact>;
+}
+
+interface RosterUserRow {
+    id: string;
+    userId: string;
+    displayName: string;
+    status?: string;
+    location?: string;
+    joinedAt?: string;
+    $location_at?: string;
+    [key: string]: unknown;
+}
+
+function text(value: unknown): string {
+    return typeof value === 'string'
+        ? value.trim()
+        : String(value ?? '').trim();
+}
+
+function endpointText(value: string | undefined): string {
+    return text(value) || 'default';
+}
+
+function firstText(...values: unknown[]): string {
+    for (const value of values) {
+        const valueText = text(value);
+        if (valueText) {
+            return valueText;
+        }
+    }
+    return '';
+}
+
+function record(value: unknown): Record<string, unknown> {
+    return isRecord(value) ? value : {};
+}
+
+function userId(value: unknown): string {
+    const source = record(value);
+    const nested = record(source.user);
+    return firstText(
+        source.id,
+        source.userId,
+        source.user_id,
+        source.targetUserId,
+        source.target_user_id,
+        nested.id,
+        nested.userId,
+        nested.user_id
+    );
+}
+
+function displayName(value: unknown): string {
+    if (typeof value === 'string') {
+        return value.trim();
+    }
+    const source = record(value);
+    const nested = record(source.user);
+    return firstText(
+        source.displayName,
+        source.display_name,
+        source.username,
+        source.name,
+        nested.displayName,
+        nested.display_name,
+        nested.username,
+        nested.name,
+        source.userId,
+        source.user_id,
+        source.id,
+        nested.id
+    );
+}
+
+function instanceLocationKey(location: string | undefined): string {
+    const parsed = parseLocation(normalizeLocationValue(location));
+    if (!parsed.isRealInstance || !parsed.worldId || !parsed.instanceId) {
+        return '';
+    }
+    return `${parsed.worldId}:${parsed.instanceId}`;
+}
+
+function instancePresenceKey(
+    endpoint: string | undefined,
+    location: string | undefined
+): string {
+    const key = instanceLocationKey(location);
+    return key ? `${endpointText(endpoint)}::${key}` : '';
+}
+
+function createRosterRow(user: unknown): RosterUserRow {
+    const source = record(user);
+    const nested = record(source.user);
+    const id = userId(source);
+    const name = firstText(displayName(source), id);
+    const joinedAt = firstText(
+        source.joinedAt,
+        source.joined_at,
+        source.locationAt,
+        source.location_at,
+        source.$location_at
+    );
+
+    return {
+        ...nested,
+        ...source,
+        id,
+        userId: firstText(source.userId, id),
+        displayName: name,
+        ...(joinedAt
+            ? {
+                  joinedAt,
+                  $location_at: joinedAt
+              }
+            : {})
+    };
+}
+
+function buildInstancePresenceFact({
+    endpoint = '',
+    location = '',
+    source = 'seed',
+    ownerUserId = '',
+    ownerGroupId = '',
+    worldName = '',
+    groupName = '',
+    instanceName = '',
+    players = [],
+    receivedAt = new Date().toISOString()
+}: InstancePresenceFactInput = {}): InstancePresenceFact | null {
+    const normalizedLocation = normalizeLocationValue(location);
+    const parsed = parseLocation(normalizedLocation);
+    const locationKey = instanceLocationKey(normalizedLocation);
+    if (!locationKey) {
+        return null;
+    }
+    const playersById: Record<string, InstancePlayerFact> = {};
+    const userIds: string[] = [];
+    for (const player of Array.isArray(players) ? players : []) {
+        const id = firstText(
+            userId(player),
+            record(player).userId,
+            record(player).user_id
+        );
+        if (!id || playersById[id]) {
+            continue;
+        }
+        const row = createRosterRow(player);
+        playersById[id] = {
+            id,
+            userId: id,
+            displayName: row.displayName,
+            joinedAt: row.joinedAt,
+            locationAt: row.$location_at
+        };
+        userIds.push(id);
+    }
+
+    const fact = {
+        endpoint: endpointText(endpoint),
+        location: normalizedLocation,
+        locationKey,
+        worldId: parsed.worldId,
+        instanceId: parsed.instanceId,
+        ownerUserId: text(ownerUserId || parsed.userId),
+        ownerGroupId: text(ownerGroupId || parsed.groupId),
+        worldName: text(worldName),
+        groupName: text(groupName),
+        instanceName: text(instanceName || parsed.instanceName),
+        source,
+        receivedAt: text(receivedAt) || new Date().toISOString(),
+        userIds,
+        playersById
+    };
+    return fact;
+}
+
+function sameUnknownLeaf(a: unknown, b: unknown): boolean {
+    return a === b || JSON.stringify(a) === JSON.stringify(b);
+}
+
+function sameInstancePlayerFact(
+    a: InstancePlayerFact,
+    b: InstancePlayerFact
+): boolean {
+    return (
+        a.id === b.id &&
+        a.userId === b.userId &&
+        a.displayName === b.displayName &&
+        sameUnknownLeaf(a.joinedAt, b.joinedAt) &&
+        sameUnknownLeaf(a.locationAt, b.locationAt)
+    );
+}
+
+function sameInstancePresenceFact(
+    a: InstancePresenceFact,
+    b: InstancePresenceFact
+): boolean {
+    if (
+        a.receivedAt !== b.receivedAt ||
+        a.endpoint !== b.endpoint ||
+        a.location !== b.location ||
+        a.locationKey !== b.locationKey ||
+        a.worldId !== b.worldId ||
+        a.instanceId !== b.instanceId ||
+        a.ownerUserId !== b.ownerUserId ||
+        a.ownerGroupId !== b.ownerGroupId ||
+        a.worldName !== b.worldName ||
+        a.groupName !== b.groupName ||
+        a.instanceName !== b.instanceName ||
+        a.source !== b.source ||
+        a.userIds.length !== b.userIds.length
+    ) {
+        return false;
+    }
+    for (let index = 0; index < a.userIds.length; index++) {
+        if (a.userIds[index] !== b.userIds[index]) {
+            return false;
+        }
+    }
+    const aPlayerIds = Object.keys(a.playersById);
+    if (aPlayerIds.length !== Object.keys(b.playersById).length) {
+        return false;
+    }
+    for (const playerId of aPlayerIds) {
+        const bPlayer = b.playersById[playerId];
+        if (
+            !bPlayer ||
+            !sameInstancePlayerFact(a.playersById[playerId], bPlayer)
+        ) {
+            return false;
+        }
+    }
+    return true;
+}
+
+export {
+    buildInstancePresenceFact,
+    instanceLocationKey,
+    instancePresenceKey,
+    sameInstancePresenceFact
+};
+export type { InstancePresenceFact, InstancePresenceFactInput };

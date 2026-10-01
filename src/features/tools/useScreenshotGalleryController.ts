@@ -1,0 +1,440 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { useSearchParams } from 'react-router';
+
+import {
+    commands,
+    type ScreenshotFolderTree,
+    type ScreenshotLibraryImage,
+    type ScreenshotLibraryScanStatus
+} from '@/platform/tauri/bindings';
+import configRepository from '@/repositories/configRepository';
+import {
+    getCurrentScreenshotLibraryScanStatus,
+    startScreenshotLibraryScan,
+    subscribeScreenshotLibraryScanStatus
+} from '@/services/screenshotLibraryScanService';
+import { toast } from '@/services/toastService';
+import type { CapabilityStatus } from '@/state/runtimeStore';
+
+import {
+    getGalleryFolderPathSet,
+    normalizeGalleryScrollPositions,
+    normalizeGalleryScrollTop,
+    resolveGalleryFolder,
+    SCREENSHOT_GALLERY_FOLDER_CONFIG_KEY,
+    SCREENSHOT_GALLERY_SCROLL_CONFIG_KEY,
+    SCREENSHOT_GALLERY_SCROLL_SAVE_DELAY_MS,
+    serializeGalleryScrollPositions
+} from './screenshotMetadataValues';
+
+type SetSearchParams = ReturnType<typeof useSearchParams>[1];
+
+function persistGalleryScrollPositions(positions: Map<string, number>) {
+    return configRepository
+        .setObject(
+            SCREENSHOT_GALLERY_SCROLL_CONFIG_KEY,
+            serializeGalleryScrollPositions(positions)
+        )
+        .catch(() => {});
+}
+
+export function useScreenshotGalleryController({
+    isGalleryMode,
+    routeFolder,
+    screenshotCacheStatus,
+    setSearchParams
+}: {
+    isGalleryMode: boolean;
+    routeFolder: string;
+    screenshotCacheStatus: CapabilityStatus;
+    setSearchParams: SetSearchParams;
+}) {
+    const { t } = useTranslation();
+    const galleryRequestRef = useRef(0);
+    const selectedGalleryFolderRef = useRef('');
+    const galleryScrollPositionsRef = useRef<Map<string, number>>(new Map());
+    const galleryScrollPersistTimerRef = useRef<number | null>(null);
+    const galleryScanActiveRef = useRef(false);
+    const [folderTree, setFolderTree] = useState<ScreenshotFolderTree | null>(
+        null
+    );
+    const [galleryImages, setGalleryImages] = useState<
+        ScreenshotLibraryImage[]
+    >([]);
+    const [galleryImagesFolder, setGalleryImagesFolder] = useState('');
+    const [selectedGalleryFolder, setSelectedGalleryFolder] = useState('');
+    const [storedGalleryFolder, setStoredGalleryFolder] = useState('');
+    const [
+        isGalleryFolderPreferenceLoaded,
+        setIsGalleryFolderPreferenceLoaded
+    ] = useState(false);
+    const [scanStatus, setScanStatus] =
+        useState<ScreenshotLibraryScanStatus | null>(null);
+    const [galleryScanError, setGalleryScanError] = useState('');
+    const [galleryTreeError, setGalleryTreeError] = useState('');
+    const [galleryImagesError, setGalleryImagesError] = useState('');
+    const [isGalleryTreeLoading, setIsGalleryTreeLoading] = useState(false);
+    const [isGalleryImagesLoading, setIsGalleryImagesLoading] = useState(false);
+    const [galleryRevision, setGalleryRevision] = useState(0);
+
+    const visibleGalleryImages =
+        galleryImagesFolder === selectedGalleryFolder ? galleryImages : [];
+    const selectedGalleryScrollTop =
+        galleryScrollPositionsRef.current.get(selectedGalleryFolder) || 0;
+    const shouldShowGalleryImagesLoading =
+        isGalleryImagesLoading && visibleGalleryImages.length === 0;
+
+    useEffect(() => {
+        let active = true;
+        Promise.all([
+            configRepository.getString(
+                SCREENSHOT_GALLERY_FOLDER_CONFIG_KEY,
+                ''
+            ),
+            configRepository.getObject(SCREENSHOT_GALLERY_SCROLL_CONFIG_KEY, {})
+        ])
+            .then(([folder, scrollPositions]) => {
+                if (!active) {
+                    return;
+                }
+                setStoredGalleryFolder(folder || '');
+                galleryScrollPositionsRef.current =
+                    normalizeGalleryScrollPositions(scrollPositions);
+            })
+            .catch(() => {})
+            .finally(() => {
+                if (active) {
+                    setIsGalleryFolderPreferenceLoaded(true);
+                }
+            });
+
+        return () => {
+            active = false;
+            if (galleryScrollPersistTimerRef.current !== null) {
+                window.clearTimeout(galleryScrollPersistTimerRef.current);
+                galleryScrollPersistTimerRef.current = null;
+                persistGalleryScrollPositions(
+                    galleryScrollPositionsRef.current
+                );
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        selectedGalleryFolderRef.current = selectedGalleryFolder;
+    }, [selectedGalleryFolder]);
+
+    useEffect(() => {
+        if (
+            !isGalleryMode ||
+            !isGalleryFolderPreferenceLoaded ||
+            !selectedGalleryFolder ||
+            selectedGalleryFolder === storedGalleryFolder
+        ) {
+            return;
+        }
+
+        setStoredGalleryFolder(selectedGalleryFolder);
+        configRepository
+            .setString(
+                SCREENSHOT_GALLERY_FOLDER_CONFIG_KEY,
+                selectedGalleryFolder
+            )
+            .catch(() => {});
+    }, [
+        isGalleryFolderPreferenceLoaded,
+        isGalleryMode,
+        selectedGalleryFolder,
+        storedGalleryFolder
+    ]);
+
+    const openGalleryRoute = useCallback(() => {
+        const folder = routeFolder || selectedGalleryFolder;
+        if (folder) {
+            selectedGalleryFolderRef.current = folder;
+            setSelectedGalleryFolder(folder);
+        }
+        const nextParams = new URLSearchParams();
+        if (folder) {
+            nextParams.set('folder', folder);
+        }
+        setSearchParams(nextParams);
+    }, [routeFolder, selectedGalleryFolder, setSearchParams]);
+
+    const loadGalleryTree = useCallback(
+        async ({
+            preferPopulated = false
+        }: { preferPopulated?: boolean } = {}) => {
+            setIsGalleryTreeLoading(true);
+            try {
+                const tree = await commands.appGetScreenshotFolderTree();
+                setFolderTree(tree || null);
+                setGalleryTreeError('');
+                const folderPathSet = getGalleryFolderPathSet(tree);
+                galleryScrollPositionsRef.current = new Map(
+                    Array.from(
+                        galleryScrollPositionsRef.current.entries()
+                    ).filter(([path]) => folderPathSet.has(path))
+                );
+                setSelectedGalleryFolder((current) =>
+                    resolveGalleryFolder(
+                        tree,
+                        preferPopulated
+                            ? [
+                                  routeFolder,
+                                  selectedGalleryFolderRef.current,
+                                  storedGalleryFolder
+                              ]
+                            : [
+                                  routeFolder,
+                                  routeFolder ? '' : current,
+                                  storedGalleryFolder
+                              ]
+                    )
+                );
+                setGalleryRevision((current) => current + 1);
+            } catch (error) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : t('dialog.screenshot_metadata.gallery_load_failed');
+                setGalleryTreeError(message);
+                toast.add({ type: 'error', title: message });
+            } finally {
+                setIsGalleryTreeLoading(false);
+            }
+        },
+        [routeFolder, storedGalleryFolder, t]
+    );
+
+    const applyScanStatus = useCallback(
+        (status: ScreenshotLibraryScanStatus) => {
+            setScanStatus(status);
+            setGalleryScanError(status.error || '');
+            if (status.running) {
+                galleryScanActiveRef.current = true;
+                return;
+            }
+            if (galleryScanActiveRef.current) {
+                galleryScanActiveRef.current = false;
+                void loadGalleryTree({ preferPopulated: true });
+            }
+        },
+        [loadGalleryTree]
+    );
+
+    const refreshGallery = useCallback(
+        async (force = false) => {
+            setGalleryScanError('');
+            setGalleryTreeError('');
+            setGalleryImagesError('');
+            galleryScanActiveRef.current = true;
+            try {
+                const status = await startScreenshotLibraryScan(force);
+                if (!status) {
+                    return;
+                }
+                applyScanStatus(status);
+                if (status.running) {
+                    await loadGalleryTree({ preferPopulated: force });
+                }
+            } catch (error) {
+                galleryScanActiveRef.current = false;
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : t('dialog.screenshot_metadata.scan_failed');
+                setGalleryScanError(message);
+                toast.add({ type: 'error', title: message });
+                await loadGalleryTree({ preferPopulated: force });
+            }
+        },
+        [applyScanStatus, loadGalleryTree, t]
+    );
+
+    useEffect(() => {
+        if (
+            !isGalleryMode ||
+            !screenshotCacheStatus?.available ||
+            !isGalleryFolderPreferenceLoaded
+        ) {
+            return undefined;
+        }
+        let active = true;
+        const unsubscribe = subscribeScreenshotLibraryScanStatus((status) => {
+            if (active) {
+                applyScanStatus(status);
+            }
+        });
+        getCurrentScreenshotLibraryScanStatus()
+            .then((status) => {
+                if (!active || !status) {
+                    return;
+                }
+                applyScanStatus(status);
+                if (status.running) {
+                    void loadGalleryTree();
+                } else {
+                    void refreshGallery(false);
+                }
+            })
+            .catch((error: unknown) => {
+                if (!active) {
+                    return;
+                }
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : t('dialog.screenshot_metadata.scan_failed');
+                setGalleryScanError(message);
+                toast.add({ type: 'error', title: message });
+            });
+        return () => {
+            active = false;
+            galleryScanActiveRef.current = false;
+            unsubscribe();
+        };
+    }, [
+        applyScanStatus,
+        isGalleryFolderPreferenceLoaded,
+        isGalleryMode,
+        loadGalleryTree,
+        refreshGallery,
+        screenshotCacheStatus?.available,
+        t
+    ]);
+
+    useEffect(() => {
+        if (!isGalleryMode || !folderTree) {
+            return;
+        }
+        setSelectedGalleryFolder(
+            resolveGalleryFolder(folderTree, [
+                routeFolder,
+                routeFolder ? '' : selectedGalleryFolder,
+                storedGalleryFolder
+            ])
+        );
+    }, [
+        folderTree,
+        isGalleryMode,
+        routeFolder,
+        selectedGalleryFolder,
+        storedGalleryFolder
+    ]);
+
+    useEffect(() => {
+        if (!isGalleryMode || !selectedGalleryFolder) {
+            galleryRequestRef.current += 1;
+            setGalleryImages([]);
+            setGalleryImagesFolder('');
+            setIsGalleryImagesLoading(false);
+            return;
+        }
+
+        const requestId = galleryRequestRef.current + 1;
+        galleryRequestRef.current = requestId;
+        const requestedFolder = selectedGalleryFolder;
+        setIsGalleryImagesLoading(true);
+
+        commands
+            .appGetScreenshotFolderImages(requestedFolder)
+            .then((images) => {
+                if (galleryRequestRef.current === requestId) {
+                    setGalleryImagesError('');
+                    setGalleryImages(Array.isArray(images) ? images : []);
+                    setGalleryImagesFolder(requestedFolder);
+                }
+            })
+            .catch((error: unknown) => {
+                if (galleryRequestRef.current === requestId) {
+                    const message =
+                        error instanceof Error
+                            ? error.message
+                            : t(
+                                  'dialog.screenshot_metadata.gallery_load_failed'
+                              );
+                    setGalleryImagesError(message);
+                    setGalleryImages([]);
+                    setGalleryImagesFolder(requestedFolder);
+                    toast.add({ type: 'error', title: message });
+                }
+            })
+            .finally(() => {
+                if (galleryRequestRef.current === requestId) {
+                    setIsGalleryImagesLoading(false);
+                }
+            });
+    }, [galleryRevision, isGalleryMode, selectedGalleryFolder, t]);
+
+    const removeGalleryImages = useCallback((paths: string[]) => {
+        const removedPaths = new Set(paths);
+        setGalleryImages((current) =>
+            current.filter((image) => !removedPaths.has(image.path))
+        );
+    }, []);
+
+    const refreshGalleryTree = useCallback(() => {
+        void loadGalleryTree();
+    }, [loadGalleryTree]);
+
+    function selectGalleryFolder(folder: string) {
+        setSelectedGalleryFolder(folder);
+        const nextParams = new URLSearchParams();
+        if (folder) {
+            nextParams.set('folder', folder);
+        }
+        setSearchParams(nextParams);
+    }
+
+    const updateGalleryScrollPosition = useCallback(
+        (folder: string, scrollTop: number) => {
+            if (!folder) {
+                return;
+            }
+            const normalizedScrollTop = normalizeGalleryScrollTop(scrollTop);
+            const positions = galleryScrollPositionsRef.current;
+            positions.delete(folder);
+            positions.set(folder, normalizedScrollTop);
+
+            if (galleryScrollPersistTimerRef.current !== null) {
+                window.clearTimeout(galleryScrollPersistTimerRef.current);
+            }
+            galleryScrollPersistTimerRef.current = window.setTimeout(() => {
+                galleryScrollPersistTimerRef.current = null;
+                persistGalleryScrollPositions(
+                    galleryScrollPositionsRef.current
+                );
+            }, SCREENSHOT_GALLERY_SCROLL_SAVE_DELAY_MS);
+        },
+        []
+    );
+
+    useEffect(() => {
+        if (!isGalleryFolderPreferenceLoaded || !folderTree) {
+            return;
+        }
+        persistGalleryScrollPositions(galleryScrollPositionsRef.current);
+    }, [folderTree, isGalleryFolderPreferenceLoaded]);
+
+    return {
+        folderTree,
+        galleryImagesError,
+        galleryScanError,
+        galleryTreeError,
+        isGalleryImagesLoading,
+        isGalleryTreeLoading,
+        openGalleryRoute,
+        refreshGallery,
+        refreshGalleryTree,
+        removeGalleryImages,
+        scanStatus,
+        selectedGalleryFolder,
+        selectedGalleryScrollTop,
+        selectGalleryFolder,
+        shouldShowGalleryImagesLoading,
+        updateGalleryScrollPosition,
+        visibleGalleryImages
+    };
+}

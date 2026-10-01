@@ -1,0 +1,346 @@
+import { REGEXP_ONLY_DIGITS, REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { BoopEmojiDialog } from '@/components/dialogs/BoopEmojiDialog';
+import { FullscreenImageViewer } from '@/components/media/FullscreenImageViewer';
+import { useModalStore } from '@/state/modalStore';
+import { useRuntimeStore } from '@/state/runtimeStore';
+import { Button } from '@/ui/shadcn/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from '@/ui/shadcn/dialog';
+import { Input } from '@/ui/shadcn/input';
+import {
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSeparator,
+    InputOTPSlot
+} from '@/ui/shadcn/input-otp';
+import { Textarea } from '@/ui/shadcn/textarea';
+
+const OTP_CODE_LENGTH = 6;
+const RECOVERY_CODE_LENGTH = 8;
+
+function matchesPromptPattern(pattern: RegExp | null, value: string) {
+    if (!(pattern instanceof RegExp)) {
+        return true;
+    }
+
+    const flags = pattern.flags.replace(/g/g, '');
+    return new RegExp(pattern.source, flags).test(value ?? '');
+}
+
+function normalizeRecoveryCode(value: string) {
+    return value.replace(/[^a-z0-9]/gi, '').slice(0, RECOVERY_CODE_LENGTH);
+}
+
+function getOtpInputValue(
+    value: string,
+    mode: ReturnType<typeof useModalStore.getState>['otpDialog']['mode']
+) {
+    if (mode === 'otp') {
+        return normalizeRecoveryCode(value);
+    }
+
+    return value ?? '';
+}
+
+function renderOtpSlots(count: number, offset = 0) {
+    return Array.from({ length: count }, (_, index) => (
+        <InputOTPSlot key={offset + index} index={offset + index} />
+    ));
+}
+
+export function ModalHost() {
+    const { t } = useTranslation();
+
+    const alertDialog = useModalStore((state) => state.alertDialog);
+    const [retainedAlertDialog, setRetainedAlertDialog] = useState(alertDialog);
+    const promptDialog = useModalStore((state) => state.promptDialog);
+    const boopDialog = useModalStore((state) => state.boopDialog);
+    const otpDialog = useModalStore((state) => state.otpDialog);
+    const imageDialog = useModalStore((state) => state.imageDialog);
+    const isLocalUserVrcPlusSupporter = useRuntimeStore((state) =>
+        Boolean(
+            state.auth.currentUserSnapshot?.$isVRCPlus ||
+            state.auth.currentUserSnapshot?.tags?.includes?.(
+                'system_supporter'
+            ) ||
+            globalThis?.$debug?.debugVrcPlus
+        )
+    );
+    const handleOk = useModalStore((state) => state.handleOk);
+    const handleAlternative = useModalStore((state) => state.handleAlternative);
+    const handleCancel = useModalStore((state) => state.handleCancel);
+    const handleDismiss = useModalStore((state) => state.handleDismiss);
+    const handleAlertCloseComplete = useModalStore(
+        (state) => state.handleAlertCloseComplete
+    );
+    const handlePromptOk = useModalStore((state) => state.handlePromptOk);
+    const handlePromptCancel = useModalStore(
+        (state) => state.handlePromptCancel
+    );
+    const handlePromptDismiss = useModalStore(
+        (state) => state.handlePromptDismiss
+    );
+    const handleBoopOk = useModalStore((state) => state.handleBoopOk);
+    const handleBoopDismiss = useModalStore((state) => state.handleBoopDismiss);
+    const handleOtpOk = useModalStore((state) => state.handleOtpOk);
+    const handleOtpCancel = useModalStore((state) => state.handleOtpCancel);
+    const handleOtpDismiss = useModalStore((state) => state.handleOtpDismiss);
+    const closeImagePreview = useModalStore((state) => state.closeImagePreview);
+    const updatePromptValue = useModalStore((state) => state.updatePromptValue);
+    const updateOtpValue = useModalStore((state) => state.updateOtpValue);
+    const renderedAlertDialog = alertDialog.open
+        ? alertDialog
+        : retainedAlertDialog;
+    const promptValueIsValid = matchesPromptPattern(
+        promptDialog.inputPattern,
+        promptDialog.value
+    );
+    const otpValue = getOtpInputValue(otpDialog.value, otpDialog.mode);
+    const otpIsRecoveryCode = otpDialog.mode === 'otp';
+
+    useEffect(() => {
+        if (alertDialog.open) {
+            setRetainedAlertDialog(alertDialog);
+        }
+    }, [alertDialog]);
+
+    return (
+        <>
+            <Dialog
+                open={alertDialog.open}
+                disablePointerDismissal={!renderedAlertDialog.dismissible}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        handleDismiss();
+                    }
+                }}
+                onOpenChangeComplete={(open) => {
+                    if (!open) {
+                        handleAlertCloseComplete();
+                        const currentAlertDialog =
+                            useModalStore.getState().alertDialog;
+                        if (!currentAlertDialog.open) {
+                            setRetainedAlertDialog(currentAlertDialog);
+                        }
+                    }
+                }}
+            >
+                <DialogContent
+                    role="alertdialog"
+                    showCloseButton={renderedAlertDialog.dismissible}
+                >
+                    <DialogHeader>
+                        <DialogTitle>{renderedAlertDialog.title}</DialogTitle>
+                        <DialogDescription>
+                            {renderedAlertDialog.description}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        {renderedAlertDialog.mode === 'confirm' ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleCancel}
+                            >
+                                {renderedAlertDialog.cancelText ||
+                                    t('dialog.alertdialog.cancel')}
+                            </Button>
+                        ) : null}
+                        {renderedAlertDialog.alternativeText ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleAlternative}
+                            >
+                                {renderedAlertDialog.alternativeText}
+                            </Button>
+                        ) : null}
+                        <Button
+                            type="button"
+                            variant={
+                                renderedAlertDialog.destructive
+                                    ? 'destructive'
+                                    : 'default'
+                            }
+                            onClick={handleOk}
+                        >
+                            {renderedAlertDialog.confirmText ||
+                                t(
+                                    renderedAlertDialog.mode === 'alert'
+                                        ? 'dialog.alertdialog.ok'
+                                        : 'dialog.alertdialog.confirm'
+                                )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <Dialog
+                open={promptDialog.open}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        handlePromptDismiss(promptDialog.value);
+                    }
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{promptDialog.title}</DialogTitle>
+                        <DialogDescription>
+                            {promptDialog.description}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {promptDialog.multiline ? (
+                        <Textarea
+                            value={promptDialog.value}
+                            onChange={(event) =>
+                                updatePromptValue(event.target.value)
+                            }
+                            placeholder={t('dialog.tools.label.prompt_value')}
+                            className="min-h-32"
+                        />
+                    ) : (
+                        <Input
+                            type={promptDialog.inputType}
+                            value={promptDialog.value}
+                            onChange={(event) =>
+                                updatePromptValue(event.target.value)
+                            }
+                            placeholder={t('dialog.tools.label.prompt_value')}
+                        />
+                    )}
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() =>
+                                handlePromptCancel(promptDialog.value)
+                            }
+                        >
+                            {promptDialog.cancelText ||
+                                t('dialog.alertdialog.cancel')}
+                        </Button>
+                        <Button
+                            type="button"
+                            disabled={!promptValueIsValid}
+                            onClick={() => handlePromptOk(promptDialog.value)}
+                        >
+                            {promptDialog.confirmText ||
+                                t('dialog.alertdialog.confirm')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <BoopEmojiDialog
+                open={boopDialog.open}
+                isLocalUserVrcPlusSupporter={isLocalUserVrcPlusSupporter}
+                targetLabel={boopDialog.targetLabel}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        handleBoopDismiss();
+                    }
+                }}
+                onSend={handleBoopOk}
+            />
+            <Dialog
+                open={otpDialog.open}
+                disablePointerDismissal
+                onOpenChange={(open) => {
+                    if (!open) {
+                        handleOtpDismiss(otpDialog.value);
+                    }
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{otpDialog.title}</DialogTitle>
+                        <DialogDescription>
+                            {otpDialog.description}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-center">
+                        <InputOTP
+                            value={otpValue}
+                            maxLength={
+                                otpIsRecoveryCode
+                                    ? RECOVERY_CODE_LENGTH
+                                    : OTP_CODE_LENGTH
+                            }
+                            inputMode={otpIsRecoveryCode ? 'text' : 'numeric'}
+                            pattern={
+                                otpIsRecoveryCode
+                                    ? REGEXP_ONLY_DIGITS_AND_CHARS
+                                    : REGEXP_ONLY_DIGITS
+                            }
+                            autoFocus
+                            pasteTransformer={
+                                otpIsRecoveryCode
+                                    ? normalizeRecoveryCode
+                                    : undefined
+                            }
+                            onChange={(value) =>
+                                updateOtpValue(
+                                    getOtpInputValue(value, otpDialog.mode)
+                                )
+                            }
+                            onComplete={(value) =>
+                                handleOtpOk(
+                                    getOtpInputValue(value, otpDialog.mode)
+                                )
+                            }
+                        >
+                            {otpIsRecoveryCode ? (
+                                <>
+                                    <InputOTPGroup>
+                                        {renderOtpSlots(4)}
+                                    </InputOTPGroup>
+                                    <InputOTPSeparator />
+                                    <InputOTPGroup>
+                                        {renderOtpSlots(4, 4)}
+                                    </InputOTPGroup>
+                                </>
+                            ) : (
+                                <InputOTPGroup>
+                                    {renderOtpSlots(OTP_CODE_LENGTH)}
+                                </InputOTPGroup>
+                            )}
+                        </InputOTP>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => handleOtpCancel(otpDialog.value)}
+                        >
+                            {otpDialog.cancelText ||
+                                t('dialog.alertdialog.cancel')}
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={() => handleOtpOk(otpDialog.value)}
+                        >
+                            {otpDialog.confirmText ||
+                                t('dialog.alertdialog.confirm')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            <FullscreenImageViewer
+                open={imageDialog.open}
+                url={imageDialog.url}
+                title={imageDialog.title}
+                fileName={imageDialog.fileName}
+                sourcePath={imageDialog.sourcePath}
+                onClose={closeImagePreview}
+            />
+        </>
+    );
+}

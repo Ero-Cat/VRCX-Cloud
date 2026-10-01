@@ -1,0 +1,127 @@
+import { describe, expect, it } from 'vitest';
+
+import { offlinePresence, onlinePresence } from '@/test/presenceFixtures';
+
+import {
+    buildInstanceRosterRows,
+    mergeInstanceUser,
+    mergeInstanceUsers,
+    type InstanceRosterRow
+} from './instanceRoster';
+
+describe('instanceRoster', () => {
+    it('keeps a user owner first and does not duplicate the owner row', () => {
+        const roster = buildInstanceRosterRows({
+            instanceCreatorLabel: 'Creator',
+            ownerUser: {
+                id: 'usr_owner',
+                displayName: 'Owner'
+            },
+            parsedLocation: {
+                isRealInstance: true,
+                userId: 'usr_owner'
+            },
+            users: [
+                {
+                    id: 'usr_friend',
+                    displayName: 'Friend'
+                },
+                {
+                    id: 'usr_owner',
+                    displayName: 'Owner duplicate'
+                }
+            ]
+        });
+
+        expect(roster.ownerId).toBe('usr_owner');
+        expect(roster.ownerIsGroup).toBe(false);
+        expect(roster.rows.map((row) => row.id)).toEqual([
+            'usr_owner',
+            'usr_friend'
+        ]);
+        expect(roster.rows[0].$subtitle).toBe('Creator');
+    });
+
+    it('tracks group owners without inserting them into the user list', () => {
+        const roster = buildInstanceRosterRows({
+            ownerFallbackId: 'grp_owner',
+            ownerGroup: {
+                id: 'grp_owner',
+                name: 'Group Owner'
+            },
+            parsedLocation: {
+                isRealInstance: true,
+                groupId: 'grp_owner'
+            },
+            users: [
+                {
+                    id: 'usr_friend',
+                    displayName: 'Friend'
+                }
+            ]
+        });
+
+        expect(roster.ownerId).toBe('grp_owner');
+        expect(roster.ownerIsGroup).toBe(true);
+        expect(roster.rows.map((row) => row.id)).toEqual(['usr_friend']);
+    });
+
+    it('merges duplicate rows and keeps the first row profile fields', () => {
+        const users = mergeInstanceUsers(
+            [
+                {
+                    id: 'usr_friend',
+                    displayName: 'Friend',
+                    iconUrl: 'avatar.webp',
+                    status: 'ask me'
+                }
+            ],
+            [
+                {
+                    id: 'usr_friend',
+                    displayName: 'Friend latest'
+                }
+            ]
+        );
+
+        expect(users).toHaveLength(1);
+        expect(users[0].displayName).toBe('Friend');
+        expect(users[0].iconUrl).toBe('avatar.webp');
+        expect(users[0].status).toBe('ask me');
+    });
+
+    it('allows a realtime snapshot to replace only existing presence fields', () => {
+        const rows = new Map<string, InstanceRosterRow>();
+        mergeInstanceUser(rows, {
+            id: 'usr_self',
+            displayName: 'Full profile name',
+            iconUrl: 'profile.webp',
+            location: 'wrld_old:11111',
+            $presence: offlinePresence,
+            status: 'busy',
+            statusDescription: 'Old description'
+        });
+        mergeInstanceUser(
+            rows,
+            {
+                id: 'usr_self',
+                displayName: 'Snapshot name',
+                location: 'wrld_live:22222',
+                $presence: onlinePresence('wrld_live:22222'),
+                status: 'join me',
+                statusDescription: ''
+            },
+            {},
+            { incomingPresenceWins: true }
+        );
+
+        expect(rows.get('usr_self')).toMatchObject({
+            displayName: 'Full profile name',
+            iconUrl: 'profile.webp',
+            location: 'wrld_live:22222',
+            $presence: onlinePresence('wrld_live:22222'),
+            status: 'join me',
+            statusDescription: ''
+        });
+    });
+});

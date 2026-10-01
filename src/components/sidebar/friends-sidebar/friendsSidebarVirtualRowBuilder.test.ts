@@ -1,0 +1,153 @@
+import { describe, expect, it } from 'vitest';
+
+import { buildFriendsSidebarVirtualRows } from './friendsSidebarVirtualRowBuilder';
+
+const t = (key: string) => key;
+
+describe('friendsSidebarVirtualRowBuilder', () => {
+    it('builds loading skeleton rows before the footer', () => {
+        const rows = buildFriendsSidebarVirtualRows({
+            activeRows: [],
+            currentUser: null,
+            currentUserId: 'usr_me',
+            favoriteGroupSections: [],
+            favoriteRows: [],
+            loadStatus: 'running',
+            offlineRows: [],
+            onlineRows: [],
+            openGroups: {},
+            prefs: {},
+            rowsLength: 0,
+            sameInstanceGroups: [],
+            t
+        });
+
+        expect(rows.map((row) => row.type)).toEqual([
+            'skeleton',
+            'skeleton',
+            'skeleton',
+            'skeleton',
+            'skeleton',
+            'skeleton',
+            'footer'
+        ]);
+    });
+
+    it('orders same-instance and favorite sections from preferences and marks current user rows', () => {
+        const rows = buildFriendsSidebarVirtualRows({
+            activeRows: [{ id: 'usr_active' }],
+            currentUser: {
+                id: 'usr_me',
+                displayName: 'Me',
+                location: 'wrld_live:1',
+                status: 'join me'
+            },
+            currentUserId: 'usr_me',
+            favoriteGroupSections: [
+                {
+                    key: 'remote:favorites',
+                    label: 'Favorites',
+                    rows: [{ id: 'usr_favorite' }]
+                }
+            ],
+            favoriteRows: [{ id: 'usr_favorite' }],
+            loadStatus: 'ready',
+            offlineRows: [{ id: 'usr_offline' }],
+            onlineRows: [{ id: 'usr_online' }],
+            openGroups: {
+                sameInstance: true,
+                favorites: true,
+                online: false,
+                active: true,
+                offline: true
+            },
+            prefs: {
+                isSameInstanceAboveFavorites: true,
+                isSidebarDivideByFriendGroup: true
+            },
+            rowsLength: 5,
+            sameInstanceGroups: [
+                {
+                    location: 'wrld_live:1',
+                    rows: [{ id: 'usr_same' }],
+                    isCurrentInstance: true
+                }
+            ],
+            t
+        });
+
+        expect(rows.map((row) => row.key)).toEqual([
+            'section:sameInstance',
+            'instance:wrld_live:1:0',
+            'friend:sameInstance:wrld_live:1:0:currentUser:usr_me',
+            'friend:sameInstance:wrld_live:1:0:usr_same',
+            'section:favorites',
+            'favorite-group:remote:favorites',
+            'friend:favorites:remote:favorites:usr_favorite',
+            'section:online',
+            'section:active',
+            'friend:active:usr_active',
+            'section:offline',
+            'friend:offline:usr_offline',
+            'footer'
+        ]);
+        expect(rows[0]).toMatchObject({
+            type: 'section'
+        });
+        expect(rows[1]).toMatchObject({
+            type: 'instance-header',
+            count: 2,
+            isCurrentInstance: true
+        });
+        expect(rows[2]).toMatchObject({
+            isCurrentUser: true,
+            isGroupByInstance: true
+        });
+        expect(rows[3]).toMatchObject({
+            isGroupByInstance: true,
+            instanceLocation: 'wrld_live:1'
+        });
+    });
+
+    it('always includes the current user in their same-instance group', () => {
+        const rows = buildFriendsSidebarVirtualRows({
+            activeRows: [],
+            currentUser: {
+                id: 'usr_me',
+                displayName: 'Me',
+                location: 'wrld_live:1'
+            },
+            currentUserId: 'usr_me',
+            favoriteGroupSections: [],
+            favoriteRows: [],
+            loadStatus: 'ready',
+            offlineRows: [],
+            onlineRows: [],
+            openGroups: {
+                sameInstance: true
+            },
+            prefs: {},
+            rowsLength: 1,
+            sameInstanceGroups: [
+                {
+                    location: 'wrld_live:1',
+                    rows: [{ id: 'usr_same' }, { id: 'usr_other' }],
+                    isCurrentInstance: true
+                }
+            ],
+            t
+        });
+
+        expect(
+            rows
+                .filter((row) => row.type === 'friend' && row.isCurrentUser)
+                .map((row) => row.key)
+        ).toEqual(['friend:sameInstance:wrld_live:1:0:currentUser:usr_me']);
+        expect(rows.map((row) => row.key)).toContain(
+            'friend:sameInstance:wrld_live:1:0:usr_same'
+        );
+        expect(
+            rows.find((row) => row.type === 'instance-header')
+        ).toMatchObject({ count: 3 });
+    });
+});

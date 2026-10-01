@@ -1,0 +1,446 @@
+import {
+    CopyIcon,
+    ExternalLinkIcon,
+    FileTextIcon,
+    Trash2Icon,
+    XIcon
+} from 'lucide-react';
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { AffinityBadge } from '@/components/affinity/AffinityBadge';
+import type { AppRow } from '@/components/data-table/appTable';
+import {
+    DATA_TABLE_CONTROL_CELL_CLASS_NAME,
+    DATA_TABLE_METADATA_CELL_CLASS_NAME,
+    DATA_TABLE_PRIMARY_CELL_CLASS_NAME
+} from '@/components/data-table/DataTableView';
+import { formatDateFilter } from '@/lib/dateTime';
+import { openWorldDialog } from '@/services/dialogService';
+import { openExternalLink } from '@/services/entityMediaService';
+import { openGameLogUser } from '@/services/gameLogUserDialogService';
+import { Button } from '@/ui/shadcn/button';
+import { Spinner } from '@/ui/shadcn/spinner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/shadcn/tooltip';
+
+import {
+    canDeleteGameLogRow,
+    describeGameLogDetail,
+    GAME_LOG_DETAILLESS_TYPES,
+    getGameLogCopyTarget,
+    getGameLogExternalTarget,
+    getGameLogRowKey,
+    normalizeGameLogId as normalizeId,
+    resolveGameLogWorldId as resolveWorldId,
+    resolveGameLogWorldTarget as resolveWorldTarget,
+    shouldLinkGameLogPrimaryDetailToWorld as shouldLinkPrimaryDetailToWorld
+} from '../gameLogRows';
+import type { GameLogColumns, GameLogRow } from '../gameLogTypes';
+import {
+    EmptyTableValue,
+    GameLogLocationDetail,
+    SortButton
+} from './GameLogTableParts';
+import { GameLogTypeIndicator } from './GameLogTypeIndicator';
+
+type UseGameLogColumnsOptions = {
+    deletingGameLogKey: string;
+    loadingPreviousInstancesKey: string;
+    onCopyDetail(row: GameLogRow): void;
+    onDeleteRow(row: GameLogRow, options?: { skipConfirm?: boolean }): void;
+    onOpenPreviousInstances(row: GameLogRow): void;
+    shiftHeld: boolean;
+};
+
+function DateCell({ row }: { row: AppRow<GameLogRow> }) {
+    const createdAt = row.original?.created_at || '';
+    return (
+        <Tooltip>
+            <TooltipTrigger
+                render={
+                    <span className="text-sm">
+                        {formatDateFilter(createdAt, 'short')}
+                    </span>
+                }
+            />
+            <TooltipContent>
+                {formatDateFilter(createdAt, 'long')}
+            </TooltipContent>
+        </Tooltip>
+    );
+}
+
+export function useGameLogColumns({
+    deletingGameLogKey,
+    loadingPreviousInstancesKey,
+    onCopyDetail,
+    onDeleteRow,
+    onOpenPreviousInstances,
+    shiftHeld
+}: UseGameLogColumnsOptions): GameLogColumns {
+    const { t } = useTranslation();
+
+    return useMemo<GameLogColumns>(
+        () => [
+            {
+                id: 'spacer',
+                size: 20,
+                minSize: 0,
+                maxSize: 20,
+                enableSorting: false,
+                enableResizing: false,
+                header: () => null,
+                cell: () => null
+            },
+            {
+                id: 'created_at',
+                size: 140,
+                accessorFn: (row: GameLogRow) => row?.created_at || '',
+                meta: {
+                    tableCellClassName: DATA_TABLE_METADATA_CELL_CLASS_NAME
+                },
+                header: ({ column }) => (
+                    <SortButton
+                        column={column}
+                        label={t('table.gameLog.date')}
+                    />
+                ),
+                cell: ({ row }) => <DateCell row={row} />
+            },
+            {
+                id: 'type',
+                size: 150,
+                accessorFn: (row: GameLogRow) => row?.type || '',
+                header: ({ column }) => (
+                    <SortButton
+                        column={column}
+                        label={t('table.gameLog.type')}
+                    />
+                ),
+                cell: ({ row }) => {
+                    const worldTarget = resolveWorldTarget(row.original);
+                    const typeLabel = row.original?.type
+                        ? t(
+                              `view.game_log.filters.${String(row.original.type)}`
+                          )
+                        : '';
+                    if (row.original?.type !== 'Location' && worldTarget) {
+                        return (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                className="h-auto p-0"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    openWorldDialog({
+                                        worldId: worldTarget,
+                                        title:
+                                            String(
+                                                row.original?.worldName || ''
+                                            ) || worldTarget
+                                    });
+                                }}
+                            >
+                                <GameLogTypeIndicator
+                                    type={String(row.original?.type || '')}
+                                    label={typeLabel}
+                                />
+                            </Button>
+                        );
+                    }
+
+                    return (
+                        <GameLogTypeIndicator
+                            type={String(row.original?.type || '')}
+                            label={typeLabel}
+                        />
+                    );
+                }
+            },
+            {
+                id: 'displayName',
+                size: 200,
+                accessorFn: (row: GameLogRow) =>
+                    row?.displayName || row?.userId || '',
+                enableSorting: false,
+                meta: {
+                    tableCellClassName: DATA_TABLE_PRIMARY_CELL_CLASS_NAME
+                },
+                header: () => t('table.gameLog.user'),
+                cell: ({ row }) => {
+                    const displayName = normalizeId(row.original?.displayName);
+                    const canOpenUser = Boolean(
+                        displayName &&
+                        (row.original?.userId || row.original?.displayName)
+                    );
+
+                    return (
+                        <div className="grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] items-center gap-2 text-sm">
+                            <AffinityBadge
+                                isFriend={Boolean(row.original?.isFriend)}
+                                isFavorite={Boolean(row.original?.isFavorite)}
+                                iconOnly
+                            />
+                            <div className="min-w-0">
+                                {canOpenUser ? (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        className="h-auto max-w-full min-w-0 p-0 text-left text-sm hover:bg-transparent"
+                                        onClick={() => {
+                                            openGameLogUser(row.original, t);
+                                        }}
+                                    >
+                                        <span className="truncate">
+                                            {displayName}
+                                        </span>
+                                    </Button>
+                                ) : (
+                                    <span className="block truncate">
+                                        {displayName}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    );
+                }
+            },
+            {
+                id: 'detail',
+                minSize: 150,
+                meta: { stretch: true },
+                accessorFn: (row: GameLogRow) => {
+                    const detailValue = describeGameLogDetail(row);
+                    return [detailValue.primary, detailValue.secondary]
+                        .filter(Boolean)
+                        .join(' ');
+                },
+                enableSorting: false,
+                header: () => t('table.gameLog.detail'),
+                cell: ({ row }) => {
+                    const detailValue = describeGameLogDetail(row.original);
+                    const worldTarget = resolveWorldTarget(row.original);
+                    if (
+                        row.original?.type === 'Location' ||
+                        row.original?.type === 'PortalSpawn'
+                    ) {
+                        return (
+                            <GameLogLocationDetail
+                                row={row.original}
+                                detailValue={detailValue}
+                                worldTarget={worldTarget}
+                                onPreviousInstances={(targetRow) => {
+                                    onOpenPreviousInstances(targetRow);
+                                }}
+                            />
+                        );
+                    }
+                    if (
+                        GAME_LOG_DETAILLESS_TYPES.has(
+                            String(row.original?.type)
+                        )
+                    ) {
+                        return <EmptyTableValue />;
+                    }
+                    const canOpenWorld =
+                        worldTarget &&
+                        shouldLinkPrimaryDetailToWorld(row.original);
+                    const externalTarget = getGameLogExternalTarget(
+                        row.original
+                    );
+                    const copyTarget = getGameLogCopyTarget(row.original);
+                    if (
+                        !detailValue.primary &&
+                        !detailValue.secondary &&
+                        !externalTarget &&
+                        !copyTarget
+                    ) {
+                        return <EmptyTableValue />;
+                    }
+                    const primary = String(detailValue.primary || '');
+                    const secondary = String(detailValue.secondary || '');
+                    return (
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <div className="flex min-w-0 items-center gap-1.5 text-sm">
+                                        {canOpenWorld ? (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                className="h-auto min-w-0 p-0 text-left text-sm hover:bg-transparent"
+                                                onClick={() =>
+                                                    openWorldDialog({
+                                                        worldId: worldTarget,
+                                                        title:
+                                                            String(
+                                                                row.original
+                                                                    ?.worldName ||
+                                                                    ''
+                                                            ) ||
+                                                            primary ||
+                                                            worldTarget
+                                                    })
+                                                }
+                                            >
+                                                <span className="truncate">
+                                                    {primary}
+                                                </span>
+                                            </Button>
+                                        ) : (
+                                            <span className="min-w-0 truncate">
+                                                {primary}
+                                            </span>
+                                        )}
+                                        {secondary ? (
+                                            <span className="text-muted-foreground min-w-0 truncate text-xs">
+                                                {secondary}
+                                            </span>
+                                        ) : null}
+                                        {externalTarget || copyTarget ? (
+                                            <div className="ml-auto flex shrink-0 items-center gap-1">
+                                                {externalTarget ? (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        aria-label={t(
+                                                            'view.game_log.action.open_link'
+                                                        )}
+                                                        className="size-6 p-0"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            openExternalLink(
+                                                                externalTarget
+                                                            );
+                                                        }}
+                                                    >
+                                                        <ExternalLinkIcon data-icon="inline-start" />
+                                                    </Button>
+                                                ) : null}
+                                                {copyTarget ? (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        aria-label={t(
+                                                            'view.game_log.action.copy_detail'
+                                                        )}
+                                                        className="size-6 p-0"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            onCopyDetail(
+                                                                row.original
+                                                            );
+                                                        }}
+                                                    >
+                                                        <CopyIcon data-icon="inline-start" />
+                                                    </Button>
+                                                ) : null}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                }
+                            />
+                            <TooltipContent>
+                                {[primary, secondary]
+                                    .filter(Boolean)
+                                    .join(' \u00b7 ')}
+                            </TooltipContent>
+                        </Tooltip>
+                    );
+                }
+            },
+            {
+                id: 'action',
+                size: 90,
+                minSize: 90,
+                maxSize: 90,
+                enableResizing: false,
+                meta: {
+                    tableCellClassName: DATA_TABLE_CONTROL_CELL_CLASS_NAME
+                },
+                header: () => t('table.gameLog.action'),
+                enableSorting: false,
+                cell: ({ row }) => {
+                    const rowKey = getGameLogRowKey(row.original);
+                    const canDelete = canDeleteGameLogRow(row.original);
+                    const canShowPrevious = Boolean(
+                        row.original?.type === 'Location' &&
+                        resolveWorldId(row.original)
+                    );
+
+                    if (!canDelete && !canShowPrevious) {
+                        return <EmptyTableValue />;
+                    }
+
+                    return (
+                        <div className="flex items-center justify-end gap-2">
+                            {canDelete ? (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={t(
+                                        'view.game_log.modal.delete_game_log_row'
+                                    )}
+                                    className="text-muted-foreground hover:text-destructive size-6 p-0"
+                                    disabled={deletingGameLogKey === rowKey}
+                                    onClick={(event) => {
+                                        onDeleteRow(row.original, {
+                                            skipConfirm:
+                                                shiftHeld || event.shiftKey
+                                        });
+                                    }}
+                                >
+                                    {deletingGameLogKey === rowKey ? (
+                                        <Spinner data-icon="inline-start" />
+                                    ) : shiftHeld ? (
+                                        <XIcon
+                                            data-icon="inline-start"
+                                            className="text-destructive"
+                                        />
+                                    ) : (
+                                        <Trash2Icon data-icon="inline-start" />
+                                    )}
+                                </Button>
+                            ) : null}
+                            {canShowPrevious ? (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={t(
+                                        'view.game_log.action.show_instance_history'
+                                    )}
+                                    className="text-muted-foreground hover:text-foreground size-6 p-0"
+                                    disabled={
+                                        loadingPreviousInstancesKey === rowKey
+                                    }
+                                    onClick={() => {
+                                        onOpenPreviousInstances(row.original);
+                                    }}
+                                >
+                                    {loadingPreviousInstancesKey === rowKey ? (
+                                        <Spinner data-icon="inline-start" />
+                                    ) : (
+                                        <FileTextIcon data-icon="inline-start" />
+                                    )}
+                                </Button>
+                            ) : null}
+                        </div>
+                    );
+                }
+            }
+        ],
+        [
+            deletingGameLogKey,
+            loadingPreviousInstancesKey,
+            onCopyDetail,
+            onDeleteRow,
+            onOpenPreviousInstances,
+            shiftHeld,
+            t
+        ]
+    );
+}

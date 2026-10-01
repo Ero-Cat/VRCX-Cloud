@@ -1,0 +1,281 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import type { FavoriteKind } from '@/domain/favorites/types';
+import { copyTextToClipboard } from '@/services/clipboardService';
+import { Button } from '@/ui/shadcn/button';
+import { Checkbox } from '@/ui/shadcn/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle
+} from '@/ui/shadcn/dialog';
+import { Field, FieldGroup, FieldLabel } from '@/ui/shadcn/field';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from '@/ui/shadcn/select';
+import { Textarea } from '@/ui/shadcn/textarea';
+
+import {
+    buildFavoriteExportCsv,
+    FAVORITES_EXPORT_ALL_VALUE as EXPORT_ALL_VALUE,
+    FAVORITES_EXPORT_NONE_VALUE as EXPORT_NONE_VALUE,
+    getFavoriteExportFieldOptions,
+    type FavoriteExportField
+} from '../favoritesExport';
+import type { FavoriteGroupView, FavoriteItem } from '../favoritesTypes';
+
+type FavoriteExportDialogProps = {
+    open: boolean;
+    onOpenChange(open: boolean): void;
+    kind: FavoriteKind;
+    remoteGroups: FavoriteGroupView[];
+    localGroups: FavoriteGroupView[];
+    remoteItemsByGroup: Record<string, FavoriteItem[]>;
+    localItemsByGroup: Record<string, FavoriteItem[]>;
+    remoteDetailsStatus: string;
+};
+
+function FavoriteExportDialog({
+    open,
+    onOpenChange,
+    kind,
+    remoteGroups,
+    localGroups,
+    remoteItemsByGroup,
+    localItemsByGroup,
+    remoteDetailsStatus
+}: FavoriteExportDialogProps) {
+    const { t } = useTranslation();
+
+    const fieldOptions = getFavoriteExportFieldOptions(kind);
+    const [selectedFields, setSelectedFields] = useState<FavoriteExportField[]>(
+        () => fieldOptions.map((option) => option.value)
+    );
+    const [remoteGroupKey, setRemoteGroupKey] = useState(EXPORT_ALL_VALUE);
+    const [localGroupKey, setLocalGroupKey] = useState(EXPORT_NONE_VALUE);
+    const items = useMemo(() => {
+        const remoteItems =
+            remoteGroupKey === EXPORT_ALL_VALUE
+                ? Object.values(remoteItemsByGroup || {}).flat()
+                : remoteItemsByGroup?.[remoteGroupKey] || [];
+        const localItems =
+            localGroupKey === EXPORT_NONE_VALUE
+                ? []
+                : localItemsByGroup?.[localGroupKey] || [];
+
+        return [...remoteItems, ...localItems];
+    }, [localGroupKey, localItemsByGroup, remoteGroupKey, remoteItemsByGroup]);
+    const content = useMemo(
+        () => buildFavoriteExportCsv(items, kind, selectedFields),
+        [items, kind, selectedFields]
+    );
+    const remoteDetailsLoading =
+        kind !== 'friend' &&
+        (remoteDetailsStatus === 'idle' || remoteDetailsStatus === 'running');
+
+    useEffect(() => {
+        if (open) {
+            setSelectedFields(fieldOptions.map((option) => option.value));
+            setRemoteGroupKey(EXPORT_ALL_VALUE);
+            setLocalGroupKey(EXPORT_NONE_VALUE);
+        }
+    }, [fieldOptions, open]);
+
+    function toggleField(field: FavoriteExportField, checked: boolean) {
+        setSelectedFields((current) => {
+            if (checked) {
+                return Array.from(new Set([...current, field]));
+            }
+            return current.filter((entry) => entry !== field);
+        });
+    }
+
+    async function copyExportContent() {
+        await copyTextToClipboard(content, {
+            successMessage: t(
+                'view.favorite.success.copied_favorite_export_data'
+            ),
+            errorMessage: (error) =>
+                error instanceof Error
+                    ? error.message
+                    : t(
+                          'view.favorites.toast.failed_to_copy_favorite_export_data'
+                      )
+        });
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>
+                        {t('view.favorite.action.export_favorite')} {kind}
+                        {t('common.time_units.s')}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {t(
+                            'view.favorite.label.review_the_csv_content_before_copying_it_to_the_clipboard'
+                        )}
+                    </DialogDescription>
+                </DialogHeader>
+                <FieldGroup
+                    data-slot="checkbox-group"
+                    className="flex flex-row flex-wrap gap-3"
+                >
+                    {fieldOptions.map((option) => (
+                        <Field
+                            key={option.value}
+                            orientation="horizontal"
+                            className="w-auto items-center"
+                        >
+                            <Checkbox
+                                id={`favorite-export-field-${kind}-${option.value}`}
+                                checked={selectedFields.includes(option.value)}
+                                onCheckedChange={(checked) =>
+                                    toggleField(option.value, Boolean(checked))
+                                }
+                            />
+                            <FieldLabel
+                                htmlFor={`favorite-export-field-${kind}-${option.value}`}
+                            >
+                                {option.label}
+                            </FieldLabel>
+                        </Field>
+                    ))}
+                </FieldGroup>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Select
+                        value={remoteGroupKey}
+                        items={[
+                            {
+                                value: EXPORT_ALL_VALUE,
+                                label: t(
+                                    'view.favorite.label.all_vrchat_favorites'
+                                )
+                            },
+                            ...remoteGroups.map((group) => ({
+                                value: group.key,
+                                label: `${group.label} (${
+                                    group.capacity
+                                        ? `${group.count}/${group.capacity}`
+                                        : group.count
+                                })`
+                            }))
+                        ]}
+                        onValueChange={(value) =>
+                            setRemoteGroupKey(value ?? '')
+                        }
+                    >
+                        <SelectTrigger size="sm" className="min-w-52">
+                            <SelectValue
+                                placeholder={t(
+                                    'view.favorite.label.vrchat_group'
+                                )}
+                            />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem value={EXPORT_ALL_VALUE}>
+                                    {t(
+                                        'view.favorite.label.all_vrchat_favorites'
+                                    )}
+                                </SelectItem>
+                                {remoteGroups.map((group) => (
+                                    <SelectItem
+                                        key={group.key}
+                                        value={group.key}
+                                    >
+                                        {group.label} (
+                                        {group.capacity
+                                            ? `${group.count}/${group.capacity}`
+                                            : group.count}
+                                        )
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <Select
+                        value={localGroupKey}
+                        items={[
+                            {
+                                value: EXPORT_NONE_VALUE,
+                                label: t('view.favorite.empty.no_local_group')
+                            },
+                            ...localGroups.map((group) => ({
+                                value: group.key,
+                                label: `${group.label} (${group.count})`
+                            }))
+                        ]}
+                        onValueChange={(value) => setLocalGroupKey(value ?? '')}
+                    >
+                        <SelectTrigger size="sm" className="min-w-52">
+                            <SelectValue
+                                placeholder={t(
+                                    'view.favorite.label.local_group'
+                                )}
+                            />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem value={EXPORT_NONE_VALUE}>
+                                    {t('view.favorite.empty.no_local_group')}
+                                </SelectItem>
+                                {localGroups.map((group) => (
+                                    <SelectItem
+                                        key={group.key}
+                                        value={group.key}
+                                    >
+                                        {group.label} ({group.count})
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <span className="text-muted-foreground text-sm">
+                        {items.length} {t('view.favorite.label.item_s')}
+                    </span>
+                </div>
+                <Textarea
+                    readOnly
+                    rows={16}
+                    value={content}
+                    className="min-h-80 resize-none font-mono text-xs"
+                    onClick={(event) => event.currentTarget.select()}
+                />
+                <div className="flex justify-end gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        {t('common.actions.close')}
+                    </Button>
+                    <Button
+                        type="button"
+                        disabled={
+                            remoteDetailsLoading ||
+                            !items.length ||
+                            !selectedFields.length
+                        }
+                        onClick={() => {
+                            copyExportContent();
+                        }}
+                    >
+                        {t('common.actions.copy')}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export { FavoriteExportDialog };

@@ -1,0 +1,56 @@
+import { getNavIconComponent } from '@/components/layout/navIconRegistry';
+import {
+    DASHBOARD_NAV_KEY_PREFIX,
+    DEFAULT_DASHBOARD_ICON
+} from '@/shared/constants/dashboard';
+import {
+    DEFAULT_FOLDER_ICON,
+    DEFAULT_NAV_ICON_KEY
+} from '@/shared/constants/navIcons';
+
+import type { NavMenuItem } from '../navMenuModel';
+
+const navMenuLucideClassName =
+    '[&_.lucide]:text-sidebar-foreground [&_.lucide]:opacity-65 hover:[&_.lucide]:text-sidebar-accent-foreground hover:[&_.lucide]:opacity-100 active:[&_.lucide]:text-sidebar-accent-foreground active:[&_.lucide]:opacity-100 data-active:[&_.lucide]:text-sidebar-accent-foreground data-active:[&_.lucide]:opacity-100';
+
+function NavIcon({
+    entry,
+    className
+}: {
+    entry: NavMenuItem;
+    className?: string;
+}) {
+    const fallback = String(entry?.index || '').startsWith(
+        DASHBOARD_NAV_KEY_PREFIX
+    )
+        ? DEFAULT_DASHBOARD_ICON
+        : entry?.children
+          ? DEFAULT_FOLDER_ICON
+          : DEFAULT_NAV_ICON_KEY;
+    const Icon = getNavIconComponent(entry?.icon, fallback);
+    return <Icon className={className} />;
+}
+
+function NotifiedNavIcon({
+    entry,
+    isNotified,
+    className
+}: {
+    entry: NavMenuItem;
+    isNotified: boolean;
+    className?: string;
+}) {
+    return (
+        <span className="relative inline-flex size-4 shrink-0 items-center justify-center">
+            <NavIcon entry={entry} className={className} />
+            {isNotified ? (
+                <span
+                    className="bg-destructive absolute -top-0.5 -right-0.5 size-1.5 rounded-full"
+                    aria-hidden="true"
+                />
+            ) : null}
+        </span>
+    );
+}
+
+export { NavIcon, navMenuLucideClassName, NotifiedNavIcon };

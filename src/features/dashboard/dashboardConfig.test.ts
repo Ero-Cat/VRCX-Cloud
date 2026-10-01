@@ -1,0 +1,197 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+    cloneDashboardConfig,
+    cloneDashboardRows,
+    createDashboardPanelSelectOptions,
+    createDashboardWidgetPanelValue,
+    getDashboardFilterList,
+    getDashboardInstanceWidgetColumns,
+    getDashboardPanelConfig,
+    getDashboardRowKey,
+    getKnownDashboardInstanceWidgetColumns,
+    getNextDashboardFilterConfig,
+    getNextDashboardInstanceColumnConfig,
+    isDashboardFilterActive
+} from './dashboardConfig';
+
+const dashboardT = (key: string, params: { value?: string } = {}) => {
+    const messages: Record<string, string> = {
+        'dashboard.registry.feed': 'Feed',
+        'dashboard.registry.feed_widget': 'Feed Widget',
+        'view.dashboard.dynamic.existing_value': `Existing · ${params.value}`,
+        'view.dashboard.dynamic.page_value': `Page · ${params.value}`,
+        'view.dashboard.dynamic.widget_value': `Widget · ${params.value}`
+    };
+
+    return messages[key] ?? key;
+};
+
+function expectRecord(
+    value: unknown
+): asserts value is Record<string, unknown> {
+    expect(value && typeof value === 'object' && !Array.isArray(value)).toBe(
+        true
+    );
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        throw new Error('Expected record');
+    }
+}
+
+function expectArray(value: unknown): asserts value is unknown[] {
+    expect(Array.isArray(value)).toBe(true);
+    if (!Array.isArray(value)) {
+        throw new Error('Expected array');
+    }
+}
+
+describe('dashboardConfig', () => {
+    it('keeps saved dashboard rows editable without mutating the stored dashboard', () => {
+        const rows = [
+            {
+                id: 'row_1',
+                direction: 'horizontal',
+                panels: [{ key: 'feed', config: { filters: ['friend'] } }]
+            }
+        ];
+
+        const cloned = cloneDashboardRows(rows);
+        const panel = cloned[0]?.panels[0];
+        expectRecord(panel);
+        const panelConfig = panel.config;
+        expectRecord(panelConfig);
+        const filters = panelConfig.filters;
+        expectArray(filters);
+        filters.push('gps');
+
+        expect(rows[0].panels[0].config.filters).toEqual(['friend']);
+        expect(cloneDashboardRows(null)).toEqual([]);
+    });
+
+    it('gives dashboard rows stable keys for persisted and legacy rows', () => {
+        expect(getDashboardRowKey({ id: ' row_custom ' })).toBe('row_custom');
+
+        const legacyRow: unknown = {
+            direction: 'vertical',
+            panels: ['feed', { key: 'game-log' }]
+        };
+
+        const row = legacyRow as Parameters<typeof getDashboardRowKey>[0];
+        expect(getDashboardRowKey(row)).toBe(getDashboardRowKey(row));
+        expect(
+            getDashboardRowKey({ ...row, direction: 'horizontal' })
+        ).not.toBe(getDashboardRowKey(row));
+    });
+
+    it('lets users pick widgets, pages, and existing unknown panels', () => {
+        const options = createDashboardPanelSelectOptions(
+            'legacy-panel',
+            dashboardT
+        );
+
+        expect(options[0]).toEqual({
+            value: 'legacy-panel',
+            label: 'Existing · legacy-panel'
+        });
+        expect(
+            options.some((option) => option.label === 'Widget · Feed Widget')
+        ).toBe(true);
+        expect(options.some((option) => option.label === 'Page · Feed')).toBe(
+            true
+        );
+        expect(
+            createDashboardPanelSelectOptions('__none__', dashboardT).some(
+                (option) => option.value === '__none__'
+            )
+        ).toBe(false);
+    });
+
+    it('keeps widget panel configs isolated when changing panel settings', () => {
+        const config = {
+            filters: ['friend'],
+            nested: { enabled: true }
+        };
+
+        expect(getDashboardPanelConfig({ config })).toBe(config);
+        expect(getDashboardPanelConfig('feed')).toEqual({});
+
+        const clonedConfig = cloneDashboardConfig(config);
+        const clonedNested = clonedConfig.nested;
+        expectRecord(clonedNested);
+        clonedNested.enabled = false;
+        expect(config.nested.enabled).toBe(true);
+
+        const panelValue = createDashboardWidgetPanelValue(
+            'widget:feed',
+            config
+        );
+        const panelFilters = panelValue.config.filters;
+        expectArray(panelFilters);
+        panelFilters.push('gps');
+        expect(config.filters).toEqual(['friend']);
+    });
+
+    it('treats empty dashboard filter config as All and toggles individual filters predictably', () => {
+        const filterTypes = ['friend', 'gps', 'avatar'];
+
+        expect(getDashboardFilterList({ filters: ['friend'] })).toEqual([
+            'friend'
+        ]);
+        expect(isDashboardFilterActive({}, 'friend')).toBe(true);
+        expect(isDashboardFilterActive({ filters: ['gps'] }, 'friend')).toBe(
+            false
+        );
+
+        expect(
+            getNextDashboardFilterConfig({}, 'friend', filterTypes).filters
+        ).toEqual(['gps', 'avatar']);
+        expect(
+            getNextDashboardFilterConfig(
+                { filters: ['gps', 'avatar'] },
+                'friend',
+                filterTypes
+            ).filters
+        ).toEqual([]);
+        expect(
+            getNextDashboardFilterConfig(
+                { filters: ['friend'] },
+                'friend',
+                filterTypes
+            ).filters
+        ).toEqual([]);
+    });
+
+    it('keeps display name visible while users customize instance widget columns', () => {
+        expect(
+            getDashboardInstanceWidgetColumns({ columns: ['timer', 'timer'] })
+        ).toEqual(['displayName', 'timer']);
+        expect(
+            getDashboardInstanceWidgetColumns({
+                columns: ['timer', 'legacyColumn']
+            })
+        ).toEqual(['displayName', 'timer', 'legacyColumn']);
+        expect(
+            getKnownDashboardInstanceWidgetColumns({
+                columns: ['timer', 'legacyColumn']
+            })
+        ).toEqual(['displayName', 'timer']);
+
+        expect(
+            getNextDashboardInstanceColumnConfig(
+                { columns: ['displayName', 'timer', 'legacyColumn'] },
+                'timer'
+            ).columns
+        ).toEqual(['displayName', 'legacyColumn']);
+        expect(
+            getNextDashboardInstanceColumnConfig(
+                { columns: ['displayName', 'legacyColumn'] },
+                'platform'
+            ).columns
+        ).toEqual(['displayName', 'platform', 'legacyColumn']);
+
+        const config = { columns: ['displayName', 'timer'] };
+        expect(
+            getNextDashboardInstanceColumnConfig(config, 'displayName')
+        ).toBe(config);
+    });
+});

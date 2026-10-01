@@ -1,0 +1,249 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { AppUpdateDeliveryKind } from '@/platform/tauri/bindings';
+
+const mocks = vi.hoisted(() => ({
+    isHostCapabilityAvailable: vi.fn(),
+    formatReleaseDisplayVersion: vi.fn(),
+    toNormalizedReleaseFromSnapshot: vi.fn(),
+    runRuntimeTelemetryJob: vi.fn(),
+    appRegistryBackupMaintenanceRun: vi.fn(),
+    pushNotification: vi.fn()
+}));
+
+vi.mock('@/platform/tauri/bindings', () => ({
+    commands: {
+        appRegistryBackupMaintenanceRun: mocks.appRegistryBackupMaintenanceRun
+    }
+}));
+
+vi.mock('./hostCapabilityService', () => ({
+    isHostCapabilityAvailable: mocks.isHostCapabilityAvailable
+}));
+
+vi.mock('./runtimeJobTelemetryService', () => ({
+    runRuntimeTelemetryJob: mocks.runRuntimeTelemetryJob
+}));
+
+vi.mock('./updateService', () => ({
+    formatReleaseDisplayVersion: mocks.formatReleaseDisplayVersion,
+    toNormalizedReleaseFromSnapshot: mocks.toNormalizedReleaseFromSnapshot
+}));
+
+vi.mock('./i18nService', () => ({
+    default: {
+        t: (key: string, values?: Record<string, unknown>) =>
+            values ? `${key}:${JSON.stringify(values)}` : key
+    }
+}));
+
+vi.mock('@/state/notificationStore', () => ({
+    useNotificationStore: {
+        getState: () => ({ pushNotification: mocks.pushNotification })
+    }
+}));
+
+import { useRuntimeStore } from '@/state/runtimeStore';
+
+import {
+    handleAppUpdateStatusEvent,
+    runForegroundUpdateRegistryBackupMaintenance,
+    runStartupMaintenance
+} from './backgroundMaintenanceService';
+
+type ReleaseSnapshotFixture = {
+    displayName: string;
+    tagName: string;
+    htmlUrl: string;
+    publishedAt: string;
+    body: string;
+    canonicalVersion: string;
+    displayVersion: string;
+    channel: 'stable' | 'beta';
+    manifestUrl: string;
+    target: string;
+    updaterType: AppUpdateDeliveryKind;
+};
+
+const TAURI_RELEASE_SNAPSHOT: ReleaseSnapshotFixture = {
+    displayName: 'VRCX-0 2.7.0',
+    tagName: 'v2.7.0',
+    htmlUrl: 'https://example.test/release',
+    publishedAt: '2026-06-18T00:00:00Z',
+    body: '',
+    canonicalVersion: '2.7.0',
+    displayVersion: '2.7.0',
+    channel: 'stable',
+    manifestUrl:
+        'https://github.com/Map1en/VRCX-0/releases/latest/download/latest_windows.json',
+    target: 'windows-x86_64-stable',
+    updaterType: 'tauri'
+};
+
+function toNormalizedRelease(release: ReleaseSnapshotFixture | null) {
+    if (!release) {
+        return null;
+    }
+    return {
+        manifestUrl: release.manifestUrl || undefined,
+        target: release.target || undefined,
+        canonicalVersion: release.canonicalVersion,
+        channel: release.channel,
+        displayVersion: release.displayVersion,
+        htmlUrl: release.htmlUrl,
+        tagName: release.tagName,
+        displayName: release.displayName,
+        publishedAt: release.publishedAt,
+        body: release.body,
+        updaterType: release.updaterType === 'tauri' ? 'tauri' : 'manual'
+    };
+}
+
+function statusSnapshot(
+    release: ReleaseSnapshotFixture | null,
+    shouldNotify = false
+) {
+    return {
+        hasAvailableUpdate: Boolean(release),
+        checkedAt: '2026-06-18T00:00:00.000Z',
+        detail: '',
+        error: null,
+        release,
+        shouldNotify
+    };
+}
+
+describe('backgroundMaintenanceService update checks', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.stubGlobal('VERSION', '2.6.0');
+        useRuntimeStore.getState().resetRuntimeState();
+        mocks.isHostCapabilityAvailable.mockReturnValue(false);
+        mocks.formatReleaseDisplayVersion.mockImplementation((value: unknown) =>
+            String(value || '')
+        );
+        mocks.toNormalizedReleaseFromSnapshot.mockImplementation(
+            toNormalizedRelease
+        );
+        mocks.runRuntimeTelemetryJob.mockImplementation(
+            async (_metadata: unknown, task: () => Promise<unknown>) => task()
+        );
+    });
+
+    it('runStartupMaintenance only runs registry backup maintenance', async () => {
+        mocks.isHostCapabilityAvailable.mockReturnValue(true);
+        mocks.appRegistryBackupMaintenanceRun.mockResolvedValue({
+            restorePromptNeeded: false
+        });
+
+        await runStartupMaintenance();
+
+        expect(mocks.appRegistryBackupMaintenanceRun).toHaveBeenCalledWith(
+            'foreground-startup'
+        );
+    });
+
+    it('runForegroundUpdateRegistryBackupMaintenance runs registry backup maintenance independently of the update check', async () => {
+        mocks.isHostCapabilityAvailable.mockReturnValue(true);
+        mocks.appRegistryBackupMaintenanceRun.mockResolvedValue({
+            restorePromptNeeded: false
+        });
+
+        await runForegroundUpdateRegistryBackupMaintenance();
+
+        expect(mocks.appRegistryBackupMaintenanceRun).toHaveBeenCalledWith(
+            'foreground-update'
+        );
+    });
+
+    it('coalesces overlapping maintenance runs into a single backend call', async () => {
+        mocks.isHostCapabilityAvailable.mockReturnValue(true);
+        let resolveRun: (value: {
+            restorePromptNeeded: boolean;
+        }) => void = () => {
+            throw new Error('Maintenance run was not started.');
+        };
+        mocks.appRegistryBackupMaintenanceRun.mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    resolveRun = resolve;
+                })
+        );
+
+        const startupRun = runStartupMaintenance();
+        const foregroundUpdateRun =
+            runForegroundUpdateRegistryBackupMaintenance();
+        resolveRun({ restorePromptNeeded: false });
+        await Promise.all([startupRun, foregroundUpdateRun]);
+
+        expect(mocks.appRegistryBackupMaintenanceRun).toHaveBeenCalledTimes(1);
+        expect(mocks.appRegistryBackupMaintenanceRun).toHaveBeenCalledWith(
+            'foreground-startup'
+        );
+
+        mocks.appRegistryBackupMaintenanceRun.mockResolvedValueOnce({
+            restorePromptNeeded: false
+        });
+        await runForegroundUpdateRegistryBackupMaintenance();
+
+        expect(mocks.appRegistryBackupMaintenanceRun).toHaveBeenCalledTimes(2);
+        expect(mocks.appRegistryBackupMaintenanceRun).toHaveBeenLastCalledWith(
+            'foreground-update'
+        );
+    });
+
+    it('notifies when the backend marks the delivered release as should-notify', async () => {
+        await handleAppUpdateStatusEvent(
+            statusSnapshot(TAURI_RELEASE_SNAPSHOT, true)
+        );
+
+        expect(useRuntimeStore.getState().updateLoop.hasAvailableUpdate).toBe(
+            true
+        );
+        expect(mocks.pushNotification).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not notify when the backend does not mark the delivered release as should-notify', async () => {
+        await handleAppUpdateStatusEvent(
+            statusSnapshot(TAURI_RELEASE_SNAPSHOT, true)
+        );
+        await handleAppUpdateStatusEvent(
+            statusSnapshot(TAURI_RELEASE_SNAPSHOT, false)
+        );
+
+        expect(mocks.pushNotification).toHaveBeenCalledTimes(1);
+        expect(useRuntimeStore.getState().updateLoop.hasAvailableUpdate).toBe(
+            true
+        );
+    });
+
+    it('clears the update loop state when no release is available', async () => {
+        await handleAppUpdateStatusEvent(
+            statusSnapshot(TAURI_RELEASE_SNAPSHOT, true)
+        );
+        await handleAppUpdateStatusEvent(statusSnapshot(null));
+
+        expect(useRuntimeStore.getState().updateLoop.hasAvailableUpdate).toBe(
+            false
+        );
+        expect(useRuntimeStore.getState().updateLoop.latestUpdaterRelease).toBe(
+            null
+        );
+    });
+
+    it('records the check detail without notifying when the check errored', async () => {
+        await handleAppUpdateStatusEvent({
+            hasAvailableUpdate: false,
+            checkedAt: '2026-06-18T00:00:00.000Z',
+            detail: '',
+            error: 'network failed',
+            release: null,
+            shouldNotify: false
+        });
+
+        expect(mocks.pushNotification).not.toHaveBeenCalled();
+        expect(
+            useRuntimeStore.getState().updateLoop.lastUpdaterCheckDetail
+        ).toBe('network failed');
+    });
+});

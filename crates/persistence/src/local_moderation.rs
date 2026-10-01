@@ -1,0 +1,279 @@
+use chrono::{DateTime, FixedOffset};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+use crate::common::{normalize_text, now_iso, strict_row_i64, strict_row_string, ParamsBuilder};
+use crate::database::schema::ensure_user_store_tables;
+use crate::database::DatabaseService;
+use crate::ownership::OwnerId;
+use crate::realtime::normalize_user_table_prefix;
+use crate::Error;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalModerationInput {
+    #[serde(default)]
+    pub user_id: String,
+    #[serde(default)]
+    pub updated_at: String,
+    #[serde(default)]
+    pub display_name: String,
+    #[serde(default)]
+    pub block: bool,
+    #[serde(default)]
+    pub mute: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoteModerationInput {
+    #[serde(default)]
+    pub r#type: String,
+    #[serde(default)]
+    pub target_user_id: String,
+    #[serde(default)]
+    pub target_display_name: String,
+    #[serde(default)]
+    pub created: String,
+}
+
+#[derive(Debug, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalModerationOutput {
+    pub user_id: String,
+    pub updated_at: String,
+    pub display_name: String,
+    pub block: bool,
+    pub mute: bool,
+}
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+struct ModerationMetadataCandidate {
+    created_at: DateTime<FixedOffset>,
+    created: String,
+    display_name: String,
+    kind: String,
+}
+
+pub fn local_moderation_list(
+    db: &DatabaseService,
+    owner_user_id: OwnerId,
+) -> Result<Vec<LocalModerationOutput>, Error> {
+    let owner_user_id = normalize_text(owner_user_id.as_str());
+    if owner_user_id.is_empty() {
+        return Ok(Vec::new());
+    }
+    let user_prefix = normalize_user_table_prefix(&owner_user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    db.execute(
+        &format!(
+            "SELECT user_id, updated_at, display_name, block, mute FROM {user_prefix}_moderation"
+        ),
+        &Default::default(),
+    )?
+    .into_iter()
+    .map(|row| LocalModerationOutput::from_row(&row))
+    .collect()
+}
+
+impl LocalModerationOutput {
+    fn from_row(row: &[Value]) -> Result<Self, Error> {
+        Ok(Self {
+            user_id: strict_row_string(row, 0)?,
+            updated_at: strict_row_string(row, 1)?,
+            display_name: strict_row_string(row, 2)?,
+            block: strict_row_i64(row, 3)? == 1,
+            mute: strict_row_i64(row, 4)? == 1,
+        })
+    }
+}
+
+pub fn local_moderation_get(
+    db: &DatabaseService,
+    owner_user_id: OwnerId,
+    user_id: String,
+) -> Result<Option<LocalModerationOutput>, Error> {
+    let owner_user_id = normalize_text(owner_user_id.as_str());
+    let user_id = normalize_text(user_id);
+    if owner_user_id.is_empty() || user_id.is_empty() {
+        return Ok(None);
+    }
+    let user_prefix = normalize_user_table_prefix(&owner_user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    db
+        .execute(
+            &format!("SELECT user_id, updated_at, display_name, block, mute FROM {user_prefix}_moderation WHERE user_id = @user_id LIMIT 1"),
+            &ParamsBuilder::new().set("user_id", user_id).build(),
+        )?
+        .first()
+        .map(|row| LocalModerationOutput::from_row(row))
+        .transpose()
+}
+
+pub fn local_moderation_set(
+    db: &DatabaseService,
+    owner_user_id: OwnerId,
+    entry: LocalModerationInput,
+) -> Result<(), Error> {
+    set_local_moderation_row(db, &owner_user_id, &entry)
+}
+
+pub fn local_moderation_delete(
+    db: &DatabaseService,
+    owner_user_id: OwnerId,
+    user_id: String,
+) -> Result<(), Error> {
+    delete_local_moderation_row(db, &owner_user_id, &user_id)
+}
+
+pub fn local_moderation_sync_snapshot(
+    db: &DatabaseService,
+    owner_user_id: OwnerId,
+    rows: Vec<RemoteModerationInput>,
+) -> Result<Vec<LocalModerationOutput>, Error> {
+    use std::collections::{HashMap, HashSet};
+
+    let owner_user_id = normalize_text(owner_user_id.as_str());
+    if owner_user_id.is_empty() {
+        return Ok(Vec::new());
+    }
+    let user_prefix = normalize_user_table_prefix(&owner_user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+
+    let mut moderation_by_user_id: HashMap<String, LocalModerationOutput> = HashMap::new();
+    let mut metadata_by_user_id: HashMap<String, ModerationMetadataCandidate> = HashMap::new();
+    for row in rows {
+        if row.r#type != "block" && row.r#type != "mute" {
+            continue;
+        }
+        let target_user_id = normalize_text(row.target_user_id);
+        if target_user_id.is_empty() {
+            continue;
+        }
+        let entry = moderation_by_user_id
+            .entry(target_user_id.clone())
+            .or_insert_with(|| LocalModerationOutput {
+                user_id: target_user_id.clone(),
+                updated_at: String::new(),
+                display_name: String::new(),
+                block: false,
+                mute: false,
+            });
+        if let Ok(created_at) = DateTime::parse_from_rfc3339(row.created.trim()) {
+            let candidate = ModerationMetadataCandidate {
+                created_at,
+                created: row.created.clone(),
+                display_name: row.target_display_name.clone(),
+                kind: row.r#type.clone(),
+            };
+            if metadata_by_user_id
+                .get(&target_user_id)
+                .is_none_or(|current| candidate > *current)
+            {
+                entry.updated_at = candidate.created.clone();
+                entry.display_name = candidate.display_name.clone();
+                metadata_by_user_id.insert(target_user_id.clone(), candidate);
+            }
+        } else if !metadata_by_user_id.contains_key(&target_user_id)
+            && !row.target_display_name.trim().is_empty()
+            && row.target_display_name > entry.display_name
+        {
+            entry.display_name = row.target_display_name.clone();
+        }
+        if row.r#type == "block" {
+            entry.block = true;
+        }
+        if row.r#type == "mute" {
+            entry.mute = true;
+        }
+    }
+    for entry in moderation_by_user_id.values_mut() {
+        if entry.updated_at.is_empty() {
+            entry.updated_at = now_iso();
+        }
+    }
+
+    let target_ids: HashSet<String> = moderation_by_user_id.keys().cloned().collect();
+    let existing = db.execute(
+        &format!("SELECT user_id FROM {user_prefix}_moderation"),
+        &Default::default(),
+    )?;
+
+    db.write_transaction(|tx| {
+        for row in existing {
+            let user_id = row
+                .first()
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+            if !target_ids.contains(&user_id) {
+                tx.execute_non_query(
+                    &format!("DELETE FROM {user_prefix}_moderation WHERE user_id = @user_id"),
+                    &ParamsBuilder::new().set("user_id", user_id).build(),
+                )?;
+            }
+        }
+        for entry in moderation_by_user_id.values() {
+            tx.execute_non_query(
+                &format!("INSERT OR REPLACE INTO {user_prefix}_moderation (user_id, updated_at, display_name, block, mute) VALUES (@user_id, @updated_at, @display_name, @block, @mute)"),
+                &ParamsBuilder::new()
+                    .set("user_id", entry.user_id.clone())
+                    .set("updated_at", entry.updated_at.clone())
+                    .set("display_name", entry.display_name.clone())
+                    .set("block", if entry.block { 1 } else { 0 })
+                    .set("mute", if entry.mute { 1 } else { 0 })
+                    .build(),
+            )?;
+        }
+        Ok(())
+    })?;
+
+    Ok(moderation_by_user_id.into_values().collect())
+}
+
+pub(crate) fn set_local_moderation_row(
+    db: &DatabaseService,
+    owner_user_id: &OwnerId,
+    entry: &LocalModerationInput,
+) -> Result<(), Error> {
+    let owner_user_id = normalize_text(owner_user_id.as_str());
+    let user_id = normalize_text(&entry.user_id);
+    if owner_user_id.is_empty() || user_id.is_empty() {
+        return Ok(());
+    }
+    let user_prefix = normalize_user_table_prefix(&owner_user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    db.execute_non_query(
+        &format!("INSERT OR REPLACE INTO {user_prefix}_moderation (user_id, updated_at, display_name, block, mute) VALUES (@user_id, @updated_at, @display_name, @block, @mute)"),
+        &ParamsBuilder::new()
+            .set("user_id", user_id)
+            .set("updated_at", entry.updated_at.clone())
+            .set("display_name", entry.display_name.clone())
+            .set("block", if entry.block { 1 } else { 0 })
+            .set("mute", if entry.mute { 1 } else { 0 })
+            .build(),
+    )?;
+    Ok(())
+}
+
+pub(crate) fn delete_local_moderation_row(
+    db: &DatabaseService,
+    owner_user_id: &OwnerId,
+    user_id: &str,
+) -> Result<(), Error> {
+    let owner_user_id = normalize_text(owner_user_id.as_str());
+    let user_id = normalize_text(user_id);
+    if owner_user_id.is_empty() || user_id.is_empty() {
+        return Ok(());
+    }
+    let user_prefix = normalize_user_table_prefix(&owner_user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    db.execute_non_query(
+        &format!("DELETE FROM {user_prefix}_moderation WHERE user_id = @user_id"),
+        &ParamsBuilder::new().set("user_id", user_id).build(),
+    )?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests;

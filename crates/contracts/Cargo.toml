@@ -1,0 +1,16 @@
+[package]
+name = "vrcx-0-contracts"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "IO-free DTO and protocol kernel shared by application ports and outbound adapters"
+
+[dependencies]
+compact_str = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+specta = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }
+vrcx-0-core = { path = "../core" }
+vrcx-0-runtime-event = { path = "../runtime-event" }

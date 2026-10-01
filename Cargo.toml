@@ -1,0 +1,124 @@
+[workspace]
+members = [
+    "src-tauri",
+    "crates/i18n",
+    "crates/core",
+    "crates/persistence",
+    "crates/integrations",
+    "crates/vrchat-client",
+    "crates/vr-overlay",
+    "crates/platform",
+    "crates/local-server",
+    "crates/host-desktop",
+    "crates/media",
+    "crates/runtime-event",
+    "crates/contracts",
+    "crates/application-core",
+    "crates/outbound-adapters",
+    "crates/application-activity",
+    "crates/application-realtime",
+    "crates/application",
+    "crates/application-game",
+    "crates/composition",
+    "crates/runtime-host-desktop",
+    "crates/overlay-runtime",
+    "crates/headless",
+    "crates/mcp",
+    "crates/integration-api",
+    "crates/assistant"
+]
+default-members = [
+    "src-tauri",
+    "crates/i18n",
+    "crates/core",
+    "crates/persistence",
+    "crates/integrations",
+    "crates/vrchat-client",
+    "crates/vr-overlay",
+    "crates/platform",
+    "crates/local-server",
+    "crates/host-desktop",
+    "crates/media",
+    "crates/runtime-event",
+    "crates/contracts",
+    "crates/application-core",
+    "crates/outbound-adapters",
+    "crates/application-activity",
+    "crates/application-realtime",
+    "crates/application",
+    "crates/application-game",
+    "crates/composition",
+    "crates/runtime-host-desktop",
+    "crates/overlay-runtime",
+    "crates/headless",
+    "crates/mcp",
+    "crates/integration-api",
+    "crates/assistant"
+]
+resolver = "2"
+
+[workspace.package]
+license = "GPL-3.0-only"
+
+[workspace.dependencies]
+async-trait = "0.1"
+base64 = "0.23"
+bytes = "1"
+chacha20poly1305 = "0.11"
+chrono = "0.4"
+compact_str = { version = "0.10", features = ["serde"] }
+dirs = "7"
+image = "0.25"
+iana-time-zone = "0.1"
+machine-uid = "0.6"
+percent-encoding = "2"
+proptest = "1"
+reqwest = "0.13"
+regex = "1"
+fs4 = "1.1"
+rusqlite = "0.40"
+serde = "1"
+serde_json = "1"
+semver = "1"
+sha2 = "0.11"
+slint = { version = "~1.18", default-features = false, features = [
+    "compat-1-2",
+    "renderer-software",
+    "std"
+] }
+slint-build = "~1.18"
+specta = { version = "=2.0.0-rc.22", features = [
+    "derive",
+    "serde_json",
+    "chrono"
+] }
+sys-locale = "0.3"
+tar = "0.4"
+thiserror = "2"
+tokio = "1"
+tokio-util = "0.7"
+tracing = "0.1"
+url = "2"
+uuid = { version = "1", features = ["v4"] }
+walkdir = "2"
+zip = { version = "8", default-features = false }
+zstd = { version = "0.14", features = ["zstdmt"] }
+
+[profile.dev]
+incremental = true
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+opt-level = 1
+
+[profile.test]
+debug = false
+opt-level = 0
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

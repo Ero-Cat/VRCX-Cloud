@@ -1,0 +1,100 @@
+import {
+    createGroupPost,
+    deleteGroupPost,
+    editGroupPost,
+    getAllGroupGallery,
+    getAllGroupPosts,
+    getGroupGallery,
+    getGroupPosts
+} from './group-profile/content';
+import { getAllGroupLogs, getGroupAuditLogTypes } from './group-profile/logs';
+import {
+    cancelGroupRequest,
+    getAllGroupMembers,
+    getGroupMembers,
+    getGroupMembersSearch,
+    joinGroup,
+    leaveGroup,
+    sendGroupInvite,
+    setGroupMemberProps,
+    setGroupRepresentation
+} from './group-profile/members';
+import {
+    addGroupMemberRole,
+    banGroupMember,
+    blockGroup,
+    deleteBlockedGroupRequest,
+    deleteSentGroupInvite,
+    getAllGroupBans,
+    getAllGroupInvites,
+    getAllGroupJoinRequests,
+    getGroupBans,
+    getGroupInvites,
+    getGroupJoinRequests,
+    kickGroupMember,
+    removeGroupMemberRole,
+    respondGroupJoinRequest,
+    unbanGroupMember,
+    unblockGroup
+} from './group-profile/moderation';
+import {
+    fetchGroupProfile,
+    getGroupProfile,
+    getUsersGroupInstances,
+    getUserGroups,
+    getUserGroupsOverview,
+    normalize
+} from './group-profile/profile';
+
+const groupProfileRepository = Object.freeze({
+    normalize,
+    fetchGroupProfile,
+    getGroupProfile,
+    getUserGroups,
+    getUserGroupsOverview,
+    getGroupPosts,
+    getAllGroupPosts,
+    createGroupPost,
+    editGroupPost,
+    deleteGroupPost,
+    getGroupMembers,
+    getGroupMembersSearch,
+    getAllGroupMembers,
+    getGroupGallery,
+    getAllGroupGallery,
+    joinGroup,
+    leaveGroup,
+    cancelGroupRequest,
+    sendGroupInvite,
+    kickGroupMember,
+    banGroupMember,
+    unbanGroupMember,
+    deleteSentGroupInvite,
+    respondGroupJoinRequest,
+    deleteBlockedGroupRequest,
+    addGroupMemberRole,
+    removeGroupMemberRole,
+    getGroupBans,
+    getAllGroupBans,
+    getGroupInvites,
+    getAllGroupInvites,
+    getGroupJoinRequests,
+    getAllGroupJoinRequests,
+    getGroupAuditLogTypes,
+    getAllGroupLogs,
+    setGroupRepresentation,
+    setGroupMemberProps,
+    blockGroup,
+    unblockGroup,
+    getUsersGroupInstances
+});
+
+export type {
+    GroupAuditLogData,
+    GroupAuditLogRow,
+    GroupInstanceRecord,
+    GroupMemberRow,
+    GroupMemberUser,
+    GroupProfileRecord
+} from '@/domain/entities/group';
+export default groupProfileRepository;

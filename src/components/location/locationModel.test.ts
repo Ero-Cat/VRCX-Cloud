@@ -1,0 +1,75 @@
+import { describe, expect, it } from 'vitest';
+
+import {
+    buildInstanceActionTarget,
+    firstNonNegativeLocationNumber,
+    normalizeLocationObject,
+    resolveLocationTarget
+} from './locationModel';
+
+describe('locationModel', () => {
+    it('skips negative player-count sentinels', () => {
+        expect(firstNonNegativeLocationNumber(-1, '4', 5)).toBe(4);
+        expect(firstNonNegativeLocationNumber(-1, undefined)).toBeNull();
+    });
+
+    it('uses the traveling destination as the display target', () => {
+        expect(
+            resolveLocationTarget('traveling', 'wrld_test:12345~region(jp)')
+        ).toBe('wrld_test:12345~region(jp)');
+    });
+
+    it('normalizes object-shaped instance locations', () => {
+        const location = normalizeLocationObject({
+            worldId: 'wrld_test',
+            instanceId: '12345',
+            regionName: 'eu',
+            secureName: 'token'
+        });
+
+        expect(location.tag).toBe('wrld_test:12345');
+        expect(location.worldId).toBe('wrld_test');
+        expect(location.instanceId).toBe('12345');
+        expect(location.region).toBe('eu');
+        expect(location.launchToken).toBe('token');
+        expect(location.isRealInstance).toBe(true);
+    });
+
+    it('builds one action target for launch, invite, and refresh', () => {
+        const target = buildInstanceActionTarget({
+            location: 'wrld_test:12345~hidden(usr_owner)',
+            shortName: 'abc12345',
+            worldName: 'Test World'
+        });
+
+        expect(target.launchLocation).toBe('wrld_test:12345~hidden(usr_owner)');
+        expect(target.inviteLocation).toBe('wrld_test:12345~hidden(usr_owner)');
+        expect(target.instanceLocation).toBe(
+            'wrld_test:12345~hidden(usr_owner)'
+        );
+        expect(target.isRealLaunchLocation).toBe(true);
+        expect(target.isRealInviteLocation).toBe(true);
+        expect(target.isRealInstanceLocation).toBe(true);
+        expect(target.shortName).toBe('abc12345');
+        expect(target.worldName).toBe('Test World');
+    });
+
+    it('preserves independent launch, invite, and refresh locations', () => {
+        const target = buildInstanceActionTarget({
+            location: 'private',
+            launchLocation: 'wrld_launch:12345~region(us)',
+            inviteLocation: 'wrld_invite:23456~region(jp)',
+            instanceLocation: 'wrld_refresh:34567~region(eu)'
+        });
+
+        expect(target.launchLocation).toBe('wrld_launch:12345~region(us)');
+        expect(target.inviteLocation).toBe('wrld_invite:23456~region(jp)');
+        expect(target.instanceLocation).toBe('wrld_refresh:34567~region(eu)');
+        expect(target.parsedLaunchLocation.worldId).toBe('wrld_launch');
+        expect(target.parsedInviteLocation.worldId).toBe('wrld_invite');
+        expect(target.parsedInstanceLocation.worldId).toBe('wrld_refresh');
+        expect(target.isRealLaunchLocation).toBe(true);
+        expect(target.isRealInviteLocation).toBe(true);
+        expect(target.isRealInstanceLocation).toBe(true);
+    });
+});

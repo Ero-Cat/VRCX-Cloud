@@ -1,0 +1,780 @@
+import { ClockIcon } from 'lucide-react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
+
+import { resolveSidebarStatusDotClassName } from '@/components/sidebar/friends-sidebar/friendsSidebarModel';
+import type { InstanceRosterRow } from '@/domain/instances/instanceRoster';
+import { openAvatarDialog, openGroupDialog } from '@/services/dialogService';
+import {
+    convertFileUrlToImageUrl,
+    openExternalLink
+} from '@/services/entityMediaService';
+import { isActionRecent } from '@/services/recentActionService';
+import { MINUTE_MS } from '@/shared/constants/time';
+import { vrchatUserUrl } from '@/shared/constants/vrchatWebUrls';
+import { extractFileId } from '@/shared/utils/fileUtils';
+import { parseLocation } from '@/shared/utils/location';
+import { usePreferencesStore } from '@/state/preferencesStore';
+
+import {
+    EntityDialogScaffold,
+    EntityDialogTwoColumnLayout
+} from './EntityDialogScaffold';
+import { ProfileMediaPanel } from './ProfileMediaPanel';
+import { UserDialogHeaderSection } from './user-dialog/components/UserDialogHeaderSection';
+import { UserDialogProfileDecorationsPanel } from './user-dialog/components/UserDialogProfileDecorationsPanel';
+import { UserDialogTabsSection } from './user-dialog/components/UserDialogTabsSection';
+import type {
+    resolveFriendRequestState,
+    resolvePlatformMeta
+} from './user-dialog/userDialogContentHelpers';
+import { buildUserDialogLocationUsers } from './user-dialog/userDialogLocationUsers';
+import {
+    applyUserDialogProfileAppearanceOverrides,
+    resolveUserDialogBannerUrl
+} from './user-dialog/userDialogProfileAppearance';
+import {
+    isOfflineLikeValue,
+    normalizedText
+} from './user-dialog/userDialogRows';
+import type { UserDialogLoadStatus } from './user-dialog/userDialogTabService';
+import { buildUserDialogProfileSummary } from './user-dialog/userDialogViewData';
+import { USER_PROFILE_MEDIA_SECTIONS } from './user-dialog/userProfileFields';
+import { useUserDialogAvatarAuthorAction } from './user-dialog/useUserDialogAvatarAuthorAction';
+import { useUserDialogClipboardActions } from './user-dialog/useUserDialogClipboardActions';
+import type { useUserDialogLocationPanel } from './user-dialog/useUserDialogLocationPanel';
+import type {
+    AvatarOverrideState,
+    ExtendedModerationState,
+    ModerationState
+} from './user-dialog/useUserDialogModerationState';
+import { useUserDialogProfileAppearance } from './user-dialog/useUserDialogProfileAppearance';
+import { useUserDialogProfileDecorations } from './user-dialog/useUserDialogProfileDecorations';
+import type { UserDialogProfileRecord } from './user-dialog/useUserDialogProfileResource';
+import { useUserDialogTabbedRuntimeState } from './user-dialog/useUserDialogRuntimeState';
+import type { useUserDialogSelfActions } from './user-dialog/useUserDialogSelfActions';
+import type { useUserDialogSupplementalData } from './user-dialog/useUserDialogSupplementalData';
+import { useUserDialogTabData } from './user-dialog/useUserDialogTabData';
+import type {
+    AvatarOverrideType,
+    ExtendedModerationType,
+    ModerationType
+} from './user-dialog/useUserModerationActions';
+
+type SupplementalData = ReturnType<typeof useUserDialogSupplementalData>;
+type SelfControls = ReturnType<typeof useUserDialogSelfActions>['actions'];
+type LocationPanelController = ReturnType<typeof useUserDialogLocationPanel>;
+
+interface UserDialogTabbedViewProps {
+    profile: UserDialogProfileRecord;
+    resource: {
+        memo: string;
+        detail: string;
+        imageUrl: string;
+        loadStatus: string;
+        actionStatus: string;
+        recentActionVersion?: number;
+        reloadToken?: number;
+        initialAction?: string;
+    };
+    relationship: {
+        moderationState: ModerationState;
+        extendedModerationState?: ExtendedModerationState;
+        avatarOverrideState?: AvatarOverrideState;
+        isCurrentUser: boolean;
+        isFriend: boolean;
+        isFavorite: boolean;
+        friendRequestState: ReturnType<typeof resolveFriendRequestState>;
+    };
+    platformInfo: {
+        platform: ReturnType<typeof resolvePlatformMeta>;
+        platformIcon: ComponentType | null;
+    };
+    presence: {
+        presenceLocation: string;
+        currentAvatarTarget: string;
+        homeLocationTarget: string;
+        canInviteFromCurrentLocation: boolean;
+        currentUserHasSharedConnectionsOptOut: boolean;
+        currentUserBoopingEnabled: boolean;
+        userStats?: SupplementalData['userStats'];
+        loadPreviousInstances?: SupplementalData['loadPreviousInstances'];
+        previousInstances?: SupplementalData['previousInstances'];
+        previousInstancesError?: SupplementalData['previousInstancesError'];
+        previousInstancesStatus?: SupplementalData['previousInstancesStatus'];
+        representedGroup?: SupplementalData['representedGroup'];
+        representedGroupStatus?: string;
+        hideUserNotes?: boolean;
+        hideUserMemos?: boolean;
+    };
+    locationPanel: {
+        sameInstanceUsers?: InstanceRosterRow[];
+        locationOwnerUser?: Record<string, unknown> | null;
+        locationOwnerGroup?: Record<string, unknown> | null;
+        locationInstance?: Record<string, unknown> | null;
+        locationFriendCount?: number;
+        locationPlayerCount?: number;
+        onRefreshLocation?: LocationPanelController['refreshLocationPanel'];
+        onPreviousInstancesChange: SupplementalData['setPreviousInstances'];
+    };
+    profileControls: {
+        onRefresh: () => void;
+        onEditMemo: () => void | Promise<void>;
+    };
+    friendControls: {
+        onFriendRequest: (action: string) => void;
+        onInvite: () => void;
+        onInviteMessage: () => void;
+        onInviteRequest: () => void;
+        onInviteRequestMessage: () => void;
+        onBoop: () => void;
+        onUnfriend: () => void;
+        onModeration: (type: ModerationType, enabled: boolean) => void;
+        onExtendedModeration: (
+            type: ExtendedModerationType,
+            enabled: boolean
+        ) => void;
+        onAvatarOverride: (type: AvatarOverrideType) => void;
+        onReportHacking: () => void;
+        onInviteToGroup: () => void;
+        onGroupModeration: () => void;
+    };
+    selfControls: SelfControls;
+}
+
+function record(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object'
+        ? Object.fromEntries(Object.entries(value))
+        : {};
+}
+
+const SELF_PANELS = ['profile-media', 'profile-decorations'] as const;
+type SelfPanel = '' | (typeof SELF_PANELS)[number];
+
+function isSelfPanel(value: string): value is Exclude<SelfPanel, ''> {
+    return SELF_PANELS.some((panel) => panel === value);
+}
+
+const VRC_PLUS_SUMMARY_SNAPSHOT = Object.freeze({ $isVRCPlus: true });
+
+function finiteTabCount(value: number | undefined) {
+    return value !== undefined && Number.isFinite(value) && value >= 0
+        ? value
+        : undefined;
+}
+
+function loadedTabCount(
+    status: UserDialogLoadStatus | undefined,
+    rows: readonly unknown[]
+) {
+    return status === 'ready' ? rows.length : undefined;
+}
+
+function resolveTabCount(
+    primary: number | undefined,
+    fallback: number | undefined
+) {
+    return finiteTabCount(primary) ?? finiteTabCount(fallback);
+}
+
+export function UserDialogTabbedView({
+    profile,
+    friendControls,
+    locationPanel,
+    platformInfo,
+    presence,
+    profileControls,
+    relationship,
+    resource,
+    selfControls
+}: UserDialogTabbedViewProps) {
+    const {
+        memo,
+        detail,
+        imageUrl,
+        loadStatus,
+        actionStatus,
+        recentActionVersion = 0,
+        reloadToken = 0,
+        initialAction = ''
+    } = resource;
+    const appearanceVisibility = usePreferencesStore(
+        useShallow((state) => ({
+            profileBackground: state.showUserDialogProfileBackground,
+            avatarFrame: state.showUserDialogAvatarFrame,
+            profileEffect: state.showUserDialogProfileEffect,
+            nameplateEffect: state.showUserDialogNameplateEffect
+        }))
+    );
+    const [selfPanel, setSelfPanel] = useState<SelfPanel>('');
+    const activeSelfPanel: SelfPanel = relationship.isCurrentUser
+        ? selfPanel
+        : '';
+    const canonicalProfileAppearance = useUserDialogProfileAppearance({
+        profile,
+        visibility: appearanceVisibility
+    });
+    const profileDecorations = useUserDialogProfileDecorations({
+        enabled: activeSelfPanel === 'profile-decorations',
+        onProfileUpdated: profileControls.onRefresh
+    });
+    const profileAppearance = relationship.isCurrentUser
+        ? applyUserDialogProfileAppearanceOverrides(
+              canonicalProfileAppearance,
+              profileDecorations.appearanceOverrides
+          )
+        : canonicalProfileAppearance;
+    const {
+        moderationState,
+        extendedModerationState = { interactOff: false, muteChat: false },
+        avatarOverrideState = { hideAvatar: false, showAvatar: false },
+        isCurrentUser,
+        isFriend,
+        friendRequestState
+    } = relationship;
+    const { platform, platformIcon: PlatformIcon } = platformInfo;
+    const {
+        presenceLocation,
+        currentAvatarTarget,
+        homeLocationTarget,
+        canInviteFromCurrentLocation,
+        currentUserHasSharedConnectionsOptOut,
+        currentUserBoopingEnabled,
+        userStats = {},
+        loadPreviousInstances,
+        previousInstances = [],
+        previousInstancesError = '',
+        previousInstancesStatus = 'idle',
+        representedGroup = null,
+        representedGroupStatus = 'idle',
+        hideUserNotes = false,
+        hideUserMemos = false
+    } = presence;
+    const {
+        sameInstanceUsers = [],
+        locationOwnerUser = null,
+        locationOwnerGroup = null,
+        locationInstance = null,
+        locationFriendCount = 0,
+        locationPlayerCount = 0,
+        onRefreshLocation,
+        onPreviousInstancesChange
+    } = locationPanel;
+    const { onRefresh, onEditMemo } = profileControls;
+    const {
+        onFriendRequest,
+        onInvite,
+        onInviteMessage,
+        onInviteRequest,
+        onInviteRequestMessage,
+        onBoop,
+        onUnfriend,
+        onModeration,
+        onExtendedModeration,
+        onAvatarOverride,
+        onReportHacking,
+        onInviteToGroup,
+        onGroupModeration
+    } = friendControls;
+    const {
+        editSelfStatus: onEditSelfStatus,
+        editSelfProfileDetails: onEditSelfProfileDetails,
+        setSelfProfileMediaField: onSetSelfProfileMediaField,
+        toggleSelfAvatarCopying: onToggleSelfAvatarCopying,
+        toggleSelfBooping: onToggleSelfBooping,
+        toggleSelfSharedConnections: onToggleSelfSharedConnections,
+        toggleSelfDiscordConnections: onToggleSelfDiscordConnections,
+        toggleBadgeVisibility: onToggleBadgeVisibility,
+        toggleBadgeShowcased: onToggleBadgeShowcased
+    } = selfControls;
+    const { t } = useTranslation();
+    const [nowMs, setNowMs] = useState(() => Date.now());
+    const {
+        currentAvatarId,
+        currentEndpoint,
+        currentUserId,
+        friendsById,
+        inGameGroupOrder,
+        isLocalUserVrcPlusSupporter,
+        openImagePreview,
+        previousAvatarSwapTime
+    } = useUserDialogTabbedRuntimeState();
+    const { copyUserText, openDiscordProfile } =
+        useUserDialogClipboardActions();
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, MINUTE_MS);
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, []);
+
+    const tabData = useUserDialogTabData({
+        profile,
+        reloadToken,
+        isCurrentUser,
+        currentEndpoint,
+        currentUserId,
+        currentAvatarId,
+        previousAvatarSwapTime,
+        currentUserHasSharedConnectionsOptOut,
+        friendsById,
+        inGameGroupOrder
+    });
+
+    useEffect(() => {
+        if (isCurrentUser && isSelfPanel(initialAction)) {
+            setSelfPanel(initialAction);
+        }
+    }, [initialAction, isCurrentUser]);
+
+    const {
+        activeTab,
+        avatarReleaseStatus,
+        avatarSort,
+        bioLinks,
+        changeAvatarReleaseStatus,
+        changeAvatarSort,
+        changeTab,
+        changeWorldOrder,
+        changeWorldSort,
+        effectiveGroupSort,
+        favoriteWorlds,
+        filteredFavoriteWorlds,
+        filteredMutualFriends,
+        filteredProfileGroups,
+        filteredProfileWorlds,
+        groupSearchActive,
+        loadTab,
+        mutualFriends,
+        mutualSort,
+        profileAvatars,
+        profileGroups,
+        profileWorlds,
+        remoteData,
+        remoteErrors,
+        remoteStatus,
+        remoteTabCounts,
+        search,
+        setGroupSort,
+        setMutualSort,
+        setSearch,
+        sortedProfileGroups,
+        tabs,
+        visibleMutualFriends,
+        visibleProfileAvatars,
+        vrchatConfigConstants,
+        worldOrder,
+        worldSort
+    } = tabData;
+
+    useEffect(() => {
+        if (
+            activeTab === 'instance-history' &&
+            previousInstancesStatus === 'idle'
+        ) {
+            void loadPreviousInstances?.();
+        }
+    }, [activeTab, loadPreviousInstances, previousInstancesStatus]);
+
+    const userUrl = profile.id ? vrchatUserUrl(profile.id) : '';
+    const username =
+        profile.username && profile.username !== profile.id
+            ? profile.username
+            : '';
+    const profileTitle = profile.displayName || profile.username || 'User';
+    const pronounsText = Array.isArray(profile.pronouns)
+        ? profile.pronouns.join(', ')
+        : normalizedText(profile.pronouns);
+    const {
+        previousDisplayNames,
+        statusStateText,
+        userGroupSections,
+        ownGroupCountText,
+        remainingGroupCountText,
+        userTimeSpent,
+        userJoinCount,
+        lastSeen,
+        profileLanguages,
+        mutualFriendCount,
+        friendNumber,
+        estimatedOnlineDurationMs,
+        presenceActivityAt,
+        friendedAt,
+        relationshipHistory
+    } = buildUserDialogProfileSummary({
+        profile,
+        userStats: {
+            ...userStats,
+            mutualFriendCount:
+                remoteTabCounts.mutual ?? record(userStats).mutualFriendCount
+        },
+        sortedProfileGroups,
+        isCurrentUser,
+        vrchatConfigConstants,
+        currentUserSnapshot: isLocalUserVrcPlusSupporter
+            ? VRC_PLUS_SUMMARY_SNAPSHOT
+            : null,
+        nowMs
+    });
+    const statusDotClassName = resolveSidebarStatusDotClassName(profile, {
+        hideNonFriend: false
+    });
+    const currentAvatarDisplayName = String(
+        profile.currentAvatarName || profile.avatarName || ''
+    ).trim();
+    const fallbackAvatarTarget =
+        typeof profile.fallbackAvatar === 'string'
+            ? profile.fallbackAvatar.trim()
+            : '';
+    const fallbackAvatarDialogArgs = {
+        avatarId: fallbackAvatarTarget,
+        title: 'Fallback Avatar'
+    };
+    const visibleHomeLocationTarget = isOfflineLikeValue(homeLocationTarget)
+        ? ''
+        : homeLocationTarget;
+    const visiblePresenceLocation = isOfflineLikeValue(presenceLocation)
+        ? ''
+        : presenceLocation;
+    const visiblePresenceParsedLocation = visiblePresenceLocation
+        ? parseLocation(visiblePresenceLocation)
+        : null;
+    const locationWorldTitle = normalizedText(
+        profile.worldName || profile.$worldName
+    );
+    const { locationInstanceUsers, locationOwnerId } = useMemo(
+        () =>
+            buildUserDialogLocationUsers({
+                currentUserId,
+                friendsById,
+                locationInstance,
+                locationOwnerGroup,
+                locationOwnerUser,
+                profile,
+                sameInstanceUsers,
+                t,
+                visiblePresenceParsedLocation
+            }),
+        [
+            currentUserId,
+            friendsById,
+            locationInstance,
+            locationOwnerGroup,
+            locationOwnerUser,
+            profile,
+            sameInstanceUsers,
+            t,
+            visiblePresenceParsedLocation
+        ]
+    );
+    const tabCounts = useMemo(
+        () => ({
+            'instance-history': isCurrentUser
+                ? undefined
+                : previousInstances.length,
+            mutual: resolveTabCount(
+                loadedTabCount(remoteStatus.mutual, mutualFriends),
+                remoteTabCounts.mutual ?? mutualFriendCount
+            ),
+            groups: resolveTabCount(
+                loadedTabCount(remoteStatus.groups, profileGroups),
+                remoteTabCounts.groups
+            ),
+            worlds: resolveTabCount(
+                loadedTabCount(remoteStatus.worlds, profileWorlds),
+                remoteTabCounts.worlds
+            ),
+            'favorite-worlds': resolveTabCount(
+                loadedTabCount(remoteStatus['favorite-worlds'], favoriteWorlds),
+                remoteTabCounts['favorite-worlds']
+            ),
+            avatars: resolveTabCount(
+                loadedTabCount(remoteStatus.avatars, profileAvatars),
+                remoteTabCounts.avatars
+            )
+        }),
+        [
+            favoriteWorlds,
+            isCurrentUser,
+            mutualFriendCount,
+            mutualFriends,
+            previousInstances.length,
+            profileAvatars,
+            profileGroups,
+            profileWorlds,
+            remoteStatus,
+            remoteTabCounts
+        ]
+    );
+    const isRecentDialogAction = (
+        actionType: Parameters<typeof isActionRecent>[1]
+    ) => recentActionVersion >= 0 && isActionRecent(profile.id, actionType);
+    const recentDialogShortcut = (
+        actionType: Parameters<typeof isActionRecent>[1]
+    ) =>
+        isRecentDialogAction(actionType) ? (
+            <ClockIcon className="text-muted-foreground size-3.5" />
+        ) : null;
+
+    const showAvatarAuthor = useUserDialogAvatarAuthorAction({
+        currentAvatarTarget
+    });
+    const bannerUrl = convertFileUrlToImageUrl(
+        resolveUserDialogBannerUrl(profile),
+        1024
+    );
+    const bannerFallbackUrl = convertFileUrlToImageUrl(imageUrl, 1024);
+    const displayedBannerUrl = bannerUrl || bannerFallbackUrl;
+
+    function openInstanceHistory() {
+        changeTab('instance-history', { allowHidden: true });
+    }
+
+    function openFeed() {
+        changeTab('feed', { allowHidden: true });
+    }
+
+    const headerModel = {
+        actionStatus,
+        appearanceVisibility,
+        avatarOverrideState,
+        canInviteFromCurrentLocation,
+        currentAvatarTarget,
+        currentUserBoopingEnabled,
+        detail,
+        extendedModerationState,
+        fallbackAvatarTarget,
+        friendNumber,
+        friendRequestState,
+        bannerFallbackUrl,
+        imageUrl: bannerUrl,
+        isCurrentUser,
+        isFriend,
+        loadStatus,
+        moderationState,
+        platform,
+        PlatformIcon,
+        previousDisplayNames,
+        profile,
+        profileAppearance,
+        profileIconUrl: imageUrl,
+        profileLanguages,
+        profileTitle,
+        pronounsText,
+        recentDialogShortcut,
+        statusDotClassName,
+        statusStateText,
+        username,
+        userUrl,
+        estimatedOnlineDurationMs
+    };
+    const headerCommands = {
+        onAvatarOverride,
+        onBoop,
+        onCopyDisplayName: (displayName: string) => {
+            copyUserText(
+                normalizedText(displayName),
+                t('dialog.user.info.display_name')
+            );
+        },
+        onCopyUserId: () => {
+            copyUserText(normalizedText(profile.id), t('dialog.user.info.id'));
+        },
+        onCopyUserUrl: () => {
+            copyUserText(userUrl, t('dialog.user.info.url'));
+        },
+        onCopyUsername: username
+            ? () => {
+                  copyUserText(username, t('dialog.user.info.username'));
+              }
+            : undefined,
+        onEditMemo,
+        onEditSelfProfileDetails,
+        onEditSelfProfileMedia: () => setSelfPanel('profile-media'),
+        onEditSelfProfileDecorations: () => setSelfPanel('profile-decorations'),
+        onEditSelfStatus,
+        onExtendedModeration,
+        onFriendRequest,
+        onGroupModeration,
+        onImageClick: () =>
+            openImagePreview({
+                url: displayedBannerUrl,
+                title: profileTitle
+            }),
+        onInvite,
+        onInviteMessage,
+        onInviteRequest,
+        onInviteRequestMessage,
+        onInviteToGroup,
+        onModeration,
+        onOpenDiscordProfile: openDiscordProfile,
+        onOpenFallbackAvatar: () => openAvatarDialog(fallbackAvatarDialogArgs),
+        onOpenImagePreview: openImagePreview,
+        onOpenUserIcon: () =>
+            openImagePreview({
+                url: imageUrl,
+                title: profileTitle
+            }),
+        onOpenUserUrl: () => openExternalLink(userUrl),
+        onRefresh,
+        onReportHacking,
+        onShowAvatarAuthor: showAvatarAuthor,
+        onShowInstanceHistory: openInstanceHistory,
+        onToggleBadgeShowcased,
+        onToggleBadgeVisibility,
+        onToggleSelfAvatarCopying,
+        onToggleSelfBooping,
+        onToggleSelfDiscordConnections,
+        onToggleSelfSharedConnections,
+        onUnfriend
+    };
+    const tabsModel = {
+        root: {
+            activeTab,
+            tabCounts,
+            tabs
+        },
+        info: {
+            bioLinks,
+            currentAvatarDisplayName,
+            hideUserMemos,
+            hideUserNotes,
+            isCurrentUser,
+            isFriend,
+            lastSeen,
+            memo,
+            friendedAt,
+            relationshipHistory,
+            presenceActivityAt,
+            profile,
+            representedGroup,
+            representedGroupStatus,
+            userJoinCount,
+            userTimeSpent,
+            visibleHomeLocationTarget
+        },
+        presence: {
+            visiblePresenceLocation,
+            locationInstance,
+            locationOwnerId,
+            locationPlayerCount,
+            currentUserId,
+            currentEndpoint,
+            locationWorldTitle,
+            locationFriendCount,
+            previousInstances,
+            locationInstanceUsers
+        },
+        remote: {
+            loadTab,
+            remoteData,
+            remoteErrors,
+            remoteStatus,
+            search
+        },
+        mutual: {
+            filteredMutualFriends,
+            mutualFriends,
+            mutualSort,
+            visibleMutualFriends
+        },
+        groups: {
+            effectiveGroupSort,
+            filteredProfileGroups,
+            groupSearchActive,
+            ownGroupCountText,
+            profileGroups,
+            remainingGroupCountText,
+            userGroupSections
+        },
+        worlds: {
+            filteredProfileWorlds,
+            profileWorlds,
+            worldOrder,
+            worldSort
+        },
+        favoriteWorlds: {
+            favoriteWorlds,
+            filteredFavoriteWorlds
+        },
+        avatars: {
+            avatarReleaseStatus,
+            avatarSort,
+            currentUserId,
+            profileAvatars,
+            visibleProfileAvatars
+        },
+        history: {
+            previousInstances,
+            previousInstancesError,
+            previousInstancesStatus
+        }
+    };
+    const tabsCommands = {
+        changeAvatarReleaseStatus,
+        changeAvatarSort,
+        changeTab,
+        changeWorldOrder,
+        changeWorldSort,
+        onEditMemo,
+        onOpenFeed: openFeed,
+        onOpenInstanceHistory: openInstanceHistory,
+        onPreviousInstancesChange,
+        onRefreshLocation,
+        openGroupDialog,
+        setGroupSort,
+        setMutualSort,
+        setSearch
+    };
+
+    return (
+        <EntityDialogScaffold className="gap-3">
+            <EntityDialogTwoColumnLayout
+                rail={
+                    <UserDialogHeaderSection
+                        headerModel={headerModel}
+                        headerCommands={headerCommands}
+                    />
+                }
+            >
+                {activeSelfPanel === 'profile-media' ? (
+                    <ProfileMediaPanel
+                        title={t('dialog.user.actions.edit_profile_media')}
+                        sections={USER_PROFILE_MEDIA_SECTIONS}
+                        currentFileIds={{
+                            banner: extractFileId(
+                                typeof profile.bannerCustomUrl === 'string'
+                                    ? profile.bannerCustomUrl
+                                    : ''
+                            ),
+                            userIcon: extractFileId(
+                                typeof profile.userIcon === 'string'
+                                    ? profile.userIcon
+                                    : ''
+                            )
+                        }}
+                        actionStatus={actionStatus}
+                        onBack={() => setSelfPanel('')}
+                        onSetField={onSetSelfProfileMediaField}
+                    />
+                ) : activeSelfPanel === 'profile-decorations' ? (
+                    <UserDialogProfileDecorationsPanel
+                        profile={profile}
+                        isVrcPlus={isLocalUserVrcPlusSupporter}
+                        onBack={() => setSelfPanel('')}
+                        controller={profileDecorations}
+                    />
+                ) : (
+                    <UserDialogTabsSection
+                        tabsModel={tabsModel}
+                        tabsCommands={tabsCommands}
+                    />
+                )}
+            </EntityDialogTwoColumnLayout>
+        </EntityDialogScaffold>
+    );
+}

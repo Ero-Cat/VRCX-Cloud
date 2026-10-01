@@ -1,0 +1,272 @@
+import { LockIcon } from 'lucide-react';
+import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { cn } from '@/lib/utils';
+import { commands } from '@/platform/tauri/bindings';
+import avatarProfileRepository from '@/repositories/avatarProfileRepository';
+import avatarSearchProviderRepository from '@/repositories/avatarSearchProviderRepository';
+import { openAvatarDialog, openUserDialog } from '@/services/dialogService';
+import { toast } from '@/services/toastService';
+import { extractFileId } from '@/shared/utils/fileUtils';
+import { useRuntimeStore } from '@/state/runtimeStore';
+import { Button } from '@/ui/shadcn/button';
+
+import { normalizeFeedId as normalizeId } from './feedRows';
+import { useAvatarImageInfo } from './useAvatarImageInfo';
+
+type ResolvedAvatarRecord = Record<string, unknown> & {
+    id?: string;
+    name?: string;
+};
+
+type AvatarInfoLineProps = {
+    avatarName?: string | null;
+    avatarTags?: string[] | null;
+    compact?: boolean;
+    imageUrl?: string | null;
+    ownerId?: string | null;
+    showTags?: boolean;
+    userId?: string | null;
+};
+
+function isAvatarRecord(value: unknown): value is ResolvedAvatarRecord {
+    return Boolean(value) && typeof value === 'object';
+}
+
+function avatarMatchesFileId(
+    avatar: unknown,
+    fileId: string
+): avatar is ResolvedAvatarRecord {
+    if (!isAvatarRecord(avatar) || !avatar.id) {
+        return false;
+    }
+    return (
+        extractFileId(String(avatar.imageUrl ?? '')) === fileId ||
+        extractFileId(String(avatar.thumbnailImageUrl ?? '')) === fileId
+    );
+}
+
+async function findAvatarByImageUrl({
+    imageUrl,
+    avatarName
+}: {
+    imageUrl: string;
+    avatarName: string;
+}): Promise<ResolvedAvatarRecord | null> {
+    const fileId = extractFileId(imageUrl);
+    const query = normalizeId(avatarName) || fileId;
+    if (!fileId || query.length < 3) {
+        return null;
+    }
+
+    const cachedMatch = await avatarProfileRepository
+        .findAvatarByImageUrl(imageUrl)
+        .catch(() => null);
+    if (cachedMatch) {
+        return avatarProfileRepository.normalize(cachedMatch);
+    }
+
+    const config = await avatarSearchProviderRepository.getConfig();
+    if (!config.enabled || !config.selectedProvider) {
+        return null;
+    }
+
+    const response = await avatarSearchProviderRepository.search({
+        provider: config.selectedProvider,
+        query
+    });
+
+    return (
+        response.avatars.find(
+            (avatar: unknown): avatar is ResolvedAvatarRecord =>
+                avatarMatchesFileId(avatar, fileId)
+        ) ?? null
+    );
+}
+
+function isEmptyAvatarTags(value: unknown): boolean {
+    if (typeof value === 'string' || Array.isArray(value)) {
+        return value.length === 0;
+    }
+    if (value && typeof value === 'object' && 'length' in value) {
+        return !value.length;
+    }
+    return true;
+}
+
+function avatarTagsEqual(left: unknown, right: unknown): boolean {
+    if (left === right) {
+        return true;
+    }
+    if (!Array.isArray(left) || !Array.isArray(right)) {
+        return isEmptyAvatarTags(left) && isEmptyAvatarTags(right);
+    }
+    if (left.length !== right.length) {
+        return false;
+    }
+    return left.every(
+        (value: unknown, index: number) => value === right[index]
+    );
+}
+
+export const AvatarInfoLine = memo(function AvatarInfoLine({
+    avatarName,
+    avatarTags,
+    compact = false,
+    imageUrl,
+    ownerId,
+    showTags = true,
+    userId
+}: AvatarInfoLineProps) {
+    const { t } = useTranslation();
+    const currentUserSnapshot = useRuntimeStore(
+        (state) => state.auth.currentUserSnapshot
+    );
+    const info = useAvatarImageInfo({ avatarName, imageUrl, ownerId });
+
+    const normalizedOwnerId = normalizeId(info.ownerId);
+    const normalizedUserId = normalizeId(userId);
+    const avatarType =
+        normalizedOwnerId && normalizedUserId
+            ? normalizedOwnerId === normalizedUserId
+                ? 'own'
+                : 'public'
+            : '';
+    const label =
+        info.status === 'running'
+            ? 'Resolving avatar info...'
+            : info.avatarName || t('dialog.user.info.unknown_avatar');
+
+    async function openAvatarAuthorTarget(): Promise<void> {
+        const resolvedImageUrl = imageUrl?.trim() ?? '';
+        if (!resolvedImageUrl) {
+            return;
+        }
+
+        if (
+            normalizedUserId &&
+            normalizeId(currentUserSnapshot?.id) === normalizedUserId &&
+            currentUserSnapshot?.currentAvatar
+        ) {
+            openAvatarDialog({
+                avatarId: currentUserSnapshot.currentAvatar,
+                title:
+                    normalizeId(currentUserSnapshot.currentAvatarName) ||
+                    normalizeId(currentUserSnapshot.avatarName) ||
+                    normalizeId(info.avatarName) ||
+                    undefined
+            });
+            return;
+        }
+
+        let nextOwnerId = normalizedOwnerId;
+        let nextAvatarName = info.avatarName;
+        if (!nextOwnerId) {
+            try {
+                const file =
+                    await commands.appFileMetadataGet(resolvedImageUrl);
+                nextOwnerId = normalizeId(file?.ownerId);
+                nextAvatarName = file?.avatarName || nextAvatarName;
+            } catch (error) {
+                toast.add({
+                    type: 'error',
+                    title:
+                        error instanceof Error
+                            ? error.message
+                            : t(
+                                  'view.feed.toast.failed_to_resolve_avatar_author'
+                              )
+                });
+                return;
+            }
+        }
+
+        try {
+            const avatar = await findAvatarByImageUrl({
+                imageUrl: resolvedImageUrl,
+                avatarName: nextAvatarName
+            });
+            if (avatar?.id) {
+                openAvatarDialog({
+                    avatarId: avatar.id,
+                    title: avatar.name || nextAvatarName || undefined,
+                    seedData: avatar
+                });
+                return;
+            }
+        } catch {
+            // Fall back to the old author/private distinction when the remote avatar index is unavailable.
+        }
+
+        if (!nextOwnerId) {
+            toast.add({
+                type: 'warning',
+                title: t('view.feed.error.avatar_author_unavailable')
+            });
+            return;
+        }
+
+        if (nextOwnerId === normalizedUserId) {
+            toast.add({
+                type: 'warning',
+                title: t('view.feed.error.avatar_is_private_or_not_found')
+            });
+            return;
+        }
+
+        openUserDialog({
+            userId: nextOwnerId,
+            title: nextAvatarName || undefined
+        });
+    }
+
+    return (
+        <div className="flex flex-col gap-0.5">
+            <Button
+                type="button"
+                variant="ghost"
+                className={cn(
+                    'text-muted-foreground hover:text-content-primary h-auto w-fit justify-start p-0 text-left font-normal hover:bg-transparent',
+                    compact && 'text-xs leading-snug'
+                )}
+                disabled={!imageUrl}
+                onClick={() => {
+                    openAvatarAuthorTarget();
+                }}
+            >
+                {label}
+                {avatarType === 'own' ? (
+                    <LockIcon
+                        data-icon="inline-end"
+                        className={compact ? 'size-3' : undefined}
+                    />
+                ) : null}
+            </Button>
+            {showTags && Array.isArray(avatarTags) && avatarTags.length ? (
+                <div className="text-muted-foreground truncate text-xs">
+                    {avatarTags
+                        .map((tag: unknown) =>
+                            String(tag).replace('content_', '')
+                        )
+                        .join(', ')}
+                </div>
+            ) : null}
+        </div>
+    );
+}, areAvatarInfoLinePropsEqual);
+
+function areAvatarInfoLinePropsEqual(
+    previousProps: Readonly<AvatarInfoLineProps>,
+    nextProps: Readonly<AvatarInfoLineProps>
+): boolean {
+    return (
+        previousProps.avatarName === nextProps.avatarName &&
+        previousProps.compact === nextProps.compact &&
+        previousProps.showTags === nextProps.showTags &&
+        previousProps.imageUrl === nextProps.imageUrl &&
+        previousProps.ownerId === nextProps.ownerId &&
+        previousProps.userId === nextProps.userId &&
+        avatarTagsEqual(previousProps.avatarTags, nextProps.avatarTags)
+    );
+}

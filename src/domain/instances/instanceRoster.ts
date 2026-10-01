@@ -1,0 +1,438 @@
+import { hasGroupIdPrefix } from '@/shared/constants/vrchatIds';
+import { parseLocation } from '@/shared/utils/location';
+import { isRecord } from '@/shared/utils/record';
+
+type InstanceRosterRecord = Record<string, unknown>;
+type InstanceRosterSource = InstanceRosterRecord | string | null | undefined;
+type InstanceRosterMap = Map<string, InstanceRosterRow>;
+export type InstanceRosterTimestamp = number | string;
+
+export interface MergeInstanceUserOptions {
+    incomingPresenceWins?: boolean;
+}
+
+const INSTANCE_USER_PRESENCE_FIELDS = [
+    '$presence',
+    'location',
+    '$location',
+    'worldId',
+    'instanceId',
+    'travelingToLocation',
+    'travelingToWorld',
+    'travelingToInstance',
+    '$travelingToLocation',
+    'status',
+    'statusDescription'
+];
+
+interface BuildInstanceRosterRowsInput {
+    includeProfileFallback?: boolean;
+    instanceCreatorLabel?: string;
+    ownerFallbackId?: string;
+    ownerGroup?: InstanceRosterSource;
+    ownerUser?: InstanceRosterSource;
+    parsedLocation?: InstanceRosterRecord | null;
+    profile?: InstanceRosterSource;
+    users?: unknown[];
+}
+
+export interface InstanceRosterRow extends InstanceRosterRecord {
+    id: string;
+    userId: string;
+    displayName: string;
+    iconUrl: string;
+    $subtitle: string;
+    joinedAt: InstanceRosterTimestamp;
+}
+
+export interface InstanceRosterRows {
+    ownerId: string;
+    ownerIsGroup: boolean;
+    rows: InstanceRosterRow[];
+}
+
+function field(source: unknown, key: string): unknown {
+    return isRecord(source) ? source[key] : undefined;
+}
+
+function nestedUser(source: unknown): InstanceRosterRecord {
+    const value = field(source, 'user');
+    return isRecord(value) ? value : {};
+}
+
+function sourceHasUserIdentity(source: InstanceRosterRecord): boolean {
+    const nested = nestedUser(source);
+    return Boolean(
+        field(source, 'id') ||
+        field(source, 'userId') ||
+        field(source, 'user_id') ||
+        field(source, 'targetUserId') ||
+        field(source, 'target_user_id') ||
+        field(source, 'displayName') ||
+        field(source, 'display_name') ||
+        field(source, 'username') ||
+        field(source, 'name') ||
+        field(nested, 'id') ||
+        field(nested, 'userId') ||
+        field(nested, 'displayName') ||
+        field(nested, 'username')
+    );
+}
+
+export function firstText(...values: unknown[]): string {
+    for (const value of values) {
+        const text =
+            typeof value === 'string'
+                ? value.trim()
+                : String(value ?? '').trim();
+        if (text) {
+            return text;
+        }
+    }
+    return '';
+}
+
+function isPresentValue(value: unknown): boolean {
+    return value !== undefined && value !== null && value !== '';
+}
+
+function userIdForRosterRow(user: unknown): string {
+    return firstText(
+        field(user, 'id'),
+        field(user, 'userId'),
+        field(user, 'user_id'),
+        field(user, 'targetUserId'),
+        field(user, 'target_user_id')
+    );
+}
+
+function firstTimestamp(...values: unknown[]): InstanceRosterTimestamp {
+    for (const value of values) {
+        if (typeof value === 'number' && Number.isFinite(value)) {
+            return value;
+        }
+        if (typeof value === 'string' && value.trim()) {
+            return value;
+        }
+    }
+    return '';
+}
+
+export function userDisplayName(user: unknown): string {
+    if (typeof user === 'string') {
+        return firstText(user);
+    }
+    const userObject = nestedUser(user);
+    return firstText(
+        field(user, 'displayName'),
+        field(user, 'display_name'),
+        field(user, 'username'),
+        field(user, 'name'),
+        field(userObject, 'displayName'),
+        field(userObject, 'display_name'),
+        field(userObject, 'username'),
+        field(userObject, 'name'),
+        field(user, 'userId'),
+        field(user, 'user_id'),
+        field(user, 'id'),
+        field(userObject, 'id'),
+        field(userObject, 'userId'),
+        field(userObject, 'user_id')
+    );
+}
+
+export function createInstanceUserRow(
+    user: unknown,
+    fallback: InstanceRosterRecord = {}
+): InstanceRosterRow {
+    const fallbackUserId = firstText(
+        field(fallback, 'id'),
+        field(fallback, 'userId'),
+        field(fallback, 'user_id')
+    );
+    const sourceRecord: InstanceRosterRecord =
+        typeof user === 'string'
+            ? {
+                  id: fallbackUserId || user,
+                  userId: fallbackUserId || user,
+                  displayName: user
+              }
+            : isRecord(user)
+              ? user
+              : {};
+    const userObject = nestedUser(sourceRecord);
+    const userId = firstText(
+        field(sourceRecord, 'id'),
+        field(sourceRecord, 'userId'),
+        field(sourceRecord, 'user_id'),
+        field(sourceRecord, 'targetUserId'),
+        field(sourceRecord, 'target_user_id'),
+        field(userObject, 'id'),
+        field(userObject, 'userId'),
+        field(userObject, 'user_id'),
+        field(fallback, 'id'),
+        field(fallback, 'userId'),
+        field(fallback, 'user_id')
+    );
+    const displayName =
+        userDisplayName(sourceRecord) ||
+        firstText(
+            field(fallback, 'displayName'),
+            field(fallback, 'display_name')
+        ) ||
+        userId;
+
+    return {
+        ...userObject,
+        ...sourceRecord,
+        id: userId || firstText(field(sourceRecord, 'id')),
+        userId: firstText(field(sourceRecord, 'userId'), userId),
+        displayName,
+        iconUrl: firstText(
+            field(sourceRecord, 'iconUrl'),
+            field(userObject, 'iconUrl'),
+            field(fallback, 'iconUrl')
+        ),
+        $subtitle: firstText(
+            field(fallback, 'subtitle'),
+            field(sourceRecord, '$subtitle'),
+            field(sourceRecord, 'subtitle')
+        ),
+        joinedAt: firstTimestamp(
+            field(sourceRecord, 'joinedAt'),
+            field(sourceRecord, 'joined_at'),
+            field(fallback, 'joinedAt'),
+            field(fallback, 'joined_at')
+        )
+    };
+}
+
+export function mergeInstanceUserRows(
+    existing: InstanceRosterRow | null | undefined,
+    incoming: InstanceRosterRow | null | undefined,
+    { incomingPresenceWins = false }: MergeInstanceUserOptions = {}
+): InstanceRosterRow | null | undefined {
+    if (!existing) {
+        return incoming;
+    }
+    if (!incoming) {
+        return existing;
+    }
+
+    const merged: InstanceRosterRow = { ...incoming, ...existing };
+    for (const [key, value] of Object.entries(incoming)) {
+        if (!isPresentValue(merged[key]) && isPresentValue(value)) {
+            merged[key] = value;
+        }
+    }
+    if (incomingPresenceWins) {
+        for (const field of INSTANCE_USER_PRESENCE_FIELDS) {
+            if (incoming[field] !== undefined) {
+                merged[field] = incoming[field];
+            }
+        }
+    }
+    return merged;
+}
+
+function rosterUserKey(user: unknown): string {
+    const id = userIdForRosterRow(user);
+    if (id) {
+        return id;
+    }
+    const displayName = userDisplayName(user);
+    return displayName ? `display:${displayName.toLowerCase()}` : '';
+}
+
+export function mergeInstanceUser(
+    rowsByKey: InstanceRosterMap,
+    user: InstanceRosterSource,
+    fallback: InstanceRosterRecord = {},
+    options: MergeInstanceUserOptions = {}
+): void {
+    const row = createInstanceUserRow(user, fallback);
+    const key = rosterUserKey(row);
+    if (!key) {
+        return;
+    }
+    const existing = rowsByKey.get(key);
+    rowsByKey.set(
+        key,
+        existing ? mergeInstanceUserRows(existing, row, options)! : row
+    );
+}
+
+export function pushInstanceUserSource(
+    source: unknown,
+    push: (user: InstanceRosterSource, fallback?: InstanceRosterRecord) => void,
+    fallback: InstanceRosterRecord = {}
+): void {
+    const pushWithFallback = (
+        value: InstanceRosterSource,
+        fallbackRow: InstanceRosterRecord = {}
+    ) => {
+        push(value, fallbackRow);
+    };
+    if (!source) {
+        return;
+    }
+    if (source instanceof Map) {
+        for (const [key, value] of source.entries()) {
+            pushInstanceUserSource(value, push, { id: key, userId: key });
+        }
+        return;
+    }
+    if (Array.isArray(source)) {
+        for (const value of source) {
+            pushInstanceUserSource(value, push);
+        }
+        return;
+    }
+    if (isRecord(source)) {
+        if (sourceHasUserIdentity(source)) {
+            pushWithFallback(source, fallback);
+            return;
+        }
+        for (const [key, value] of Object.entries(source)) {
+            pushInstanceUserSource(value, push, { id: key, userId: key });
+        }
+        return;
+    }
+    pushWithFallback(typeof source === 'string' ? source : null, fallback);
+}
+
+export function normalizeInstanceUsers(
+    ...sources: unknown[]
+): InstanceRosterRow[] {
+    const rows: InstanceRosterRow[] = [];
+    for (const source of sources) {
+        pushInstanceUserSource(source, (user, fallback = {}) => {
+            const row = createInstanceUserRow(user, fallback);
+            if (rosterUserKey(row)) {
+                rows.push(row);
+            }
+        });
+    }
+    return rows;
+}
+
+export function mergeInstanceUsers(...sources: unknown[]): InstanceRosterRow[] {
+    const rowsByKey: InstanceRosterMap = new Map();
+    for (const user of normalizeInstanceUsers(...sources)) {
+        mergeInstanceUser(rowsByKey, user);
+    }
+    return Array.from(rowsByKey.values());
+}
+
+export function isSameInstanceLocation(left: unknown, right: unknown): boolean {
+    const leftTag = firstText(left);
+    const rightTag = firstText(right);
+    if (!leftTag || !rightTag) {
+        return false;
+    }
+    if (leftTag === rightTag) {
+        return true;
+    }
+    const leftLocation = parseLocation(leftTag);
+    const rightLocation = parseLocation(rightTag);
+    return Boolean(
+        leftLocation.worldId &&
+        rightLocation.worldId &&
+        leftLocation.instanceId &&
+        rightLocation.instanceId &&
+        leftLocation.worldId === rightLocation.worldId &&
+        leftLocation.instanceId === rightLocation.instanceId
+    );
+}
+
+export function buildInstanceRosterRows({
+    includeProfileFallback = false,
+    instanceCreatorLabel = 'Instance creator',
+    ownerFallbackId = '',
+    ownerGroup = null,
+    ownerUser = null,
+    parsedLocation = null,
+    profile = null,
+    users = []
+}: BuildInstanceRosterRowsInput = {}): InstanceRosterRows {
+    const rowsByKey: InstanceRosterMap = new Map();
+    for (const user of users) {
+        mergeInstanceUser(
+            rowsByKey,
+            isRecord(user) || typeof user === 'string' ? user : null
+        );
+    }
+
+    if (
+        includeProfileFallback &&
+        !rowsByKey.size &&
+        Boolean(field(parsedLocation, 'isRealInstance'))
+    ) {
+        mergeInstanceUser(rowsByKey, profile);
+    }
+
+    const ownerUserId = userIdForRosterRow(ownerUser);
+    const ownerGroupId = firstText(
+        field(ownerGroup, 'id'),
+        field(ownerGroup, 'groupId'),
+        hasGroupIdPrefix(ownerFallbackId) ? ownerFallbackId : '',
+        hasGroupIdPrefix(field(parsedLocation, 'groupId'))
+            ? field(parsedLocation, 'groupId')
+            : ''
+    );
+    const ownerId = firstText(
+        ownerGroupId,
+        ownerUserId,
+        ownerFallbackId,
+        field(parsedLocation, 'userId'),
+        field(parsedLocation, 'groupId')
+    );
+    const ownerIsGroup = Boolean(
+        ownerGroupId ||
+        hasGroupIdPrefix(ownerUserId) ||
+        hasGroupIdPrefix(ownerId)
+    );
+    const ownerName = ownerIsGroup
+        ? firstText(
+              field(ownerGroup, 'name'),
+              field(ownerGroup, 'displayName'),
+              field(ownerGroup, 'display_name'),
+              field(ownerGroup, 'shortCode'),
+              ownerId
+          )
+        : firstText(
+              field(ownerUser, 'displayName'),
+              field(ownerUser, 'username'),
+              field(ownerUser, 'name'),
+              ownerId
+          );
+    const ownerRow =
+        !ownerIsGroup && ownerUser
+            ? createInstanceUserRow(ownerUser, {
+                  subtitle: instanceCreatorLabel
+              })
+            : !ownerIsGroup && ownerId
+              ? createInstanceUserRow(
+                    {
+                        id: ownerId,
+                        userId: ownerId,
+                        displayName: ownerName
+                    },
+                    { subtitle: instanceCreatorLabel }
+                )
+              : null;
+    const ownerRowId = userIdForRosterRow(ownerRow);
+    if (ownerRow) {
+        mergeInstanceUser(rowsByKey, ownerRow);
+    }
+    const mergedOwnerRow = ownerRowId ? rowsByKey.get(ownerRowId) : null;
+    const playerRows = Array.from(rowsByKey.values()).filter(
+        (user) => !ownerRowId || userIdForRosterRow(user) !== ownerRowId
+    );
+
+    return {
+        ownerId,
+        ownerIsGroup,
+        rows: mergedOwnerRow ? [mergedOwnerRow, ...playerRows] : playerRows
+    };
+}

@@ -1,0 +1,12 @@
+pub mod auth;
+pub mod avatars;
+pub mod favorites;
+pub mod friends;
+pub mod groups;
+pub mod instances;
+pub mod media;
+pub mod notifications;
+pub mod search;
+pub mod tools;
+pub mod users;
+pub mod worlds;

@@ -1,0 +1,166 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "categories": {
+        "correctness": "error"
+    },
+    "plugins": ["unicorn", "typescript", "oxc", "react", "jsx-a11y", "import"],
+    "ignorePatterns": ["node_modules/**", "src/ui/shadcn/**"],
+    "options": {
+        "reportUnusedDisableDirectives": "error"
+    },
+    "env": {
+        "builtin": true,
+        "browser": true
+    },
+    "globals": {
+        "VERSION": "readonly",
+        "VRCX_0_BUILD_LABEL": "readonly",
+        "VRCX_0_BUILD_BADGE": "readonly"
+    },
+    "rules": {
+        "no-unused-vars": "warn",
+        "no-control-regex": "warn",
+        "import/no-cycle": "error",
+        "react/button-has-type": "error",
+        "react/rules-of-hooks": "error",
+        "react/exhaustive-deps": "error",
+        "react/globals": "error",
+        "react/iframe-missing-sandbox": "error",
+        "react/immutability": "off",
+        "react/jsx-no-comment-textnodes": "error",
+        "react/jsx-no-constructed-context-values": "error",
+        "react/jsx-no-script-url": "error",
+        "react/jsx-no-target-blank": "error",
+        "react/no-unknown-property": "error",
+        "react/no-unstable-nested-components": "error",
+        "react/preserve-manual-memoization": "off",
+        "react/purity": "error",
+        "react/refs": "off",
+        "react/set-state-in-effect": "off",
+        "react/static-components": "off",
+        "react/style-prop-object": "error",
+        "jsx-a11y/alt-text": "error",
+        "jsx-a11y/anchor-has-content": "error",
+        "jsx-a11y/anchor-is-valid": "error",
+        "jsx-a11y/aria-props": "error",
+        "jsx-a11y/aria-role": "error",
+        "jsx-a11y/aria-unsupported-elements": "error",
+        "jsx-a11y/heading-has-content": "error",
+        "jsx-a11y/iframe-has-title": "error",
+        "jsx-a11y/img-redundant-alt": "error",
+        "jsx-a11y/no-access-key": "error",
+        "jsx-a11y/no-autofocus": "off",
+        "jsx-a11y/no-distracting-elements": "error",
+        "jsx-a11y/no-noninteractive-tabindex": "off",
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "jsx-a11y/role-has-required-aria-props": "error",
+        "jsx-a11y/scope": "error",
+        "jsx-a11y/tabindex-no-positive": "error"
+    },
+    "overrides": [
+        {
+            "files": ["**/*.{ts,tsx}"],
+            "rules": {
+                "typescript/no-explicit-any": "error"
+            }
+        },
+        {
+            "files": ["src/{domain,shared}/**/*.{ts,tsx}"],
+            "rules": {
+                "no-restricted-imports": [
+                    "error",
+                    {
+                        "patterns": [
+                            {
+                                "group": [
+                                    "@/app/**",
+                                    "@/components/**",
+                                    "@/features/**",
+                                    "@/lib/**",
+                                    "@/platform/**",
+                                    "@/repositories/**",
+                                    "@/services/**",
+                                    "@/state/**",
+                                    "@/ui/**"
+                                ],
+                                "message": "Domain and shared modules must not depend on higher frontend layers."
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "files": ["src/components/**/*.{ts,tsx}"],
+            "rules": {
+                "no-restricted-imports": [
+                    "error",
+                    {
+                        "patterns": [
+                            {
+                                "group": ["@/features/**", "**/features/**"],
+                                "message": "Shared components must not depend on feature modules."
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "files": ["src/{services,state}/**/*.{ts,tsx}"],
+            "excludeFiles": ["src/services/preferencesService.test.ts"],
+            "rules": {
+                "no-restricted-imports": [
+                    "error",
+                    {
+                        "patterns": [
+                            {
+                                "group": ["@/features/**"],
+                                "message": "Services and stores must not depend on feature modules."
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "files": ["**/*.test.{ts,tsx}"],
+            "rules": {
+                "react/button-has-type": "off",
+                "react/globals": "off"
+            }
+        },
+        {
+            "files": ["src/features/feed/useFeedRowArrivals.ts"],
+            "rules": {
+                "react/purity": "off"
+            }
+        },
+        {
+            "files": ["src/services/confusables.ts"],
+            "rules": {
+                "no-control-regex": "off",
+                "no-irregular-whitespace": "off",
+                "no-misleading-character-class": "off"
+            }
+        },
+        {
+            "files": ["src/components/media/FullscreenImageViewer.tsx"],
+            "rules": {
+                "jsx-a11y/no-noninteractive-element-interactions": "off"
+            }
+        },
+        {
+            "files": ["src/lib/mutual-friends/graphLayoutWorkerClient.ts"],
+            "rules": {
+                "import/default": "off"
+            }
+        },
+        {
+            "files": ["src/repositories/avatarProfileRepository.test.ts"],
+            "rules": {
+                "import/namespace": "off"
+            }
+        }
+    ]
+}

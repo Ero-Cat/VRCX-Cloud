@@ -1,0 +1,30 @@
+[package]
+name = "vrcx-0-application-game"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "Desktop game runtime"
+
+[features]
+test-utils = [
+    "vrcx-0-application-activity/test-utils",
+    "vrcx-0-application-core/test-utils",
+]
+
+[dependencies]
+async-trait = { workspace = true }
+chrono = { workspace = true }
+percent-encoding = { workspace = true }
+serde = { workspace = true, features = ["derive", "rc"] }
+serde_json = { workspace = true }
+specta = { workspace = true }
+tokio = { workspace = true, features = ["rt", "sync", "time"] }
+tracing = { workspace = true }
+url = { workspace = true }
+vrcx-0-application-activity = { path = "../application-activity" }
+vrcx-0-contracts = { path = "../contracts" }
+vrcx-0-application-core = { path = "../application-core" }
+vrcx-0-core = { path = "../core" }
+
+[dev-dependencies]
+vrcx-0-application-core = { path = "../application-core", features = ["test-utils"] }

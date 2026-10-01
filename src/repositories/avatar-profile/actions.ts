@@ -1,0 +1,122 @@
+import { invalidateEntityQueries, queryKeys } from '@/lib/entityQueryCache';
+import {
+    commands,
+    type VrchatAvatarSaveInput
+} from '@/platform/tauri/bindings';
+import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
+
+import {
+    avatarIdInput,
+    normalizeEntityId,
+    unwrapVrchatAvatarResponse
+} from './shared';
+import type { AvatarIdInput, AvatarRecord, SaveAvatarInput } from './types';
+
+export async function selectAvatar({ avatarId }: AvatarIdInput) {
+    const normalizedAvatarId = normalizeEntityId(avatarId);
+    if (!normalizedAvatarId) {
+        throw new Error(
+            'AvatarProfileRepository.selectAvatar requires an avatar id.'
+        );
+    }
+
+    const outcome = await commands.appVrchatAvatarSelect(
+        avatarIdInput(normalizedAvatarId)
+    );
+    return {
+        applied: outcome.applied,
+        ...unwrapVrchatAvatarResponse<Record<string, unknown>>(
+            outcome.response,
+            `avatars/${encodeURIComponent(normalizedAvatarId)}/select`
+        )
+    };
+}
+
+export async function selectFallbackAvatar({ avatarId }: AvatarIdInput) {
+    const normalizedAvatarId = normalizeEntityId(avatarId);
+    if (!normalizedAvatarId) {
+        throw new Error(
+            'AvatarProfileRepository.selectFallbackAvatar requires an avatar id.'
+        );
+    }
+
+    const outcome = await commands.appVrchatAvatarSelectFallback(
+        avatarIdInput(normalizedAvatarId)
+    );
+    return {
+        applied: outcome.applied,
+        ...unwrapVrchatAvatarResponse<Record<string, unknown>>(
+            outcome.response,
+            `avatars/${encodeURIComponent(normalizedAvatarId)}/selectfallback`
+        )
+    };
+}
+
+export async function saveAvatar({ avatarId, params }: SaveAvatarInput) {
+    const normalizedAvatarId = normalizeEntityId(avatarId);
+    if (!normalizedAvatarId) {
+        throw new Error(
+            'AvatarProfileRepository.saveAvatar requires an avatar id.'
+        );
+    }
+
+    const input = {
+        avatarId: normalizedAvatarId,
+        params
+    } satisfies VrchatAvatarSaveInput;
+    const response = unwrapVrchatAvatarResponse<AvatarRecord>(
+        await commands.appVrchatAvatarSave(input),
+        `avatars/${encodeURIComponent(normalizedAvatarId)}`
+    );
+    return response;
+}
+
+export async function deleteAvatar({ avatarId }: AvatarIdInput) {
+    const normalizedAvatarId = normalizeEntityId(avatarId);
+    if (!normalizedAvatarId) {
+        throw new Error(
+            'AvatarProfileRepository.deleteAvatar requires an avatar id.'
+        );
+    }
+
+    const response = unwrapVrchatAvatarResponse<AvatarRecord>(
+        await commands.appVrchatAvatarDelete(avatarIdInput(normalizedAvatarId)),
+        `avatars/${encodeURIComponent(normalizedAvatarId)}`
+    );
+    await invalidateEntityQueries(
+        queryKeys.avatarGallery(normalizedAvatarId, DEFAULT_VRCHAT_API_ENDPOINT)
+    );
+    return response;
+}
+
+export async function createImposter({ avatarId }: AvatarIdInput) {
+    const normalizedAvatarId = normalizeEntityId(avatarId);
+    if (!normalizedAvatarId) {
+        throw new Error(
+            'AvatarProfileRepository.createImposter requires an avatar id.'
+        );
+    }
+
+    return unwrapVrchatAvatarResponse<AvatarRecord>(
+        await commands.appVrchatAvatarImpostorCreate(
+            avatarIdInput(normalizedAvatarId)
+        ),
+        `avatars/${encodeURIComponent(normalizedAvatarId)}/impostor/enqueue`
+    );
+}
+
+export async function deleteImposter({ avatarId }: AvatarIdInput) {
+    const normalizedAvatarId = normalizeEntityId(avatarId);
+    if (!normalizedAvatarId) {
+        throw new Error(
+            'AvatarProfileRepository.deleteImposter requires an avatar id.'
+        );
+    }
+
+    return unwrapVrchatAvatarResponse<AvatarRecord>(
+        await commands.appVrchatAvatarImpostorDelete(
+            avatarIdInput(normalizedAvatarId)
+        ),
+        `avatars/${encodeURIComponent(normalizedAvatarId)}/impostor`
+    );
+}

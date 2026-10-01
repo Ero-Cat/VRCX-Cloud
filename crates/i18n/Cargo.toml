@@ -1,0 +1,15 @@
+[package]
+name = "vrcx-0-i18n"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "Native localization catalog"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+specta.workspace = true
+
+[build-dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }

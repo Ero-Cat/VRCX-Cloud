@@ -1,0 +1,20 @@
+[package]
+name = "vrcx-0-integration-api"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "Read-only API for application integrations"
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+chrono = { workspace = true }
+getrandom = "0.4"
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+specta = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["io-util", "macros", "net", "rt", "sync", "time"] }
+tokio-util = { workspace = true, features = ["rt"] }
+tracing = { workspace = true }
+vrcx-0-local-server = { path = "../local-server" }
+vrcx-0-runtime-event = { path = "../runtime-event" }

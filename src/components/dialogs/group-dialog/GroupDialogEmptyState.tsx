@@ -1,0 +1,20 @@
+import { EmptyState as AppEmptyState } from '@/components/layout/PageScaffold';
+import { Spinner } from '@/ui/shadcn/spinner';
+
+export function GroupDialogEmptyState({
+    title,
+    description,
+    loading = false
+}: Pick<ComponentProps<typeof AppEmptyState>, 'title' | 'description'> & {
+    loading?: boolean;
+}) {
+    return (
+        <AppEmptyState
+            className={loading ? 'min-h-[min(600px,80vh)]' : 'min-h-56'}
+            title={title}
+            description={description}
+            icon={loading ? Spinner : undefined}
+        />
+    );
+}
+import type { ComponentProps } from 'react';

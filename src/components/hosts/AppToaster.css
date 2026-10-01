@@ -1,0 +1,8 @@
+@media (prefers-reduced-motion: reduce) {
+    [data-slot='toast-viewport'] *,
+    [data-slot='toast-viewport'] *::before,
+    [data-slot='toast-viewport'] *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}

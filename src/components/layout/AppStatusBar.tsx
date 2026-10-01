@@ -1,0 +1,898 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { formatDateTime } from '@/lib/dateTime';
+import { STATUS_BAR_CONFIG_KEYS } from '@/repositories/configKeys';
+import configRepository from '@/repositories/configRepository';
+import { startBackgroundModeForCurrentSession } from '@/services/backgroundModeService';
+import { copyTextToClipboard } from '@/services/clipboardService';
+import { wasMutualGraphFetchStartedInThisSession } from '@/services/mutualGraphFetchService';
+import { loadPreferenceSnapshot } from '@/services/preferencesService';
+import {
+    proxySettingsErrorMessage,
+    saveProxySettingsPreferences,
+    testProxySettings
+} from '@/services/proxySettingsService';
+import { openExternalLink } from '@/services/shellIntegrationService';
+import {
+    formatZoomPercentage,
+    normalizeZoomLevel
+} from '@/services/themeService';
+import { toast } from '@/services/toastService';
+import { refreshVrcStatusNow } from '@/services/vrcStatusService';
+import {
+    queueZoomLevelPreference,
+    stepQueuedZoomLevelPreference,
+    syncQueuedZoomLevel
+} from '@/services/zoomPreferenceService';
+import { links } from '@/shared/constants/link';
+import {
+    HOUR_MS,
+    SECOND_MS,
+    SECONDS_PER_HOUR,
+    SECONDS_PER_MINUTE
+} from '@/shared/constants/time';
+import { getDateTimeFormatter } from '@/shared/utils/dateTimeFormatters';
+import { isRecord } from '@/shared/utils/record';
+import { useDataDirMigrationStore } from '@/state/dataDirMigrationStore';
+import { usePreferencesStore } from '@/state/preferencesStore';
+import { useProfileBackupStore } from '@/state/profileBackupStore';
+import { useRuntimeStore } from '@/state/runtimeStore';
+import { useShellStore } from '@/state/shellStore';
+import { useWorldCollectionImportStore } from '@/state/worldCollectionImportStore';
+import { ContextMenu, ContextMenuTrigger } from '@/ui/shadcn/context-menu';
+
+import { StatusBarContextMenuContent } from './status-bar/StatusBarContextMenuContent';
+import { StatusBarFooter } from './status-bar/StatusBarFooter';
+import type {
+    StatusBarClock,
+    StatusBarVisibility,
+    StatusBarVisibilityKey
+} from './status-bar/statusBarTypes';
+
+const DEFAULT_VISIBILITY: StatusBarVisibility = {
+    vrchat: true,
+    steamvr: true,
+    proxy: true,
+    ws: true,
+    instanceQueue: true,
+    mutualGraph: true,
+    nowPlaying: true,
+    uptime: false,
+    zoom: true,
+    clocks: true,
+    servers: true
+};
+
+function normalizeUtcHour(value: unknown) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+        return 0;
+    }
+    return Math.max(-12, Math.min(14, Math.round(numeric)));
+}
+
+function parseClockOffset(entry: unknown) {
+    const value = isRecord(entry)
+        ? 'offset' in entry
+            ? entry.offset
+            : entry.timezone
+        : entry;
+    if (typeof value === 'number') {
+        return normalizeUtcHour(value);
+    }
+    if (typeof value !== 'string') {
+        return 0;
+    }
+    if (/^[+-]?\d+$/.test(value.trim())) {
+        return normalizeUtcHour(Number(value));
+    }
+    const utcMatch = value.trim().match(/^UTC([+-])(\d{1,2})(?::(\d{1,2}))?$/i);
+    if (utcMatch) {
+        const sign = utcMatch[1] === '+' ? 1 : -1;
+        const hours = Number(utcMatch[2]);
+        const minutes = Number(utcMatch[3] || 0);
+        return normalizeUtcHour(sign * (hours + minutes / 60));
+    }
+
+    try {
+        const parts = getDateTimeFormatter('en-US', {
+            timeZone: value,
+            timeZoneName: 'longOffset'
+        }).formatToParts(new Date());
+        const timeZoneName =
+            parts.find((part) => part.type === 'timeZoneName')?.value || '';
+        const offsetMatch = timeZoneName.match(
+            /^GMT([+-])(\d{1,2})(?::(\d{2}))?$/
+        );
+        if (offsetMatch) {
+            const sign = offsetMatch[1] === '+' ? 1 : -1;
+            const hours = Number(offsetMatch[2]);
+            const minutes = Number(offsetMatch[3] || 0);
+            return normalizeUtcHour(sign * (hours + minutes / 60));
+        }
+    } catch {
+        return 0;
+    }
+
+    return 0;
+}
+
+function formatUtcHour(offset: number) {
+    const normalized = normalizeUtcHour(offset);
+    return `UTC${normalized >= 0 ? '+' : ''}${normalized}`;
+}
+
+const TIMEZONE_OPTIONS = Array.from({ length: 27 }, (_, index) => {
+    const value = index - 12;
+    return { value, label: formatUtcHour(value) };
+});
+
+function formatClock(nowMs: number, offset: number) {
+    const shifted = new Date(nowMs + normalizeUtcHour(offset) * HOUR_MS);
+    const hours = String(shifted.getUTCHours()).padStart(2, '0');
+    const minutes = String(shifted.getUTCMinutes()).padStart(2, '0');
+    return `${hours}:${minutes} ${formatUtcHour(offset)}`;
+}
+
+function getDefaultClockOffset(localOffset: number) {
+    return localOffset >= 0 ? -5 : 9;
+}
+
+function createDefaultClocks(): StatusBarClock[] {
+    const localOffset = normalizeUtcHour(-new Date().getTimezoneOffset() / 60);
+    return [
+        { offset: getDefaultClockOffset(localOffset) },
+        { offset: localOffset },
+        { offset: 0 }
+    ];
+}
+
+function formatDuration(ms: number) {
+    const { hours, minutes, seconds } = durationParts(ms);
+    if (hours > 0) {
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function durationParts(ms: number) {
+    const safeSeconds = Math.max(0, Math.floor(ms / SECOND_MS));
+    const hours = Math.floor(safeSeconds / SECONDS_PER_HOUR);
+    const minutes = Math.floor(
+        (safeSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
+    );
+    const seconds = safeSeconds % SECONDS_PER_MINUTE;
+    return { hours, minutes, seconds };
+}
+
+function formatAppUptime(ms: number) {
+    const { hours, minutes, seconds } = durationParts(ms);
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function formatStatusDate(value: string | null | undefined) {
+    return formatDateTime(value, {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+export function AppStatusBar({
+    className,
+    sidebarWindowMode = false
+}: {
+    className?: string;
+    sidebarWindowMode?: boolean;
+}) {
+    const { t } = useTranslation();
+    const [appStartedAt] = useState(Date.now);
+    const observedMutualGraphRunRef = useRef(0);
+    const notifiedMutualGraphRunRef = useRef(0);
+    const [visibility, setVisibility] = useState(DEFAULT_VISIBILITY);
+    const [clocks, setClocks] = useState(() => createDefaultClocks());
+    const [clockCount, setClockCount] = useState(1);
+    const [clockPopoverOpen, setClockPopoverOpen] = useState<boolean[]>([
+        false,
+        false,
+        false
+    ]);
+    const websocketConnected = useRuntimeStore(
+        (state) => state.transport.websocketConnected
+    );
+    const lastGameStartedAt = useRuntimeStore(
+        (state) => state.gameState.lastGameStartedAt
+    );
+    const currentLocationStartedAt = useRuntimeStore(
+        (state) => state.gameState.currentLocationStartedAt
+    );
+    const currentWorldName = useRuntimeStore(
+        (state) => state.gameState.currentWorldName
+    );
+    const currentWorldId = useRuntimeStore(
+        (state) => state.gameState.currentWorldId
+    );
+    const lastGameLogAt = useRuntimeStore(
+        (state) => state.gameState.lastGameLogAt
+    );
+    const lastGameLogType = useRuntimeStore(
+        (state) => state.gameState.lastGameLogType
+    );
+    const nowPlayingUrl = useRuntimeStore((state) => state.nowPlaying.url);
+    const nowPlayingName = useRuntimeStore((state) => state.nowPlaying.name);
+    const nowPlayingStartedAt = useRuntimeStore(
+        (state) => state.nowPlaying.startedAt
+    );
+    const nowPlayingPosition = useRuntimeStore(
+        (state) => state.nowPlaying.position
+    );
+    const nowPlayingLength = useRuntimeStore(
+        (state) => state.nowPlaying.length
+    );
+    const instanceQueue = useRuntimeStore((state) => state.instanceQueue);
+    const friendProfileLoadStatus = useRuntimeStore(
+        (state) => state.friendProfileLoad.status
+    );
+    const friendProfileLoadProcessedFriends = useRuntimeStore(
+        (state) => state.friendProfileLoad.processedFriends
+    );
+    const friendProfileLoadTotalFriends = useRuntimeStore(
+        (state) => state.friendProfileLoad.totalFriends
+    );
+    const mutualGraphRunId = useRuntimeStore(
+        (state) => state.mutualGraph.runId
+    );
+    const mutualGraphStatus = useRuntimeStore(
+        (state) => state.mutualGraph.status
+    );
+    const mutualGraphProcessedFriends = useRuntimeStore(
+        (state) => state.mutualGraph.processedFriends
+    );
+    const mutualGraphTotalFriends = useRuntimeStore(
+        (state) => state.mutualGraph.totalFriends
+    );
+    const mutualGraphCancelRequested = useRuntimeStore(
+        (state) => state.mutualGraph.cancelRequested
+    );
+    const mutualGraphFailedFriends = useRuntimeStore(
+        (state) => state.mutualGraph.failedFriends
+    );
+    const mutualGraphLastError = useRuntimeStore(
+        (state) => state.mutualGraph.lastError
+    );
+    const isGameRunning = useRuntimeStore(
+        (state) => state.gameState.isGameRunning
+    );
+    const isSteamVRRunning = useRuntimeStore(
+        (state) => state.gameState.isSteamVRRunning
+    );
+    const vrcStatusIndicator = useRuntimeStore(
+        (state) => state.vrcStatus.indicator
+    );
+    const vrcStatusSummary = useRuntimeStore(
+        (state) => state.vrcStatus.summary
+    );
+    const vrcStatusStatus = useRuntimeStore((state) => state.vrcStatus.status);
+    const vrcStatusLastFetchedAt = useRuntimeStore(
+        (state) => state.vrcStatus.lastFetchedAt
+    );
+    const vrcStatusRefreshing = useRuntimeStore(
+        (state) => state.vrcStatus.refreshing
+    );
+    const vrcStatusError = useRuntimeStore((state) => state.vrcStatus.error);
+    const preferencesHydrated = usePreferencesStore(
+        (state) => state.preferencesHydrated
+    );
+    const proxyEnabled = usePreferencesStore((state) => state.proxyEnabled);
+    const proxyServer = usePreferencesStore((state) => state.proxyServer);
+    const zoomLevel = useShellStore((state) => state.zoomLevel);
+    const worldCollectionImportActive = useWorldCollectionImportStore(
+        (state) => state.active
+    );
+    const worldCollectionImportProgress = useWorldCollectionImportStore(
+        (state) => state.progress
+    );
+    const worldCollectionImportTotal = useWorldCollectionImportStore(
+        (state) => state.total
+    );
+    const profileBackupStatus = useProfileBackupStore((state) => state.status);
+    const dataDirMigrationStatus = useDataDirMigrationStore(
+        (state) => state.status
+    );
+    const setSystemHostOpen = useRuntimeStore(
+        (state) => state.setSystemHostOpen
+    );
+    const [proxyEditorOpen, setProxyEditorOpen] = useState(false);
+    const [proxyDraftEnabled, setProxyDraftEnabled] = useState(proxyEnabled);
+    const [proxyDraftServer, setProxyDraftServer] = useState(proxyServer);
+    const [proxySaving, setProxySaving] = useState(false);
+    const [proxyTesting, setProxyTesting] = useState(false);
+    const visibleClocks = clocks.slice(
+        0,
+        Math.max(0, Math.min(3, Number(clockCount) || 0))
+    );
+    const runtimeTransport = useMemo(
+        () => ({
+            websocketConnected
+        }),
+        [websocketConnected]
+    );
+    const runtimeGameState = useMemo(
+        () => ({
+            lastGameStartedAt,
+            currentLocationStartedAt,
+            currentWorldName,
+            currentWorldId,
+            lastGameLogAt,
+            lastGameLogType
+        }),
+        [
+            currentLocationStartedAt,
+            currentWorldId,
+            currentWorldName,
+            lastGameLogAt,
+            lastGameLogType,
+            lastGameStartedAt
+        ]
+    );
+    const nowPlaying = useMemo(
+        () => ({
+            url: nowPlayingUrl,
+            name: nowPlayingName,
+            startedAt: nowPlayingStartedAt,
+            position: nowPlayingPosition,
+            length: nowPlayingLength
+        }),
+        [
+            nowPlayingLength,
+            nowPlayingName,
+            nowPlayingPosition,
+            nowPlayingStartedAt,
+            nowPlayingUrl
+        ]
+    );
+    const mutualGraph = useMemo(
+        () => ({
+            runId: mutualGraphRunId,
+            status: mutualGraphStatus,
+            processedFriends: mutualGraphProcessedFriends,
+            totalFriends: mutualGraphTotalFriends,
+            cancelRequested: mutualGraphCancelRequested,
+            failedFriends: mutualGraphFailedFriends,
+            lastError: mutualGraphLastError
+        }),
+        [
+            mutualGraphCancelRequested,
+            mutualGraphFailedFriends,
+            mutualGraphLastError,
+            mutualGraphProcessedFriends,
+            mutualGraphRunId,
+            mutualGraphStatus,
+            mutualGraphTotalFriends
+        ]
+    );
+    const friendProfileLoad = useMemo(
+        () => ({
+            status: friendProfileLoadStatus,
+            processedFriends: friendProfileLoadProcessedFriends,
+            totalFriends: friendProfileLoadTotalFriends
+        }),
+        [
+            friendProfileLoadProcessedFriends,
+            friendProfileLoadStatus,
+            friendProfileLoadTotalFriends
+        ]
+    );
+    const worldCollectionImport = useMemo(
+        () => ({
+            active: worldCollectionImportActive,
+            progress: worldCollectionImportProgress,
+            total: worldCollectionImportTotal
+        }),
+        [
+            worldCollectionImportActive,
+            worldCollectionImportProgress,
+            worldCollectionImportTotal
+        ]
+    );
+    const profileBackup = useMemo(
+        () => ({
+            status: profileBackupStatus,
+            onOpenDetails: () => setSystemHostOpen('profileBackupOpen', true)
+        }),
+        [profileBackupStatus, setSystemHostOpen]
+    );
+    const dataDirMigration = useMemo(
+        () => ({ status: dataDirMigrationStatus }),
+        [dataDirMigrationStatus]
+    );
+    const vrcStatus = useMemo(
+        () => ({
+            indicator: vrcStatusIndicator,
+            summary: vrcStatusSummary,
+            status: vrcStatusStatus,
+            lastFetchedAt: vrcStatusLastFetchedAt,
+            refreshing: vrcStatusRefreshing,
+            error: vrcStatusError
+        }),
+        [
+            vrcStatusError,
+            vrcStatusIndicator,
+            vrcStatusLastFetchedAt,
+            vrcStatusRefreshing,
+            vrcStatusStatus,
+            vrcStatusSummary
+        ]
+    );
+    const gameStartedAt = Date.parse(lastGameStartedAt || '');
+    const currentLocationStartedTimestamp = Date.parse(
+        currentLocationStartedAt || ''
+    );
+    const currentWorld = currentWorldName || currentWorldId || '';
+    const currentZoomLevel = normalizeZoomLevel(zoomLevel);
+    const timezoneOptions = TIMEZONE_OPTIONS;
+
+    useEffect(() => {
+        syncQueuedZoomLevel(currentZoomLevel);
+    }, [currentZoomLevel]);
+
+    useEffect(() => {
+        if (!proxyEditorOpen) {
+            setProxyDraftEnabled(proxyEnabled);
+            setProxyDraftServer(proxyServer);
+        }
+    }, [proxyEditorOpen, proxyEnabled, proxyServer]);
+
+    useEffect(() => {
+        const runId = mutualGraphRunId;
+        if (!runId) {
+            return;
+        }
+
+        if (
+            mutualGraphStatus === 'running' ||
+            mutualGraphStatus === 'cancelling'
+        ) {
+            observedMutualGraphRunRef.current = runId;
+            return;
+        }
+
+        if (
+            (observedMutualGraphRunRef.current !== runId &&
+                !wasMutualGraphFetchStartedInThisSession(runId)) ||
+            notifiedMutualGraphRunRef.current === runId
+        ) {
+            return;
+        }
+
+        if (mutualGraphStatus === 'completed') {
+            notifiedMutualGraphRunRef.current = runId;
+            toast.add({
+                type: 'success',
+                title: t('view.charts.success.mutual_friends_graph_refreshed')
+            });
+            return;
+        }
+
+        if (mutualGraphStatus === 'cancelled') {
+            notifiedMutualGraphRunRef.current = runId;
+            toast.add({
+                type: 'warning',
+                title: t(
+                    'view.charts.label.mutual_graph_fetch_cancelled_the_cached_graph_was_not_replaced'
+                )
+            });
+            return;
+        }
+
+        if (mutualGraphStatus === 'error') {
+            notifiedMutualGraphRunRef.current = runId;
+            toast.add({
+                type: 'error',
+                title:
+                    mutualGraphLastError ||
+                    t('view.charts.toast.failed_to_fetch_mutual_friends_graph')
+            });
+        }
+    }, [mutualGraphLastError, mutualGraphRunId, mutualGraphStatus, t]);
+
+    useEffect(() => {
+        let active = true;
+
+        Promise.all([
+            configRepository.getString(STATUS_BAR_CONFIG_KEYS.visibility, null),
+            configRepository.getString(STATUS_BAR_CONFIG_KEYS.clocks, null),
+            configRepository.getString(STATUS_BAR_CONFIG_KEYS.clockCount, null)
+        ])
+            .then(([savedVisibility, savedClocks, savedClockCount]) => {
+                if (!active) {
+                    return;
+                }
+
+                if (savedVisibility) {
+                    try {
+                        setVisibility({
+                            ...DEFAULT_VISIBILITY,
+                            ...JSON.parse(savedVisibility)
+                        });
+                    } catch {
+                        setVisibility(DEFAULT_VISIBILITY);
+                    }
+                }
+
+                if (savedClocks) {
+                    try {
+                        const parsed = JSON.parse(savedClocks);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            const defaults = createDefaultClocks();
+                            const nextClocks = defaults.map(
+                                (defaultClock, index) => {
+                                    const entry = parsed[index];
+                                    return entry
+                                        ? { offset: parseClockOffset(entry) }
+                                        : defaultClock;
+                                }
+                            );
+                            setClocks(nextClocks);
+                        }
+                    } catch {
+                        // no-op
+                    }
+                }
+
+                if (savedClockCount !== null) {
+                    const parsedClockCount = Number(savedClockCount);
+                    if (parsedClockCount >= 0 && parsedClockCount <= 3) {
+                        setClockCount(parsedClockCount);
+                    }
+                }
+            })
+            .catch(() => {});
+
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    function persistVisibility(nextVisibility: StatusBarVisibility) {
+        setVisibility(nextVisibility);
+        configRepository
+            .setString(
+                STATUS_BAR_CONFIG_KEYS.visibility,
+                JSON.stringify(nextVisibility)
+            )
+            .catch((error: unknown) => {
+                toast.add({
+                    type: 'error',
+                    title:
+                        error instanceof Error
+                            ? error.message
+                            : t(
+                                  'component.app_status_bar.toast.failed_to_save_status_bar_visibility'
+                              )
+                });
+            });
+    }
+
+    function toggleVisibility(key: StatusBarVisibilityKey, checked: boolean) {
+        const nextVisibility: StatusBarVisibility = {
+            ...visibility,
+            [key]: Boolean(checked)
+        };
+        persistVisibility(nextVisibility);
+    }
+
+    function setClockCountValue(nextValue: number) {
+        const parsed = Math.max(0, Math.min(3, Number(nextValue) || 0));
+        setClockCount(parsed);
+        if (parsed > 0 && !visibility.clocks) {
+            persistVisibility({
+                ...visibility,
+                clocks: true
+            });
+        }
+        configRepository
+            .setString(STATUS_BAR_CONFIG_KEYS.clockCount, String(parsed))
+            .catch((error: unknown) => {
+                toast.add({
+                    type: 'error',
+                    title:
+                        error instanceof Error
+                            ? error.message
+                            : t(
+                                  'component.app_status_bar.toast.failed_to_save_clock_count'
+                              )
+                });
+            });
+    }
+
+    function setClockPopoverValue(index: number, open: boolean) {
+        setClockPopoverOpen((current) => {
+            const next = [...current];
+            next[index] = open;
+            return next;
+        });
+    }
+
+    function updateClockTimezone(index: number, offsetValue: string | null) {
+        setClocks((current) => {
+            const defaults = createDefaultClocks();
+            const nextClocks = defaults.map(
+                (defaultClock, clockIndex) =>
+                    current[clockIndex] ?? defaultClock
+            );
+            nextClocks[index] = { offset: parseClockOffset(offsetValue) };
+            configRepository
+                .setString(
+                    STATUS_BAR_CONFIG_KEYS.clocks,
+                    JSON.stringify(nextClocks)
+                )
+                .catch((error: unknown) => {
+                    toast.add({
+                        type: 'error',
+                        title:
+                            error instanceof Error
+                                ? error.message
+                                : t(
+                                      'component.app_status_bar.toast.failed_to_save_status_bar_clocks'
+                                  )
+                    });
+                });
+            return nextClocks;
+        });
+        setClockPopoverValue(index, false);
+    }
+
+    async function openStatusPage() {
+        const refreshStatusPromise = refreshVrcStatusNow().catch(
+            (error: unknown) => {
+                console.warn('VRChat status refresh failed:', error);
+            }
+        );
+
+        try {
+            await openExternalLink(links.vrchatStatus);
+        } catch (error) {
+            toast.add({
+                type: 'error',
+                title:
+                    error instanceof Error
+                        ? error.message
+                        : t(
+                              'component.app_status_bar.toast.failed_to_open_vrchat_status'
+                          )
+            });
+        }
+
+        await refreshStatusPromise;
+    }
+
+    async function openProxyEditor() {
+        if (!preferencesHydrated) {
+            await loadPreferenceSnapshot();
+        }
+        const state = usePreferencesStore.getState();
+        setProxyDraftEnabled(state.proxyEnabled);
+        setProxyDraftServer(state.proxyServer);
+        setProxyEditorOpen(true);
+    }
+
+    function openProxyEditorWithToast() {
+        openProxyEditor().catch((error: unknown) => {
+            toast.add({
+                type: 'error',
+                title:
+                    proxySettingsErrorMessage(error) ||
+                    t(
+                        'component.app_status_bar.toast.failed_to_update_proxy_settings'
+                    )
+            });
+        });
+    }
+
+    function setProxyEditorOpenValue(open: boolean) {
+        if (!open) {
+            setProxyEditorOpen(false);
+            return;
+        }
+        openProxyEditorWithToast();
+    }
+
+    async function saveProxyEditor(restart: boolean) {
+        setProxySaving(true);
+        try {
+            await saveProxySettingsPreferences(
+                {
+                    enabled: proxyDraftEnabled,
+                    server: proxyDraftServer
+                },
+                { restart }
+            );
+            if (!restart) {
+                toast.add({
+                    type: 'success',
+                    title: t('prompt.proxy_settings.saved_restart_required')
+                });
+                setProxyEditorOpen(false);
+            }
+        } catch (error) {
+            toast.add({
+                type: 'error',
+                title:
+                    proxySettingsErrorMessage(error) ||
+                    t(
+                        'component.app_status_bar.toast.failed_to_update_proxy_settings'
+                    )
+            });
+        } finally {
+            setProxySaving(false);
+        }
+    }
+
+    async function testProxyEditor() {
+        setProxyTesting(true);
+        try {
+            const result = await testProxySettings(proxyDraftServer);
+            toast.add({
+                type: 'success',
+                title: t('prompt.proxy_settings.test_success', {
+                    status: result.status
+                })
+            });
+        } catch (error) {
+            toast.add({
+                type: 'error',
+                title: t('prompt.proxy_settings.test_failed', {
+                    message: proxySettingsErrorMessage(error)
+                })
+            });
+        } finally {
+            setProxyTesting(false);
+        }
+    }
+
+    function showZoomError(error: unknown) {
+        toast.add({
+            type: 'error',
+            title:
+                error instanceof Error
+                    ? error.message
+                    : t('app_menu.messages.zoom_failed')
+        });
+    }
+
+    function startBackgroundMode() {
+        startBackgroundModeForCurrentSession().catch((error: unknown) => {
+            console.warn('Failed to start background mode:', error);
+            toast.add({
+                type: 'error',
+                title:
+                    error instanceof Error
+                        ? error.message
+                        : t(
+                              'component.app_status_bar.toast.failed_to_start_background_mode'
+                          )
+            });
+        });
+    }
+
+    function setQueuedZoomLevel(nextZoom: number) {
+        queueZoomLevelPreference(nextZoom, { onError: showZoomError });
+    }
+
+    function stepQueuedZoomLevel(delta: number) {
+        stepQueuedZoomLevelPreference(delta, { onError: showZoomError });
+    }
+
+    const footer = {
+        appStartedAt,
+        clockPopoverOpen,
+        currentLocationStartedTimestamp,
+        currentWorld,
+        dataDirMigration,
+        formatAppUptime,
+        formatClock,
+        formatDuration,
+        formatStatusDate,
+        friendProfileLoad,
+        gameStartedAt,
+        isGameRunning,
+        isSteamVRRunning,
+        instanceQueue,
+        mutualGraph,
+        nowPlaying,
+        proxyEditor: {
+            enabled: proxyDraftEnabled,
+            open: proxyEditorOpen,
+            saving: proxySaving,
+            server: proxyDraftServer,
+            testing: proxyTesting
+        },
+        profileBackup,
+        proxyEnabled,
+        proxyServer,
+        runtimeGameState,
+        runtimeTransport,
+        timezoneOptions,
+        visibility,
+        visibleClocks,
+        worldCollectionImport,
+        vrcStatus,
+        zoomLabel: formatZoomPercentage(currentZoomLevel),
+        zoomLevel: currentZoomLevel,
+        onCopyMediaLink: () => {
+            if (!nowPlaying.url) {
+                return;
+            }
+            void copyTextToClipboard(nowPlaying.url, {
+                successMessage: t(
+                    'component.app_status_bar.toast.media_link_copied'
+                ),
+                errorMessage: t(
+                    'component.app_status_bar.toast.failed_to_copy_media_link'
+                )
+            });
+        },
+        onOpenMediaLink: () => {
+            if (!nowPlaying.url) {
+                return;
+            }
+            openExternalLink(nowPlaying.url).catch((error: unknown) => {
+                toast.add({
+                    type: 'error',
+                    title:
+                        error instanceof Error
+                            ? error.message
+                            : t(
+                                  'component.app_status_bar.toast.failed_to_open_media_link'
+                              )
+                });
+            });
+        },
+        onOpenStatusPage: openStatusPage,
+        onStartBackgroundMode: startBackgroundMode,
+        onProxyDraftEnabledChange: setProxyDraftEnabled,
+        onProxyDraftServerChange: setProxyDraftServer,
+        onProxyEditorOpenChange: setProxyEditorOpenValue,
+        onProxySave: () => {
+            saveProxyEditor(false);
+        },
+        onProxySaveAndRestart: () => {
+            saveProxyEditor(true);
+        },
+        onProxyTest: testProxyEditor,
+        onSetClockPopoverValue: setClockPopoverValue,
+        onSetZoomLevel: setQueuedZoomLevel,
+        onStepZoomLevel: stepQueuedZoomLevel,
+        onUpdateClockTimezone: updateClockTimezone
+    };
+
+    if (sidebarWindowMode) {
+        return (
+            <StatusBarFooter
+                className={className}
+                footer={footer}
+                sidebarWindowMode
+            />
+        );
+    }
+
+    return (
+        <ContextMenu>
+            <ContextMenuTrigger
+                render={
+                    <StatusBarFooter className={className} footer={footer} />
+                }
+            />
+            <StatusBarContextMenuContent
+                clockCount={clockCount}
+                onOpenProxySettings={openProxyEditorWithToast}
+                onSetClockCountValue={setClockCountValue}
+                onToggleVisibility={toggleVisibility}
+                visibility={visibility}
+            />
+        </ContextMenu>
+    );
+}

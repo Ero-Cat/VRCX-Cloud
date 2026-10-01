@@ -1,0 +1,86 @@
+interface VRChatResolution {
+    name: string;
+    width: number | '';
+    height: number | '';
+}
+
+const VRChatScreenshotResolutions: VRChatResolution[] = [
+    { name: '1280x720 (720p)', width: 1280, height: 720 },
+    { name: '1920x1080 (1080p Default)', width: '', height: '' },
+    { name: '2560x1440 (1440p)', width: 2560, height: 1440 },
+    { name: '3840x2160 (4K)', width: 3840, height: 2160 }
+];
+
+const VRChatCameraResolutions: VRChatResolution[] = [
+    { name: '1280x720 (720p)', width: 1280, height: 720 },
+    { name: '1920x1080 (1080p Default)', width: '', height: '' },
+    { name: '2560x1440 (1440p)', width: 2560, height: 1440 },
+    { name: '3840x2160 (4K)', width: 3840, height: 2160 },
+    { name: '7680x4320 (8K)', width: 7680, height: 4320 }
+];
+
+const GITHUB_RELEASES_URL =
+    'https://api.github.com/repos/Map1en/VRCX-0/releases';
+
+const TABLE_MAX_SIZE_MIN = 100;
+const TABLE_MAX_SIZE_MAX = 10000;
+
+const SEARCH_LIMIT_MIN = 10000;
+const SEARCH_LIMIT_MAX = 100000;
+
+const DEFAULT_MAX_TABLE_SIZE = 500;
+const DEFAULT_SEARCH_LIMIT = 50000;
+const VRCHAT_MIN_CACHE_SIZE_GB = 30;
+const AVATAR_AUTO_CLEANUP_OPTIONS = ['Off', '30', '90', '180', '365'] as const;
+
+type AvatarAutoCleanupPreference = (typeof AVATAR_AUTO_CLEANUP_OPTIONS)[number];
+
+function normalizeAvatarAutoCleanupPreference(
+    value: unknown
+): AvatarAutoCleanupPreference {
+    switch (value) {
+        case 'Off':
+        case '30':
+        case '90':
+        case '180':
+        case '365':
+            return value;
+        default:
+            return 'Off';
+    }
+}
+
+export {
+    VRChatScreenshotResolutions,
+    VRChatCameraResolutions,
+    GITHUB_RELEASES_URL,
+    TABLE_MAX_SIZE_MIN,
+    TABLE_MAX_SIZE_MAX,
+    SEARCH_LIMIT_MIN,
+    SEARCH_LIMIT_MAX,
+    DEFAULT_MAX_TABLE_SIZE,
+    DEFAULT_SEARCH_LIMIT,
+    VRCHAT_MIN_CACHE_SIZE_GB,
+    AVATAR_AUTO_CLEANUP_OPTIONS,
+    normalizeAvatarAutoCleanupPreference
+};
+export type { AvatarAutoCleanupPreference, VRChatResolution };
+
+export const DEFAULT_TABLE_PAGE_SIZE = 20;
+
+export const DEFAULT_TABLE_PAGE_SIZES = Object.freeze([
+    10, 15, 20, 25, 50, 100
+]);
+
+export const DEFAULT_PRINT_AUTO_DELETE_LIMIT = 60;
+
+export const PRINT_AUTO_DELETE_LIMIT_MIN = 30;
+
+export const PRINT_AUTO_DELETE_LIMIT_MAX = 60;
+
+export const PRINT_FAVORITE_LIMIT_BUFFER = 5;
+
+export const DEFAULT_TRANSLATION_ENDPOINT =
+    'https://api.openai.com/v1/chat/completions';
+
+export const DEFAULT_TRANSLATION_MODEL = 'gpt-4o-mini';

@@ -1,0 +1,740 @@
+import { create } from 'zustand';
+
+import type {
+    NotificationWebhookFormat,
+    TranslationProvider
+} from '@/platform/tauri/bindings';
+import {
+    DEFAULT_OVERLAY_ACTIVITY_FILTERS,
+    DEFAULT_HMD_NOTIFICATION_ACTIVITY_FILTERS,
+    DEFAULT_TTS_NOTIFICATION_ACTIVITY_FILTERS,
+    DEFAULT_VR_NOTIFICATION_ACTIVITY_FILTERS,
+    DEFAULT_WEBHOOK_ACTIVITY_FILTERS,
+    normalizeOverlayActivityFilters,
+    parseHmdOverlayActivityFilterProfile,
+    parseOverlayActivityFilterProfile,
+    parseOverlayActivityFilters
+} from '@/shared/constants/overlayActivityFilters';
+import {
+    DEFAULT_TABLE_PAGE_SIZE,
+    DEFAULT_TABLE_PAGE_SIZES,
+    DEFAULT_PRINT_AUTO_DELETE_LIMIT,
+    PRINT_AUTO_DELETE_LIMIT_MIN,
+    PRINT_AUTO_DELETE_LIMIT_MAX,
+    DEFAULT_TRANSLATION_ENDPOINT,
+    DEFAULT_TRANSLATION_MODEL
+} from '@/shared/constants/settings';
+import {
+    normalizeAvatarAutoCleanupPreference,
+    DEFAULT_MAX_TABLE_SIZE,
+    DEFAULT_SEARCH_LIMIT,
+    SEARCH_LIMIT_MAX,
+    SEARCH_LIMIT_MIN,
+    TABLE_MAX_SIZE_MAX,
+    TABLE_MAX_SIZE_MIN
+} from '@/shared/constants/settings';
+import { MINUTES_PER_DAY } from '@/shared/constants/time';
+import { TRUST_COLOR_DEFAULTS } from '@/shared/constants/trustColors';
+import { DEFAULT_GENERIC_WEBHOOK_FIELDS } from '@/shared/constants/webhook';
+import { normalizeTrustColors } from '@/shared/utils/trustColors';
+
+import { normalizeNavWidth, normalizeTableDensity } from './shellStore';
+
+export type FeedTimeDisplayModePreference = 'exact' | 'relative';
+export type TranslationApiType = TranslationProvider;
+export type WeekStartsOnPreference = 0 | 1 | 6;
+export type WristOverlayHandPreference = 'left' | 'right' | 'both';
+export type WristOverlaySizePreference = 'compact' | 'normal' | 'large';
+export type OverlayStartModePreference = 'steamvr' | 'vrchatVrMode';
+export type WristOverlayStartModePreference = OverlayStartModePreference;
+export type WristOverlayButtonPreference = 'grip' | 'menu';
+export type HmdNotificationPositionPreference =
+    | 'top'
+    | 'bottom'
+    | 'left'
+    | 'right';
+export type TrustColorKey = keyof typeof TRUST_COLOR_DEFAULTS;
+export type DiscordPreferenceKey =
+    | 'discordActive'
+    | 'discordInstance'
+    | 'discordHideInvite'
+    | 'discordJoinButton'
+    | 'discordHideImage'
+    | 'discordShowPlatform'
+    | 'discordWorldIntegration'
+    | 'discordWorldNameAsDiscordStatus';
+
+export { normalizeOverlayActivityFilters };
+
+function hasPersistedOverlayActivityFilters(value: unknown): boolean {
+    if (!value) {
+        return false;
+    }
+    if (typeof value === 'string') {
+        try {
+            return hasPersistedOverlayActivityFilters(JSON.parse(value));
+        } catch {
+            return false;
+        }
+    }
+    const source = asRecord(value);
+    const wrist = asRecord(source.wrist);
+    return Boolean(wrist.types);
+}
+
+export function parseOverlayActivityFiltersPreference(value?: unknown) {
+    return hasPersistedOverlayActivityFilters(value)
+        ? parseOverlayActivityFilters(value)
+        : normalizeOverlayActivityFilters();
+}
+
+type BoundedIntOptions = {
+    min?: number;
+    max?: number;
+    fallback?: number;
+};
+type PreferenceInputSnapshot = Record<string, unknown>;
+export type NotificationTtsNameMode = 'username' | 'note' | 'usernameAndNote';
+
+function asRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object'
+        ? Object.fromEntries(Object.entries(value))
+        : {};
+}
+
+function normalizeBool(value: unknown): boolean {
+    if (typeof value === 'boolean') {
+        return value;
+    }
+    if (typeof value === 'string') {
+        return value.trim().toLowerCase() === 'true';
+    }
+    return Boolean(value);
+}
+
+export function normalizeNotificationTtsNameMode(
+    value: unknown,
+    legacyNicknameEnabled: unknown = false
+): NotificationTtsNameMode {
+    if (
+        value === 'username' ||
+        value === 'note' ||
+        value === 'usernameAndNote'
+    ) {
+        return value;
+    }
+    return normalizeBool(legacyNicknameEnabled) ? 'note' : 'username';
+}
+
+function normalizeText(value: unknown): string {
+    return typeof value === 'string'
+        ? value.trim()
+        : String(value ?? '').trim();
+}
+
+function normalizeBoundedInt(
+    value: unknown,
+    {
+        min = Number.MIN_SAFE_INTEGER,
+        max = Number.MAX_SAFE_INTEGER,
+        fallback = 0
+    }: BoundedIntOptions = {}
+): number {
+    const parsed = Number.parseInt(String(value), 10);
+    if (!Number.isFinite(parsed)) {
+        return fallback;
+    }
+    return Math.min(max, Math.max(min, parsed));
+}
+
+export function normalizeWeekStartsOn(value: unknown): WeekStartsOnPreference {
+    const numeric = Number(value);
+    return numeric === 0 || numeric === 6 ? numeric : 1;
+}
+
+export function normalizeFeedTimeDisplayMode(
+    value: unknown
+): FeedTimeDisplayModePreference {
+    return value === 'exact' ? 'exact' : 'relative';
+}
+
+export function normalizeTranslationApiType(
+    value: unknown
+): TranslationApiType {
+    return value === 'openai' || value === 'deepl' ? value : 'google';
+}
+
+function normalizeNotificationWebhookFormat(
+    value: unknown
+): NotificationWebhookFormat {
+    return value === 'discord' ? 'discord' : 'generic';
+}
+
+export function normalizeWristOverlayHand(
+    value: unknown
+): WristOverlayHandPreference {
+    return value === 'right' || value === 'both' ? value : 'left';
+}
+
+export function normalizeWristOverlaySize(
+    value: unknown
+): WristOverlaySizePreference {
+    return value === 'compact' || value === 'large' ? value : 'normal';
+}
+
+export function normalizeOverlayStartMode(
+    value: unknown
+): OverlayStartModePreference {
+    return value === 'steamvr' ? 'steamvr' : 'vrchatVrMode';
+}
+
+export function normalizeWristOverlayStartMode(
+    value: unknown
+): WristOverlayStartModePreference {
+    return normalizeOverlayStartMode(value);
+}
+
+export function normalizeWristOverlayButton(
+    value: unknown
+): WristOverlayButtonPreference {
+    return value === 'menu' ? 'menu' : 'grip';
+}
+
+export function normalizeHmdNotificationPosition(
+    value: unknown
+): HmdNotificationPositionPreference {
+    return value === 'top' || value === 'left' || value === 'right'
+        ? value
+        : 'bottom';
+}
+
+export function normalizeTablePageSizes(value: unknown): number[] {
+    const source: readonly unknown[] = Array.isArray(value)
+        ? value
+        : DEFAULT_TABLE_PAGE_SIZES;
+    const nextSizes = source
+        .map((entry) => Number.parseInt(String(entry), 10))
+        .filter(
+            (entry): entry is number =>
+                Number.isFinite(entry) && entry > 0 && entry <= 1000
+        );
+    const normalized = Array.from(new Set(nextSizes)).sort(
+        (left, right) => left - right
+    );
+    return normalized.length ? normalized : [...DEFAULT_TABLE_PAGE_SIZES];
+}
+
+export function normalizeTablePageSize(
+    value: unknown,
+    fallback: number = DEFAULT_TABLE_PAGE_SIZE
+): number {
+    return normalizeBoundedInt(value, {
+        min: 1,
+        max: 1000,
+        fallback
+    });
+}
+
+export function normalizeAutoDeletePrintsLimit(value: unknown): number {
+    return normalizeBoundedInt(value, {
+        min: PRINT_AUTO_DELETE_LIMIT_MIN,
+        max: PRINT_AUTO_DELETE_LIMIT_MAX,
+        fallback: DEFAULT_PRINT_AUTO_DELETE_LIMIT
+    });
+}
+
+export function normalizeBackgroundModeDelayMinutes(value: unknown): number {
+    return normalizeBoundedInt(value, {
+        min: 10,
+        max: 600,
+        fallback: 60
+    });
+}
+
+export function normalizeTableLimits(value: unknown = {}): {
+    maxTableSize: number;
+    searchLimit: number;
+} {
+    const limits = asRecord(value);
+    return {
+        maxTableSize: normalizeBoundedInt(limits.maxTableSize, {
+            min: TABLE_MAX_SIZE_MIN,
+            max: TABLE_MAX_SIZE_MAX,
+            fallback: DEFAULT_MAX_TABLE_SIZE
+        }),
+        searchLimit: normalizeBoundedInt(limits.searchLimit, {
+            min: SEARCH_LIMIT_MIN,
+            max: SEARCH_LIMIT_MAX,
+            fallback: DEFAULT_SEARCH_LIMIT
+        })
+    };
+}
+
+export function normalizeFeedHiddenUsers(value: unknown): string[] {
+    if (typeof value === 'string') {
+        try {
+            return normalizeFeedHiddenUsers(JSON.parse(value));
+        } catch {
+            return [];
+        }
+    }
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    const seen = new Set<string>();
+    const userIds: string[] = [];
+    for (const entry of value) {
+        const userId =
+            typeof entry === 'string'
+                ? normalizeText(entry)
+                : normalizeText(asRecord(entry).userId);
+        if (!userId || seen.has(userId)) {
+            continue;
+        }
+        seen.add(userId);
+        userIds.push(userId);
+    }
+    return userIds;
+}
+
+export const DEFAULT_PREFERENCES = Object.freeze({
+    notificationLayout: 'notification-center',
+    dataTableStriped: false,
+    tableDensity: 'standard',
+    reducedMotionAndBlur: false,
+    accessibleStatusIndicators: false,
+    showNewDashboardButton: true,
+    recentActionCooldownEnabled: false,
+    recentActionCooldownMinutes: 60,
+    screenshotHelper: true,
+    screenshotHelperModifyFilename: false,
+    screenshotHelperCopyToClipboard: false,
+    saveInstancePrints: false,
+    cropInstancePrints: false,
+    autoDeleteOldPrints: false,
+    autoDeletePrintsLimit: DEFAULT_PRINT_AUTO_DELETE_LIMIT,
+    saveInstanceStickers: false,
+    saveInstanceEmoji: false,
+    userGeneratedContentPath: '',
+    showInstanceIdInLocation: false,
+    isAgeGatedInstancesVisible: true,
+    hideNicknames: false,
+    showUserDialogProfileBackground: true,
+    showUserDialogAvatarFrame: true,
+    showUserDialogProfileEffect: true,
+    showUserDialogNameplateEffect: true,
+    weekStartsOn: 1,
+    dtIsoFormat: false,
+    dtHour12: false,
+    hideUserNotes: false,
+    hideUserMemos: false,
+    friendLogNotificationDot: true,
+    hideUnfriends: false,
+    profileBioScanEnabled: false,
+    randomUserColours: false,
+    notificationIconDot: true,
+    taskbarIconDot: true,
+    showPostUpdateChangelogToast: true,
+    autoInstallUpdatesOnStartup: true,
+    desktopToast: 'Never',
+    afkDesktopToast: false,
+    desktopNotificationSound: false,
+    notificationDoNotDisturbEndOnGameStart: true,
+    notificationTTS: 'Never',
+    notificationTTSNameMode: 'username',
+    notificationTTSNickName: false,
+    notificationTTSVoiceNative: '',
+    notificationTTSVolume: 100,
+    xsNotifications: false,
+    ovrtHudNotifications: false,
+    ovrtWristNotifications: false,
+    imageNotifications: true,
+    notificationTimeout: 3000,
+    notificationOpacity: 100,
+    hmdNotificationsEnabled: false,
+    hmdNotificationStartMode: 'vrchatVrMode',
+    hmdNotificationTimeout: 5000,
+    hmdNotificationOpacity: 100,
+    hmdNotificationPosition: 'bottom',
+    webhookEnabled: false,
+    webhookAuthEventsEnabled: true,
+    webhookUrl: '',
+    webhookFormat: 'generic',
+    webhookFields: DEFAULT_GENERIC_WEBHOOK_FIELDS,
+    wristOverlayEnabled: false,
+    wristOverlayStartMode: 'vrchatVrMode',
+    wristOverlayButton: 'grip',
+    wristOverlayHand: 'left',
+    wristOverlaySize: 'normal',
+    wristOverlayHidePrivateWorlds: false,
+    wristOverlayDarkBackground: true,
+    wristOverlayShowDevices: true,
+    wristOverlayShowBatteryPercent: false,
+    relaunchVRChatAfterCrash: false,
+    vrcQuitFix: true,
+    focusVrchatOnJoin: false,
+    autoSweepVRChatCache: false,
+    gameLogDisabled: false,
+    feedPersistenceDisabled: false,
+    avatarAutoCleanup: 'Off',
+    anonymousUsageTelemetry: true,
+    udonExceptionLogging: false,
+    logResourceLoad: false,
+    autoLoginDelayEnabled: false,
+    autoLoginDelaySeconds: 0,
+    backgroundModeEnabled: false,
+    backgroundModeDelayEnabled: false,
+    backgroundModeDelayMinutes: 60,
+    isStartAtWindowsStartup: false,
+    isStartAsMinimizedState: false,
+    isCloseToTray: false,
+    systemWindowFrame: false,
+    navPanelWidth: 240,
+    navIsCollapsed: false,
+    proxyEnabled: false,
+    proxyServer: '',
+    tablePageSize: DEFAULT_TABLE_PAGE_SIZE,
+    tablePageSizes: DEFAULT_TABLE_PAGE_SIZES,
+    tableLimits: {
+        maxTableSize: DEFAULT_MAX_TABLE_SIZE,
+        searchLimit: DEFAULT_SEARCH_LIMIT
+    },
+    localFavoriteFriendsGroups: [],
+    feedHiddenUsers: [],
+    overlayActivityFilters: DEFAULT_OVERLAY_ACTIVITY_FILTERS,
+    vrNotificationActivityFilters: DEFAULT_VR_NOTIFICATION_ACTIVITY_FILTERS,
+    hmdNotificationActivityFilters: DEFAULT_HMD_NOTIFICATION_ACTIVITY_FILTERS,
+    desktopNotificationActivityFilters:
+        DEFAULT_VR_NOTIFICATION_ACTIVITY_FILTERS,
+    webhookActivityFilters: DEFAULT_WEBHOOK_ACTIVITY_FILTERS,
+    ttsNotificationActivityFilters: DEFAULT_TTS_NOTIFICATION_ACTIVITY_FILTERS,
+    feedTimeDisplayMode: 'relative',
+    trustColor: { ...TRUST_COLOR_DEFAULTS },
+    youtubeAPI: false,
+    translationAPI: false,
+    bioLanguage: 'en',
+    translationAPIType: 'google',
+    translationEndpointId: '',
+    translationAPIEndpoint: DEFAULT_TRANSLATION_ENDPOINT,
+    translationAPIModel: DEFAULT_TRANSLATION_MODEL,
+    translationAPIPrompt: '',
+    translationAPIReasoningEffort: '',
+    appFontFamily: 'geist',
+    appCjkFontPack: 'noto',
+    customFontFamily: '',
+    customFontPrimary: '',
+    customFontSecondary: '',
+    customFontOverride: '',
+    discordActive: false,
+    discordInstance: true,
+    discordHideInvite: true,
+    discordJoinButton: false,
+    discordHideImage: false,
+    discordShowPlatform: true,
+    discordWorldIntegration: true,
+    discordWorldNameAsDiscordStatus: false
+} satisfies PreferenceInputSnapshot);
+
+export function normalizePreferenceSnapshot(snapshot: unknown = {}) {
+    const snapshotRecord = asRecord(snapshot);
+    const next: PreferenceInputSnapshot = {
+        ...DEFAULT_PREFERENCES,
+        ...snapshotRecord
+    };
+
+    return {
+        notificationLayout:
+            next.notificationLayout === 'table'
+                ? 'table'
+                : 'notification-center',
+        dataTableStriped: normalizeBool(next.dataTableStriped),
+        tableDensity: normalizeTableDensity(next.tableDensity),
+        reducedMotionAndBlur: normalizeBool(next.reducedMotionAndBlur),
+        accessibleStatusIndicators: normalizeBool(
+            next.accessibleStatusIndicators
+        ),
+        showNewDashboardButton: normalizeBool(next.showNewDashboardButton),
+        recentActionCooldownEnabled: normalizeBool(
+            next.recentActionCooldownEnabled
+        ),
+        recentActionCooldownMinutes: normalizeBoundedInt(
+            next.recentActionCooldownMinutes,
+            { min: 1, max: MINUTES_PER_DAY, fallback: 60 }
+        ),
+        screenshotHelper: normalizeBool(next.screenshotHelper),
+        screenshotHelperModifyFilename: normalizeBool(
+            next.screenshotHelperModifyFilename
+        ),
+        screenshotHelperCopyToClipboard: normalizeBool(
+            next.screenshotHelperCopyToClipboard
+        ),
+        saveInstancePrints: normalizeBool(next.saveInstancePrints),
+        cropInstancePrints: normalizeBool(next.cropInstancePrints),
+        autoDeleteOldPrints: normalizeBool(next.autoDeleteOldPrints),
+        autoDeletePrintsLimit: normalizeAutoDeletePrintsLimit(
+            next.autoDeletePrintsLimit
+        ),
+        saveInstanceStickers: normalizeBool(next.saveInstanceStickers),
+        saveInstanceEmoji: normalizeBool(next.saveInstanceEmoji),
+        userGeneratedContentPath: String(next.userGeneratedContentPath || ''),
+        showInstanceIdInLocation: normalizeBool(next.showInstanceIdInLocation),
+        isAgeGatedInstancesVisible: normalizeBool(
+            next.isAgeGatedInstancesVisible
+        ),
+        hideNicknames: normalizeBool(next.hideNicknames),
+        showUserDialogProfileBackground: normalizeBool(
+            next.showUserDialogProfileBackground
+        ),
+        showUserDialogAvatarFrame: normalizeBool(
+            next.showUserDialogAvatarFrame
+        ),
+        showUserDialogProfileEffect: normalizeBool(
+            next.showUserDialogProfileEffect
+        ),
+        showUserDialogNameplateEffect: normalizeBool(
+            next.showUserDialogNameplateEffect
+        ),
+        weekStartsOn: normalizeWeekStartsOn(next.weekStartsOn),
+        dtIsoFormat: normalizeBool(next.dtIsoFormat),
+        dtHour12: normalizeBool(next.dtHour12),
+        hideUserNotes: normalizeBool(next.hideUserNotes),
+        hideUserMemos: normalizeBool(next.hideUserMemos),
+        friendLogNotificationDot: normalizeBool(next.friendLogNotificationDot),
+        hideUnfriends: normalizeBool(next.hideUnfriends),
+        profileBioScanEnabled: normalizeBool(next.profileBioScanEnabled),
+        randomUserColours: normalizeBool(next.randomUserColours),
+        notificationIconDot: normalizeBool(next.notificationIconDot),
+        taskbarIconDot: normalizeBool(next.taskbarIconDot),
+        showPostUpdateChangelogToast: normalizeBool(
+            next.showPostUpdateChangelogToast
+        ),
+        autoInstallUpdatesOnStartup: normalizeBool(
+            next.autoInstallUpdatesOnStartup
+        ),
+        desktopToast: String(next.desktopToast || 'Never'),
+        afkDesktopToast: normalizeBool(next.afkDesktopToast),
+        desktopNotificationSound: normalizeBool(next.desktopNotificationSound),
+        notificationDoNotDisturbEndOnGameStart: normalizeBool(
+            next.notificationDoNotDisturbEndOnGameStart
+        ),
+        notificationTTS: String(next.notificationTTS || 'Never'),
+        notificationTTSNameMode: normalizeNotificationTtsNameMode(
+            next.notificationTTSNameMode,
+            next.notificationTTSNickName
+        ),
+        notificationTTSNickName: normalizeBool(next.notificationTTSNickName),
+        notificationTTSVoiceNative: String(
+            next.notificationTTSVoiceNative ?? ''
+        ),
+        notificationTTSVolume: normalizeBoundedInt(next.notificationTTSVolume, {
+            min: 0,
+            max: 100,
+            fallback: 100
+        }),
+        xsNotifications: normalizeBool(next.xsNotifications),
+        ovrtHudNotifications: normalizeBool(next.ovrtHudNotifications),
+        ovrtWristNotifications: normalizeBool(next.ovrtWristNotifications),
+        imageNotifications: normalizeBool(next.imageNotifications),
+        notificationTimeout: normalizeBoundedInt(next.notificationTimeout, {
+            min: 0,
+            max: 600000,
+            fallback: 3000
+        }),
+        notificationOpacity: normalizeBoundedInt(next.notificationOpacity, {
+            min: 0,
+            max: 100,
+            fallback: 100
+        }),
+        hmdNotificationsEnabled: normalizeBool(next.hmdNotificationsEnabled),
+        hmdNotificationStartMode: normalizeOverlayStartMode(
+            next.hmdNotificationStartMode
+        ),
+        hmdNotificationTimeout: normalizeBoundedInt(
+            next.hmdNotificationTimeout,
+            {
+                min: 1000,
+                max: 30000,
+                fallback: 5000
+            }
+        ),
+        hmdNotificationOpacity: normalizeBoundedInt(
+            next.hmdNotificationOpacity,
+            {
+                min: 0,
+                max: 100,
+                fallback: 100
+            }
+        ),
+        hmdNotificationPosition: normalizeHmdNotificationPosition(
+            next.hmdNotificationPosition
+        ),
+        webhookEnabled: normalizeBool(next.webhookEnabled),
+        webhookAuthEventsEnabled: normalizeBool(next.webhookAuthEventsEnabled),
+        webhookUrl: String(next.webhookUrl || ''),
+        webhookFormat: normalizeNotificationWebhookFormat(next.webhookFormat),
+        webhookFields: String(
+            next.webhookFields || DEFAULT_GENERIC_WEBHOOK_FIELDS
+        ),
+        wristOverlayEnabled: normalizeBool(next.wristOverlayEnabled),
+        wristOverlayStartMode: normalizeWristOverlayStartMode(
+            next.wristOverlayStartMode
+        ),
+        wristOverlayButton: normalizeWristOverlayButton(
+            next.wristOverlayButton
+        ),
+        wristOverlayHand: normalizeWristOverlayHand(next.wristOverlayHand),
+        wristOverlaySize: normalizeWristOverlaySize(next.wristOverlaySize),
+        wristOverlayHidePrivateWorlds: normalizeBool(
+            next.wristOverlayHidePrivateWorlds
+        ),
+        wristOverlayDarkBackground: normalizeBool(
+            next.wristOverlayDarkBackground
+        ),
+        wristOverlayShowDevices: normalizeBool(next.wristOverlayShowDevices),
+        wristOverlayShowBatteryPercent: normalizeBool(
+            next.wristOverlayShowBatteryPercent
+        ),
+        relaunchVRChatAfterCrash: normalizeBool(next.relaunchVRChatAfterCrash),
+        vrcQuitFix: normalizeBool(next.vrcQuitFix),
+        focusVrchatOnJoin: normalizeBool(next.focusVrchatOnJoin),
+        autoSweepVRChatCache: normalizeBool(next.autoSweepVRChatCache),
+        gameLogDisabled: normalizeBool(next.gameLogDisabled),
+        feedPersistenceDisabled: normalizeBool(next.feedPersistenceDisabled),
+        avatarAutoCleanup: normalizeAvatarAutoCleanupPreference(
+            next.avatarAutoCleanup
+        ),
+        anonymousUsageTelemetry: normalizeBool(next.anonymousUsageTelemetry),
+        udonExceptionLogging: normalizeBool(next.udonExceptionLogging),
+        logResourceLoad: normalizeBool(next.logResourceLoad),
+        autoLoginDelayEnabled: normalizeBool(next.autoLoginDelayEnabled),
+        autoLoginDelaySeconds: normalizeBoundedInt(next.autoLoginDelaySeconds, {
+            min: 0,
+            max: 10,
+            fallback: 0
+        }),
+        backgroundModeEnabled: normalizeBool(next.backgroundModeEnabled),
+        backgroundModeDelayEnabled: normalizeBool(
+            next.backgroundModeDelayEnabled
+        ),
+        backgroundModeDelayMinutes: normalizeBackgroundModeDelayMinutes(
+            next.backgroundModeDelayMinutes
+        ),
+        isStartAtWindowsStartup: normalizeBool(next.isStartAtWindowsStartup),
+        isStartAsMinimizedState: normalizeBool(next.isStartAsMinimizedState),
+        isCloseToTray: normalizeBool(next.isCloseToTray),
+        systemWindowFrame: normalizeBool(next.systemWindowFrame),
+        navPanelWidth: normalizeNavWidth(next.navPanelWidth),
+        navIsCollapsed: normalizeBool(next.navIsCollapsed),
+        proxyEnabled: normalizeBool(next.proxyEnabled),
+        proxyServer: String(next.proxyServer || ''),
+        tablePageSize: normalizeTablePageSize(next.tablePageSize),
+        tablePageSizes: normalizeTablePageSizes(next.tablePageSizes),
+        tableLimits: normalizeTableLimits(next.tableLimits),
+        localFavoriteFriendsGroups: Array.isArray(
+            next.localFavoriteFriendsGroups
+        )
+            ? next.localFavoriteFriendsGroups.filter(
+                  (groupKey): groupKey is string =>
+                      typeof groupKey === 'string' && Boolean(groupKey)
+              )
+            : [],
+        feedHiddenUsers: normalizeFeedHiddenUsers(next.feedHiddenUsers),
+        overlayActivityFilters: parseOverlayActivityFiltersPreference(
+            next.overlayActivityFilters
+        ),
+        vrNotificationActivityFilters: parseOverlayActivityFilterProfile(
+            next.vrNotificationActivityFilters
+        ),
+        hmdNotificationActivityFilters: parseHmdOverlayActivityFilterProfile(
+            next.hmdNotificationActivityFilters
+        ),
+        desktopNotificationActivityFilters: parseOverlayActivityFilterProfile(
+            next.desktopNotificationActivityFilters
+        ),
+        webhookActivityFilters: parseOverlayActivityFilterProfile(
+            next.webhookActivityFilters || DEFAULT_WEBHOOK_ACTIVITY_FILTERS
+        ),
+        ttsNotificationActivityFilters: parseOverlayActivityFilterProfile(
+            next.ttsNotificationActivityFilters ||
+                DEFAULT_TTS_NOTIFICATION_ACTIVITY_FILTERS
+        ),
+        feedTimeDisplayMode: normalizeFeedTimeDisplayMode(
+            next.feedTimeDisplayMode
+        ),
+        trustColor: normalizeTrustColors(next.trustColor),
+        youtubeAPI: normalizeBool(next.youtubeAPI),
+        translationAPI: normalizeBool(next.translationAPI),
+        bioLanguage: String(next.bioLanguage || 'en'),
+        translationAPIType: normalizeTranslationApiType(
+            next.translationAPIType
+        ),
+        translationEndpointId: String(next.translationEndpointId || ''),
+        translationAPIEndpoint: String(
+            next.translationAPIEndpoint || DEFAULT_TRANSLATION_ENDPOINT
+        ),
+        translationAPIModel: String(
+            next.translationAPIModel || DEFAULT_TRANSLATION_MODEL
+        ),
+        translationAPIPrompt: String(next.translationAPIPrompt || ''),
+        translationAPIReasoningEffort: String(
+            next.translationAPIReasoningEffort || ''
+        ),
+        appFontFamily: String(next.appFontFamily || 'geist'),
+        appCjkFontPack: String(next.appCjkFontPack || 'noto'),
+        customFontFamily: String(next.customFontFamily || ''),
+        customFontPrimary: String(next.customFontPrimary || ''),
+        customFontSecondary: String(next.customFontSecondary || ''),
+        customFontOverride: String(next.customFontOverride || ''),
+        discordActive: normalizeBool(next.discordActive),
+        discordInstance: normalizeBool(next.discordInstance),
+        discordHideInvite: normalizeBool(next.discordHideInvite),
+        discordJoinButton: normalizeBool(next.discordJoinButton),
+        discordHideImage: normalizeBool(next.discordHideImage),
+        discordShowPlatform: normalizeBool(next.discordShowPlatform),
+        discordWorldIntegration: normalizeBool(next.discordWorldIntegration),
+        discordWorldNameAsDiscordStatus: normalizeBool(
+            next.discordWorldNameAsDiscordStatus
+        )
+    };
+}
+
+export type PreferencesSnapshot = ReturnType<
+    typeof normalizePreferenceSnapshot
+>;
+
+export type PreferencesStoreState = PreferencesSnapshot & {
+    preferencesHydrated: boolean;
+    hydratePreferences(snapshot: unknown): void;
+    patchPreferences(patch: Partial<PreferencesSnapshot>): void;
+    setPreferenceValue<K extends keyof PreferencesSnapshot>(
+        key: K,
+        value: PreferencesSnapshot[K]
+    ): void;
+};
+
+export const usePreferencesStore = create<PreferencesStoreState>((set) => ({
+    ...normalizePreferenceSnapshot(DEFAULT_PREFERENCES),
+    preferencesHydrated: false,
+    hydratePreferences(snapshot: unknown) {
+        set({
+            ...normalizePreferenceSnapshot(snapshot),
+            preferencesHydrated: true
+        });
+    },
+    patchPreferences(patch: Partial<PreferencesSnapshot>) {
+        set((state) =>
+            normalizePreferenceSnapshot({
+                ...state,
+                ...patch
+            })
+        );
+    },
+    setPreferenceValue(key, value) {
+        set((state) =>
+            normalizePreferenceSnapshot({
+                ...state,
+                [key]: value
+            })
+        );
+    }
+}));

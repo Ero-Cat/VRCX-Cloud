@@ -1,0 +1,583 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { onlineFeedEntry } from '@/components/feed/feedLiveTestEntries';
+import { onlinePresence } from '@/test/presenceFixtures';
+
+const serviceMocks = vi.hoisted(() => ({
+    configRepository: {
+        getString: vi.fn()
+    },
+    pushSharedFeedNotification: vi.fn(),
+    recordCurrentUserSnapshot: vi.fn()
+}));
+
+vi.mock('@/repositories/configRepository', () => ({
+    default: serviceMocks.configRepository
+}));
+
+vi.mock('./domainIngestionService', () => ({
+    recordCurrentUserSnapshot: serviceMocks.recordCurrentUserSnapshot
+}));
+
+vi.mock('./sharedFeedNotificationService', () => ({
+    pushSharedFeedNotification: serviceMocks.pushSharedFeedNotification
+}));
+
+vi.mock('./shellIntegrationService', () => ({
+    setTrayIconNotification: vi.fn(async () => undefined),
+    setTaskbarOverlayNotification: vi.fn(async () => undefined)
+}));
+
+describe('realtimePresenceService projection boundary', () => {
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        serviceMocks.configRepository.getString.mockResolvedValue('[]');
+        serviceMocks.pushSharedFeedNotification.mockResolvedValue(undefined);
+
+        const { useFriendRosterStore } =
+            await import('@/state/friendRosterStore');
+        const { useFriendLocationTimeStore } =
+            await import('@/state/friendLocationTimeStore');
+        const { useRuntimeStore } = await import('@/state/runtimeStore');
+        const { useFeedLiveStore } = await import('@/state/feedLiveStore');
+        const { useShellStore } = await import('@/state/shellStore');
+        const { useVrcNotificationStore } =
+            await import('@/state/vrcNotificationStore');
+
+        useFriendRosterStore.getState().resetRoster();
+        useFriendLocationTimeStore.getState().reset();
+        useRuntimeStore.getState().resetRuntimeState();
+        useRuntimeStore.getState().setAuthBootstrap({
+            currentUserId: 'usr_self',
+            currentUserEndpoint: 'https://api.example.test',
+            currentUserWebsocket: 'wss://ws.example.test',
+            currentUserSnapshot: {
+                id: 'usr_self',
+                friends: ['usr_friend'],
+                onlineFriends: [],
+                activeFriends: [],
+                offlineFriends: ['usr_friend']
+            }
+        });
+        useFeedLiveStore.getState().resetFeedLive();
+        useShellStore.getState().clearAllNotifications();
+        useVrcNotificationStore.getState().resetVrcNotificationState();
+
+        const { resetRealtimeRosterUpdates } =
+            await import('./realtimeRosterUpdateQueue');
+        resetRealtimeRosterUpdates();
+    });
+
+    it('replaces cached user facts from the typed runtime projection', async () => {
+        const { useUserFactsStore } = await import('@/state/userFactsStore');
+        const { handleRealtimeUserCacheProjection } =
+            await import('./realtimePresenceService');
+        useUserFactsStore.getState().resetUserFacts();
+
+        handleRealtimeUserCacheProjection({
+            users: [
+                {
+                    id: 'usr_friend',
+                    endpoint: 'https://api.example.test',
+                    displayName: 'Friend'
+                }
+            ]
+        });
+
+        expect(
+            useUserFactsStore.getState().usersByKey[
+                'https://api.example.test::usr_friend'
+            ]
+        ).toMatchObject({
+            id: 'usr_friend',
+            displayName: 'Friend'
+        });
+    });
+
+    it('applies friend patches to the roster without touching current-user friend buckets', async () => {
+        const { useFriendRosterStore } =
+            await import('@/state/friendRosterStore');
+        const { useRuntimeStore } = await import('@/state/runtimeStore');
+        const { useShellStore } = await import('@/state/shellStore');
+        const { handleRealtimeFriendProjection } =
+            await import('./realtimePresenceService');
+
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            patches: [
+                {
+                    userId: 'usr_friend',
+                    presence: { rev: 1, view: onlinePresence('wrld_1:123') },
+                    record: {
+                        id: 'usr_friend',
+                        displayName: 'Friend'
+                    }
+                }
+            ],
+            removals: [],
+            friendLogChanged: true
+        });
+
+        expect(useFriendRosterStore.getState().onlineIds).toEqual([
+            'usr_friend'
+        ]);
+        expect(
+            useRuntimeStore.getState().auth.currentUserSnapshot
+        ).toMatchObject({
+            friends: ['usr_friend'],
+            onlineFriends: [],
+            activeFriends: [],
+            offlineFriends: ['usr_friend']
+        });
+        expect(useShellStore.getState().notifiedMenus).toContain('friend-log');
+    });
+
+    it('replaces the location-time snapshot only when the projection includes it', async () => {
+        const { useFriendLocationTimeStore } =
+            await import('@/state/friendLocationTimeStore');
+        const { handleRealtimeFriendProjection } =
+            await import('./realtimePresenceService');
+        const { flushRealtimeRosterUpdates } =
+            await import('./realtimeRosterUpdateQueue');
+
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            patches: [],
+            removals: [],
+            friendLogChanged: false,
+            locationTimeSnapshot: [
+                {
+                    userId: 'usr_friend',
+                    location: 'wrld_test:1',
+                    source: 'realtime',
+                    sinceMs: 1_700_000_000_000
+                }
+            ]
+        });
+        expect(useFriendLocationTimeStore.getState().byUserId).toEqual({
+            usr_friend: {
+                location: 'wrld_test:1',
+                source: 'realtime',
+                sinceMs: 1_700_000_000_000
+            }
+        });
+
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            patches: [],
+            removals: [],
+            friendLogChanged: false
+        });
+        flushRealtimeRosterUpdates();
+        expect(
+            useFriendLocationTimeStore.getState().byUserId.usr_friend
+        ).toEqual({
+            location: 'wrld_test:1',
+            source: 'realtime',
+            sinceMs: 1_700_000_000_000
+        });
+
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            patches: [],
+            removals: [],
+            friendLogChanged: false,
+            locationTimeSnapshot: []
+        });
+        flushRealtimeRosterUpdates();
+        expect(useFriendLocationTimeStore.getState().byUserId).toEqual({});
+    });
+
+    it('applies the dedicated Rust Feed projection', async () => {
+        const { useFeedLiveStore } = await import('@/state/feedLiveStore');
+        const { handleRealtimeFeedProjection } =
+            await import('./realtimePresenceService');
+
+        await handleRealtimeFeedProjection({
+            generation: 7,
+            ownerUserId: 'usr_self',
+            upserts: [
+                {
+                    sequence: 11,
+                    entry: onlineFeedEntry({
+                        userId: 'usr_friend',
+                        ownerUserId: 'usr_self'
+                    })
+                }
+            ],
+            patches: []
+        });
+
+        expect(useFeedLiveStore.getState()).toMatchObject({
+            version: 11,
+            entries: [
+                {
+                    sequence: 11,
+                    ownerUserId: 'usr_self',
+                    entry: {
+                        type: 'Online',
+                        userId: 'usr_friend',
+                        ownerUserId: 'usr_self'
+                    }
+                }
+            ]
+        });
+        expect(serviceMocks.pushSharedFeedNotification).toHaveBeenCalledTimes(
+            1
+        );
+    });
+
+    it('bumps the friend-log revision so the active friend-log page refreshes in place', async () => {
+        const { useFriendLogStore } = await import('@/state/friendLogStore');
+        const { handleRealtimeFriendProjection } =
+            await import('./realtimePresenceService');
+
+        const before = useFriendLogStore.getState().revision;
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            patches: [],
+            removals: [],
+            friendLogChanged: true
+        });
+        expect(useFriendLogStore.getState().revision).toBe(before + 1);
+
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            patches: [],
+            removals: [],
+            friendLogChanged: false
+        });
+        expect(useFriendLogStore.getState().revision).toBe(before + 1);
+    });
+
+    it('applies runtime friend removals only to the roster', async () => {
+        const { useFriendRosterStore } =
+            await import('@/state/friendRosterStore');
+        const { useRuntimeStore } = await import('@/state/runtimeStore');
+        const { handleRealtimeFriendProjection } =
+            await import('./realtimePresenceService');
+
+        useFriendRosterStore.getState().setRosterSnapshot({
+            currentUserId: 'usr_self',
+            friendsById: {
+                usr_friend: {
+                    id: 'usr_friend',
+                    displayName: 'Friend',
+                    state: 'online'
+                }
+            }
+        });
+
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            removals: ['usr_friend'],
+            patches: [],
+            friendLogChanged: true
+        });
+
+        expect(
+            useFriendRosterStore.getState().friendsById.usr_friend
+        ).toBeUndefined();
+        expect(
+            useRuntimeStore.getState().auth.currentUserSnapshot?.friends
+        ).toEqual(['usr_friend']);
+    });
+
+    it('keeps a coalesced patch from resurrecting a removed friend', async () => {
+        const { useFriendRosterStore } =
+            await import('@/state/friendRosterStore');
+        const { handleRealtimeFriendProjection } =
+            await import('./realtimePresenceService');
+        const { flushRealtimeRosterUpdates } =
+            await import('./realtimeRosterUpdateQueue');
+
+        useFriendRosterStore.getState().setRosterSnapshot({
+            currentUserId: 'usr_self',
+            friendsById: {
+                usr_friend: {
+                    id: 'usr_friend',
+                    displayName: 'Friend',
+                    state: 'online'
+                }
+            }
+        });
+
+        for (const displayName of ['Leading', 'Buffered']) {
+            handleRealtimeFriendProjection({
+                generation: 7,
+                baselineRevision: 1,
+                patches: [
+                    {
+                        userId: 'usr_friend',
+                        record: { id: 'usr_friend', displayName },
+                        presence: { rev: 1, view: { kind: 'offline' } }
+                    }
+                ],
+                removals: [],
+                friendLogChanged: false
+            });
+        }
+
+        handleRealtimeFriendProjection({
+            generation: 7,
+            baselineRevision: 1,
+            patches: [],
+            removals: ['usr_friend'],
+            friendLogChanged: false
+        });
+        flushRealtimeRosterUpdates();
+
+        expect(
+            useFriendRosterStore.getState().friendsById.usr_friend
+        ).toBeUndefined();
+    });
+
+    it('stores a notification projection upsert and flags the notification menu', async () => {
+        const { useShellStore } = await import('@/state/shellStore');
+        const { useVrcNotificationStore } =
+            await import('@/state/vrcNotificationStore');
+        const { handleRealtimeNotificationProjection } =
+            await import('./realtimePresenceService');
+
+        await handleRealtimeNotificationProjection({
+            generation: 7,
+            upserts: [
+                {
+                    notification: {
+                        id: 'not_1',
+                        version: 2,
+                        type: 'invite',
+                        seen: false,
+                        createdAt: '2026-05-15T00:00:00Z'
+                    },
+                    notifyMenu: true,
+                    deliverRuntime: true,
+                    runAutomation: true
+                }
+            ],
+            expiredIds: [],
+            seenIds: [],
+            clearMenuIfNoUnseen: false
+        });
+
+        expect(useVrcNotificationStore.getState().rows[0]).toMatchObject({
+            id: 'not_1',
+            type: 'invite'
+        });
+        expect(useShellStore.getState().notifiedMenus).toContain(
+            'notification'
+        );
+    });
+
+    it('uses the merged notification row for v2 update menu decisions', async () => {
+        const { useShellStore } = await import('@/state/shellStore');
+        const { useVrcNotificationStore } =
+            await import('@/state/vrcNotificationStore');
+        const { handleRealtimeNotificationProjection } =
+            await import('./realtimePresenceService');
+
+        useVrcNotificationStore.getState().upsertNotification({
+            id: 'not_1',
+            version: 2,
+            type: 'invite',
+            seen: false,
+            createdAt: '2026-05-15T00:00:00Z'
+        });
+        useShellStore.getState().clearAllNotifications();
+
+        await handleRealtimeNotificationProjection({
+            generation: 7,
+            upserts: [
+                {
+                    notification: {
+                        id: 'not_1',
+                        version: 2,
+                        message: 'Updated'
+                    },
+                    notifyMenu: true,
+                    deliverRuntime: false,
+                    runAutomation: false
+                }
+            ],
+            expiredIds: [],
+            seenIds: [],
+            clearMenuIfNoUnseen: false
+        });
+
+        expect(useVrcNotificationStore.getState().rows[0]).toMatchObject({
+            id: 'not_1',
+            seen: false,
+            message: 'Updated'
+        });
+        expect(useShellStore.getState().notifiedMenus).toContain(
+            'notification'
+        );
+    });
+
+    it('does not sync roster buckets from complete current-user projection', async () => {
+        const { useFriendRosterStore } =
+            await import('@/state/friendRosterStore');
+        const { useRuntimeStore } = await import('@/state/runtimeStore');
+        const { handleRealtimeCurrentUserProjection } =
+            await import('./realtimePresenceService');
+
+        useRuntimeStore.getState().setAuthBootstrap({
+            currentUserDisplayName: 'Self',
+            currentUserSnapshot: {
+                id: 'usr_self',
+                displayName: 'Self',
+                friends: ['usr_friend'],
+                onlineFriends: [],
+                activeFriends: [],
+                offlineFriends: ['usr_friend']
+            }
+        });
+        useFriendRosterStore.getState().applyFriendPatch({
+            userId: 'usr_friend',
+            patch: {
+                id: 'usr_friend',
+                displayName: 'Friend',
+                state: 'offline'
+            }
+        });
+        handleRealtimeCurrentUserProjection({
+            generation: 7,
+            patch: {
+                id: 'usr_self',
+                displayName: 'New Self',
+                status: 'active',
+                friends: ['usr_friend'],
+                onlineFriends: ['usr_friend'],
+                activeFriends: [],
+                offlineFriends: []
+            },
+            gameStatePatch: {
+                currentLocation: 'wrld_1:123',
+                currentWorldId: 'wrld_1'
+            }
+        });
+
+        expect(
+            useRuntimeStore.getState().auth.currentUserSnapshot?.status
+        ).toBe('active');
+        expect(
+            useRuntimeStore.getState().auth.currentUserSnapshot?.friends
+        ).toEqual(['usr_friend']);
+        expect(useFriendRosterStore.getState()).toMatchObject({
+            onlineIds: [],
+            offlineIds: ['usr_friend'],
+            friendsById: {
+                usr_friend: {
+                    state: 'offline'
+                }
+            }
+        });
+        expect(useRuntimeStore.getState().auth.currentUserDisplayName).toBe(
+            'New Self'
+        );
+        expect(useRuntimeStore.getState().gameState.currentLocation).toBe(
+            'wrld_1:123'
+        );
+        expect(serviceMocks.recordCurrentUserSnapshot).toHaveBeenCalledWith(
+            expect.objectContaining({
+                id: 'usr_self',
+                status: 'active'
+            }),
+            expect.objectContaining({
+                source: 'currentUser'
+            })
+        );
+    });
+
+    it('keeps the existing current-user friend buckets when a partial patch omits them', async () => {
+        const { useRuntimeStore } = await import('@/state/runtimeStore');
+        const { handleRealtimeCurrentUserProjection } =
+            await import('./realtimePresenceService');
+
+        useRuntimeStore.getState().setAuthBootstrap({
+            currentUserDisplayName: 'Self',
+            currentUserSnapshot: {
+                id: 'usr_self',
+                displayName: 'Self',
+                friends: ['usr_friend'],
+                onlineFriends: ['usr_friend'],
+                activeFriends: [],
+                offlineFriends: []
+            }
+        });
+
+        handleRealtimeCurrentUserProjection({
+            generation: 7,
+            patch: {
+                id: 'usr_self',
+                displayName: 'New Self',
+                status: 'active'
+            }
+        });
+
+        expect(
+            useRuntimeStore.getState().auth.currentUserSnapshot
+        ).toMatchObject({
+            displayName: 'New Self',
+            status: 'active',
+            friends: ['usr_friend'],
+            onlineFriends: ['usr_friend'],
+            activeFriends: [],
+            offlineFriends: []
+        });
+    });
+
+    it('applies Rust current-user location authority patch', async () => {
+        const { useRuntimeStore } = await import('@/state/runtimeStore');
+        const { handleRealtimeCurrentUserProjection } =
+            await import('./realtimePresenceService');
+
+        handleRealtimeCurrentUserProjection({
+            generation: 7,
+            patch: {
+                id: 'usr_self',
+                location: 'wrld_game:456',
+                worldId: 'wrld_game',
+                worldName: 'Game World'
+            }
+        });
+
+        expect(
+            useRuntimeStore.getState().auth.currentUserSnapshot?.location
+        ).toBe('wrld_game:456');
+        expect(
+            useRuntimeStore.getState().auth.currentUserSnapshot?.worldName
+        ).toBe('Game World');
+    });
+
+    it('applies runtime instance-closed projection', async () => {
+        const { useShellStore } = await import('@/state/shellStore');
+        const { useVrcNotificationStore } =
+            await import('@/state/vrcNotificationStore');
+        const { handleRealtimeInstanceClosedProjection } =
+            await import('./realtimePresenceService');
+
+        await handleRealtimeInstanceClosedProjection({
+            generation: 7,
+            notification: {
+                id: 'instance.closed:wrld_1:1',
+                type: 'instance.closed',
+                location: 'wrld_1:1'
+            }
+        });
+
+        expect(useVrcNotificationStore.getState().rows[0]).toMatchObject({
+            id: 'instance.closed:wrld_1:1'
+        });
+        expect(useShellStore.getState().notifiedMenus).toContain(
+            'notification'
+        );
+    });
+});

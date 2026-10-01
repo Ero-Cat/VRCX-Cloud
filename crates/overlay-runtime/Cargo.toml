@@ -1,0 +1,32 @@
+[package]
+name = "vrcx-0-overlay-runtime"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "VR overlay runtime"
+
+[features]
+default = []
+steamvr-overlay = ["vrcx-0-host-desktop/steamvr-overlay"]
+openxr-overlay = ["vrcx-0-host-desktop/openxr-overlay"]
+
+[dependencies]
+chrono = { workspace = true }
+image.workspace = true
+moka = { version = "0.12", features = ["sync"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+specta.workspace = true
+tokio = { workspace = true, features = ["time", "rt", "macros", "sync"] }
+tracing = { workspace = true }
+vrcx-0-application-activity = { path = "../application-activity" }
+vrcx-0-application-core = { path = "../application-core" }
+vrcx-0-application-game = { path = "../application-game" }
+vrcx-0-core = { path = "../core" }
+vrcx-0-host-desktop = { path = "../host-desktop" }
+vrcx-0-i18n = { path = "../i18n" }
+vrcx-0-persistence = { path = "../persistence" }
+vrcx-0-vr-overlay = { path = "../vr-overlay", features = ["slint-ui"] }
+
+[dev-dependencies]
+vrcx-0-application-core = { path = "../application-core", features = ["test-utils"] }

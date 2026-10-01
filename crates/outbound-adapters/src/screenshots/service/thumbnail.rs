@@ -1,0 +1,240 @@
+use super::paths::{
+    now_unix_seconds, path_string, SCREENSHOT_THUMBNAIL_CLEANUP_INTERVAL_SECONDS,
+    SCREENSHOT_THUMBNAIL_HARD_LIMIT_BYTES, SCREENSHOT_THUMBNAIL_LAST_CLEANUP_AT,
+    SCREENSHOT_THUMBNAIL_TARGET_BYTES,
+};
+use super::{
+    encode_screenshot_thumbnail_webp, is_path_inside_directory, is_png_file,
+    screenshot_thumbnail_cache_key, screenshot_thumbnail_cache_size, screenshot_thumbnail_files,
+    screenshot_thumbnail_source_state, validate_thumbnail_media_source, write_thumbnail_atomically,
+    Error, HashSet, MetadataCacheDb, Ordering, Path, PathBuf, Result,
+};
+
+#[cfg(test)]
+use super::{
+    add_screenshot_metadata, get_screenshot_metadata, has_vrcx_metadata, png,
+    ScreenshotLibraryEntry, ScreenshotSearchType,
+};
+
+fn thumbnail_path(cache_dir: &Path, stored_path: &str) -> PathBuf {
+    let stored_path = Path::new(stored_path);
+    if stored_path.is_absolute() {
+        stored_path.to_path_buf()
+    } else {
+        cache_dir.join(stored_path)
+    }
+}
+
+fn thumbnail_record_path(path: &Path, cache_dir: &Path) -> String {
+    path.strip_prefix(cache_dir)
+        .map(path_string)
+        .unwrap_or_else(|_| path_string(path))
+}
+
+fn remove_thumbnail_file(
+    path: &Path,
+    record_path: &str,
+    cache_dir: &Path,
+    cache: &MetadataCacheDb,
+) -> u64 {
+    if path.exists() && !is_path_inside_directory(path, cache_dir) {
+        return 0;
+    }
+    let size = std::fs::metadata(path)
+        .map(|metadata| metadata.len())
+        .unwrap_or(0);
+    let _ = std::fs::remove_file(path);
+    cache.delete_thumbnail_cache_record(record_path);
+    size
+}
+
+pub(super) fn delete_thumbnail_cache_for_source_paths(
+    cache_dir: &Path,
+    cache: &MetadataCacheDb,
+    source_paths: &[String],
+) {
+    if source_paths.is_empty() {
+        return;
+    }
+    let source_path_set = source_paths
+        .iter()
+        .map(String::as_str)
+        .collect::<HashSet<_>>();
+    for entry in cache.thumbnail_cache_entries() {
+        if source_path_set.contains(entry.source_path.as_str()) {
+            let path = thumbnail_path(cache_dir, &entry.thumb_path);
+            remove_thumbnail_file(&path, &entry.thumb_path, cache_dir, cache);
+        }
+    }
+}
+
+fn delete_stale_thumbnail_cache_for_source(
+    cache_dir: &Path,
+    cache: &MetadataCacheDb,
+    source_path: &str,
+    current_cache_key: &str,
+) {
+    for entry in cache.thumbnail_cache_entries_for_source(source_path) {
+        if entry.cache_key != current_cache_key {
+            let path = thumbnail_path(cache_dir, &entry.thumb_path);
+            remove_thumbnail_file(&path, &entry.thumb_path, cache_dir, cache);
+        }
+    }
+}
+
+pub(super) fn delete_all_thumbnail_cache_files(cache_dir: &Path, cache: &MetadataCacheDb) {
+    for file in screenshot_thumbnail_files(cache_dir) {
+        let record_path = thumbnail_record_path(&file.path, cache_dir);
+        remove_thumbnail_file(&file.path, &record_path, cache_dir, cache);
+    }
+}
+
+fn cleanup_screenshot_thumbnail_cache(cache_dir: &Path, cache: &MetadataCacheDb) {
+    SCREENSHOT_THUMBNAIL_LAST_CLEANUP_AT.store(now_unix_seconds(), Ordering::Release);
+    let mut total_size = screenshot_thumbnail_cache_size(cache_dir);
+
+    for entry in cache.thumbnail_cache_entries() {
+        let thumb_path = thumbnail_path(cache_dir, &entry.thumb_path);
+        let source_path = PathBuf::from(&entry.source_path);
+        let source_state = screenshot_thumbnail_source_state(&source_path).ok();
+        let source_stale = source_state
+            .map(|(size_bytes, modified_at)| {
+                size_bytes != entry.size_bytes
+                    || modified_at != entry.modified_at
+                    || screenshot_thumbnail_cache_key(&entry.source_path, size_bytes, modified_at)
+                        != entry.cache_key
+            })
+            .unwrap_or(true);
+        if source_stale || !thumb_path.is_file() {
+            total_size = total_size.saturating_sub(remove_thumbnail_file(
+                &thumb_path,
+                &entry.thumb_path,
+                cache_dir,
+                cache,
+            ));
+        }
+    }
+
+    if total_size <= SCREENSHOT_THUMBNAIL_HARD_LIMIT_BYTES {
+        return;
+    }
+
+    if total_size <= SCREENSHOT_THUMBNAIL_TARGET_BYTES {
+        return;
+    }
+
+    let last_used_by_path = cache.thumbnail_last_used_map();
+    let mut files = screenshot_thumbnail_files(cache_dir);
+    files.sort_by_key(|file| {
+        let record_path = thumbnail_record_path(&file.path, cache_dir);
+        last_used_by_path
+            .get(&record_path)
+            .copied()
+            .unwrap_or(file.modified_at)
+    });
+
+    for file in files {
+        if total_size <= SCREENSHOT_THUMBNAIL_TARGET_BYTES {
+            break;
+        }
+        let record_path = thumbnail_record_path(&file.path, cache_dir);
+        total_size = total_size.saturating_sub(remove_thumbnail_file(
+            &file.path,
+            &record_path,
+            cache_dir,
+            cache,
+        ));
+    }
+}
+
+fn cleanup_screenshot_thumbnail_cache_if_due(cache_dir: &Path, cache: &MetadataCacheDb) {
+    let now = now_unix_seconds();
+    let last_cleanup = SCREENSHOT_THUMBNAIL_LAST_CLEANUP_AT.load(Ordering::Relaxed);
+    if now.saturating_sub(last_cleanup) < SCREENSHOT_THUMBNAIL_CLEANUP_INTERVAL_SECONDS {
+        return;
+    }
+    if SCREENSHOT_THUMBNAIL_LAST_CLEANUP_AT
+        .compare_exchange(last_cleanup, now, Ordering::AcqRel, Ordering::Relaxed)
+        .is_ok()
+    {
+        cleanup_screenshot_thumbnail_cache(cache_dir, cache);
+    }
+}
+
+fn validate_screenshot_thumbnail_source(
+    path: &Path,
+    source_root: &Path,
+    size_bytes: i64,
+) -> Result<(u32, u32)> {
+    if source_root.as_os_str().is_empty() {
+        return Err(Error::Custom(
+            "VRChat photos folder is not configured.".into(),
+        ));
+    }
+    if !is_path_inside_directory(path, source_root) {
+        return Err(Error::Custom(
+            "Screenshot thumbnail source is outside the VRChat photos folder.".into(),
+        ));
+    }
+
+    validate_thumbnail_media_source(path, size_bytes).map_err(map_thumbnail_media_error)
+}
+
+fn map_thumbnail_media_error(error: vrcx_0_media::Error) -> Error {
+    match error {
+        vrcx_0_media::Error::Io(error) => Error::Io(error),
+        vrcx_0_media::Error::Custom(message) => Error::Custom(message),
+    }
+}
+
+pub fn ensure_screenshot_thumbnail(
+    path: &str,
+    cache_dir: &Path,
+    cache: &MetadataCacheDb,
+    source_root: &str,
+) -> Result<String> {
+    ensure_screenshot_thumbnail_in_root(path, cache_dir, cache, Path::new(source_root))
+}
+
+fn ensure_screenshot_thumbnail_in_root(
+    path: &str,
+    cache_dir: &Path,
+    cache: &MetadataCacheDb,
+    source_root: &Path,
+) -> Result<String> {
+    let source_path = PathBuf::from(path);
+    if !source_path.is_file() || !is_png_file(path) {
+        return Err(Error::Custom("Screenshot file is not a PNG.".into()));
+    }
+
+    let (size_bytes, modified_at) =
+        screenshot_thumbnail_source_state(&source_path).map_err(map_thumbnail_media_error)?;
+
+    validate_screenshot_thumbnail_source(&source_path, source_root, size_bytes)?;
+
+    let cache_key = screenshot_thumbnail_cache_key(path, size_bytes, modified_at);
+    let thumb_file_name = format!("{cache_key}.webp");
+    let thumb_path = cache_dir.join(&thumb_file_name);
+    let thumb_path_string = path_string(&thumb_path);
+
+    if thumb_path.is_file() {
+        cache.record_thumbnail_cache(path, &thumb_file_name, &cache_key, size_bytes, modified_at);
+        cleanup_screenshot_thumbnail_cache_if_due(cache_dir, cache);
+        return Ok(thumb_path_string);
+    }
+
+    std::fs::create_dir_all(cache_dir)?;
+    delete_stale_thumbnail_cache_for_source(cache_dir, cache, path, &cache_key);
+
+    let encoded_bytes =
+        encode_screenshot_thumbnail_webp(&source_path).map_err(map_thumbnail_media_error)?;
+    write_thumbnail_atomically(&thumb_path, &encoded_bytes).map_err(map_thumbnail_media_error)?;
+
+    cache.record_thumbnail_cache(path, &thumb_file_name, &cache_key, size_bytes, modified_at);
+    cleanup_screenshot_thumbnail_cache_if_due(cache_dir, cache);
+
+    Ok(thumb_path_string)
+}
+
+#[cfg(test)]
+mod tests;

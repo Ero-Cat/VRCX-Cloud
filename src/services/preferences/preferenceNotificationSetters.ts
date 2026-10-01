@@ -1,0 +1,128 @@
+import { commands } from '@/platform/tauri/bindings';
+import configRepository from '@/repositories/configRepository';
+import {
+    normalizeHmdOverlayActivityFilterProfile,
+    normalizeOverlayActivityFilterProfile,
+    normalizeOverlayActivityFiltersWithDefinitions,
+    type OverlayActivityTypeDefinition
+} from '@/shared/constants/overlayActivityFilters';
+import { normalizeOverlayActivityFilters } from '@/state/preferencesStore';
+
+import { patchPreferences, publishPreferenceChanged } from './preferencesCore';
+
+async function loadOverlayActivityTypeDefinitionsForSave() {
+    return commands.appOverlayActivityDefinitionsGet().catch((error) => {
+        const fallbackDefinitions: OverlayActivityTypeDefinition[] = [];
+        console.warn(
+            'Failed to load overlay activity definitions for save:',
+            error
+        );
+        return fallbackDefinitions;
+    });
+}
+
+export async function setOverlayActivityFiltersPreference(
+    value: unknown,
+    definitions?: OverlayActivityTypeDefinition[]
+) {
+    const activityDefinitions =
+        definitions ?? (await loadOverlayActivityTypeDefinitionsForSave());
+    const overlayActivityFilters = activityDefinitions.length
+        ? normalizeOverlayActivityFiltersWithDefinitions(
+              value,
+              activityDefinitions
+          )
+        : normalizeOverlayActivityFilters(value);
+    await commands.appOverlayActivityFiltersSet(overlayActivityFilters);
+    configRepository.applyServerEntry(
+        'overlayActivityFilters',
+        JSON.stringify(overlayActivityFilters)
+    );
+    patchPreferences({ overlayActivityFilters });
+    publishPreferenceChanged('overlayActivityFilters', overlayActivityFilters);
+    return overlayActivityFilters;
+}
+
+async function setNotificationActivityFilterSurfacePreference(
+    key:
+        | 'vrNotificationActivityFilters'
+        | 'desktopNotificationActivityFilters'
+        | 'webhookActivityFilters'
+        | 'ttsNotificationActivityFilters',
+    value: unknown
+) {
+    const normalized = normalizeOverlayActivityFilterProfile(value);
+    await commands.appNotificationActivityFiltersSet({
+        surface:
+            key === 'vrNotificationActivityFilters'
+                ? 'vr'
+                : key === 'desktopNotificationActivityFilters'
+                  ? 'desktop'
+                  : key === 'webhookActivityFilters'
+                    ? 'webhook'
+                    : 'tts',
+        filters: normalized
+    });
+    configRepository.applyServerEntry(key, JSON.stringify(normalized));
+    patchPreferences({ [key]: normalized });
+    publishPreferenceChanged(key, normalized);
+    return normalized;
+}
+
+export function setVrNotificationActivityFiltersPreference(value: unknown) {
+    return setNotificationActivityFilterSurfacePreference(
+        'vrNotificationActivityFilters',
+        value
+    );
+}
+
+export function setDesktopNotificationActivityFiltersPreference(
+    value: unknown
+) {
+    return setNotificationActivityFilterSurfacePreference(
+        'desktopNotificationActivityFilters',
+        value
+    );
+}
+
+export async function setHmdNotificationActivityFiltersPreference(
+    value: unknown
+) {
+    const definitions = await loadOverlayActivityTypeDefinitionsForSave();
+    const normalized = definitions.length
+        ? normalizeHmdOverlayActivityFilterProfile(value, definitions)
+        : normalizeHmdOverlayActivityFilterProfile(value);
+    await commands.appNotificationActivityFiltersSet({
+        surface: 'hmd',
+        filters: normalized
+    });
+    configRepository.applyServerEntry(
+        'hmdNotificationActivityFilters',
+        JSON.stringify(normalized)
+    );
+    patchPreferences({ hmdNotificationActivityFilters: normalized });
+    publishPreferenceChanged('hmdNotificationActivityFilters', normalized);
+    return normalized;
+}
+
+export function setWebhookActivityFiltersPreference(value: unknown) {
+    return setNotificationActivityFilterSurfacePreference(
+        'webhookActivityFilters',
+        value
+    );
+}
+
+export function setTtsNotificationActivityFiltersPreference(value: unknown) {
+    return setNotificationActivityFilterSurfacePreference(
+        'ttsNotificationActivityFilters',
+        value
+    );
+}
+
+export async function setWristOverlayEnabledPreference(value: boolean) {
+    const snapshot = await commands.appVrOverlayEnabledSet(value);
+    const wristOverlayEnabled = snapshot.enabled;
+    patchPreferences({ wristOverlayEnabled });
+    publishPreferenceChanged('wristOverlayEnabled', wristOverlayEnabled);
+    return wristOverlayEnabled;
+}

@@ -1,0 +1,95 @@
+use futures_util::future::BoxFuture;
+
+use serde::Serialize;
+use vrcx_0_application_core::vrchat_api::VrchatApiResponse as HttpApiExecuteResponse;
+pub use vrcx_0_core::TwoFactorMethod;
+
+use crate::auth::{AuthenticatedRuntimeSession, SavedAuthSnapshot};
+use vrcx_0_application_core::Result;
+
+pub type LoginApiFuture<'a> = BoxFuture<'a, Result<HttpApiExecuteResponse>>;
+
+pub enum LoginRemoteOperation {
+    Config {
+        endpoint: String,
+    },
+    CurrentUser {
+        endpoint: String,
+    },
+    BasicLogin {
+        endpoint: String,
+        username: String,
+        password: String,
+    },
+    VerifyTotp {
+        endpoint: String,
+        code: String,
+    },
+    VerifyEmailOtp {
+        endpoint: String,
+        code: String,
+    },
+    VerifyOtp {
+        endpoint: String,
+        code: String,
+    },
+}
+
+pub trait LoginApi: Send + Sync {
+    fn execute(&self, operation: LoginRemoteOperation) -> LoginApiFuture<'_>;
+}
+
+pub trait AuthSessionCookies: Send + Sync {
+    fn get(&self) -> String;
+    fn set(&self, cookies: &str) -> Result<()>;
+    fn clear(&self);
+    fn clear_auth(&self);
+    fn save(&self);
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub enum LoginFailureKind {
+    InvalidCredentials,
+    MissingCredentials,
+    SessionInvalidated,
+    TwoFactorUnavailable,
+    Network,
+    Other,
+}
+
+#[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(tag = "status", rename_all = "camelCase")]
+pub enum LoginSessionState {
+    Authenticated {
+        session: AuthenticatedRuntimeSession,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        snapshot: Option<Box<SavedAuthSnapshot>>,
+    },
+    Challenge {
+        #[serde(rename = "attemptId")]
+        attempt_id: String,
+        #[specta(type = Vec<String>)]
+        methods: Vec<TwoFactorMethod>,
+        #[specta(type = String)]
+        mode: TwoFactorMethod,
+        error: Option<String>,
+    },
+    Failed {
+        reason: String,
+        kind: LoginFailureKind,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        snapshot: Option<Box<SavedAuthSnapshot>>,
+    },
+    Cancelled,
+}
+
+impl LoginSessionState {
+    pub(super) fn failed(reason: impl Into<String>, kind: LoginFailureKind) -> Self {
+        Self::Failed {
+            reason: reason.into(),
+            kind,
+            snapshot: None,
+        }
+    }
+}

@@ -1,0 +1,184 @@
+import { ExternalLinkIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+import { cn } from '@/lib/utils';
+import { emojiAnimationStyleList } from '@/shared/constants/emoji';
+import { Button } from '@/ui/shadcn/button';
+import { Checkbox } from '@/ui/shadcn/checkbox';
+import { Field, FieldGroup, FieldLabel } from '@/ui/shadcn/field';
+import {
+    NumberField,
+    NumberFieldDecrement,
+    NumberFieldGroup,
+    NumberFieldIncrement,
+    NumberFieldInput
+} from '@/ui/shadcn/number-field';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from '@/ui/shadcn/select';
+
+export function GalleryEmojiUploadSettings({
+    emojiAnimType,
+    emojiAnimationStyle,
+    emojiAnimFps,
+    emojiAnimFrameCount,
+    emojiAnimLoopPingPong,
+    onEmojiAnimTypeChange,
+    onEmojiAnimationStyleChange,
+    onEmojiAnimFpsChange,
+    onEmojiAnimFrameCountChange,
+    onEmojiAnimLoopPingPongChange,
+    onCreateAnimatedEmoji,
+    compact = false,
+    className
+}: {
+    emojiAnimType: boolean;
+    emojiAnimationStyle: string;
+    emojiAnimFps: number;
+    emojiAnimFrameCount: number;
+    emojiAnimLoopPingPong: boolean;
+    onEmojiAnimTypeChange: (value: boolean) => void;
+    onEmojiAnimationStyleChange: (value: string) => void;
+    onEmojiAnimFpsChange: (value: number) => void;
+    onEmojiAnimFrameCountChange: (value: number) => void;
+    onEmojiAnimLoopPingPongChange: (value: boolean) => void;
+    onCreateAnimatedEmoji: () => void;
+    compact?: boolean;
+    className?: string;
+}) {
+    const { t } = useTranslation();
+
+    return (
+        <FieldGroup
+            className={cn(
+                compact
+                    ? 'flex-col gap-3'
+                    : 'bg-muted/20 flex-row flex-wrap items-end gap-3 rounded-lg border p-3',
+                className
+            )}
+        >
+            <Field className="min-w-56">
+                <FieldLabel>
+                    {t('dialog.gallery_icons.emoji_animation_styles')}
+                </FieldLabel>
+                <Select
+                    value={emojiAnimationStyle}
+                    items={Object.keys(emojiAnimationStyleList).map(
+                        (styleName) => ({
+                            value: styleName,
+                            label: styleName
+                        })
+                    )}
+                    onValueChange={(value) => {
+                        if (value) {
+                            onEmojiAnimationStyleChange(value);
+                        }
+                    }}
+                >
+                    <SelectTrigger className="w-full">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            {Object.keys(emojiAnimationStyleList).map(
+                                (styleName) => (
+                                    <SelectItem
+                                        key={styleName}
+                                        value={styleName}
+                                    >
+                                        {styleName}
+                                    </SelectItem>
+                                )
+                            )}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </Field>
+            <Field orientation="horizontal" className="h-9 w-auto">
+                <Checkbox
+                    id="gallery-emoji-animation-type"
+                    checked={emojiAnimType}
+                    onCheckedChange={(value) =>
+                        onEmojiAnimTypeChange(Boolean(value))
+                    }
+                />
+                <FieldLabel htmlFor="gallery-emoji-animation-type">
+                    {t('dialog.gallery_icons.emoji_animation_type')}
+                </FieldLabel>
+            </Field>
+            {emojiAnimType ? (
+                <>
+                    <Field className="w-28">
+                        <FieldLabel htmlFor="gallery-emoji-animation-fps">
+                            {t('dialog.gallery_icons.emoji_animation_fps')}
+                        </FieldLabel>
+                        <NumberField
+                            id="gallery-emoji-animation-fps"
+                            min={1}
+                            max={64}
+                            allowOutOfRange
+                            value={emojiAnimFps}
+                            onValueChange={(value) =>
+                                onEmojiAnimFpsChange(value ?? 0)
+                            }
+                        >
+                            <NumberFieldGroup>
+                                <NumberFieldDecrement />
+                                <NumberFieldInput />
+                                <NumberFieldIncrement />
+                            </NumberFieldGroup>
+                        </NumberField>
+                    </Field>
+                    <Field className="w-28">
+                        <FieldLabel htmlFor="gallery-emoji-animation-frame-count">
+                            {t(
+                                'dialog.gallery_icons.emoji_animation_frame_count'
+                            )}
+                        </FieldLabel>
+                        <NumberField
+                            id="gallery-emoji-animation-frame-count"
+                            min={2}
+                            max={64}
+                            allowOutOfRange
+                            value={emojiAnimFrameCount}
+                            onValueChange={(value) =>
+                                onEmojiAnimFrameCountChange(value ?? 0)
+                            }
+                        >
+                            <NumberFieldGroup>
+                                <NumberFieldDecrement />
+                                <NumberFieldInput />
+                                <NumberFieldIncrement />
+                            </NumberFieldGroup>
+                        </NumberField>
+                    </Field>
+                    <Field orientation="horizontal" className="h-9 w-auto">
+                        <Checkbox
+                            id="gallery-emoji-loop-pingpong"
+                            checked={emojiAnimLoopPingPong}
+                            onCheckedChange={(value) =>
+                                onEmojiAnimLoopPingPongChange(Boolean(value))
+                            }
+                        />
+                        <FieldLabel htmlFor="gallery-emoji-loop-pingpong">
+                            {t('dialog.gallery_icons.emoji_loop_pingpong')}
+                        </FieldLabel>
+                    </Field>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onCreateAnimatedEmoji}
+                    >
+                        <ExternalLinkIcon data-icon="inline-start" />
+                        {t('dialog.gallery_icons.create_animated_emoji')}
+                    </Button>
+                </>
+            ) : null}
+        </FieldGroup>
+    );
+}

@@ -1,0 +1,168 @@
+import {
+    useEffect,
+    useRef,
+    useState,
+    type ChangeEvent,
+    type Dispatch,
+    type MutableRefObject,
+    type SetStateAction
+} from 'react';
+import { useTranslation } from 'react-i18next';
+
+import type { WorldProfileRecord } from '@/domain/entities/world';
+import { commands } from '@/platform/tauri/bindings';
+import vrchatMediaRepository from '@/repositories/vrchatMediaRepository';
+import worldProfileRepository from '@/repositories/worldProfileRepository';
+import { toast } from '@/services/toastService';
+import {
+    readFileAsBase64,
+    validateImageUploadFile,
+    withUploadTimeout
+} from '@/shared/utils/imageUpload';
+import { normalizeString } from '@/shared/utils/string';
+
+interface UseWorldImageUploadInput {
+    world: WorldProfileRecord | null;
+    canManageWorld: boolean;
+    currentEndpoint: string;
+    profileWorldId: string;
+    actionStatusRef: MutableRefObject<string>;
+    setActionStatus: Dispatch<SetStateAction<string>>;
+    activeWorldTargetRef: MutableRefObject<{
+        worldId: string;
+        endpoint: string;
+    }>;
+    setWorld: Dispatch<SetStateAction<WorldProfileRecord | null>>;
+    setDetail: Dispatch<SetStateAction<string>>;
+}
+
+export function useWorldImageUpload({
+    world,
+    canManageWorld,
+    currentEndpoint,
+    profileWorldId,
+    actionStatusRef,
+    setActionStatus,
+    activeWorldTargetRef,
+    setWorld,
+    setDetail
+}: UseWorldImageUploadInput) {
+    const { t } = useTranslation();
+    const [imageCropRequest, setImageCropRequest] = useState<{
+        file: File;
+        world: WorldProfileRecord;
+    } | null>(null);
+    const imageUploadInputRef = useRef<HTMLInputElement | null>(null);
+    const imageUploadWorldRef = useRef<WorldProfileRecord | null>(null);
+
+    useEffect(() => {
+        imageUploadWorldRef.current = null;
+        setImageCropRequest(null);
+    }, [profileWorldId]);
+
+    function beginWorldImageUpload() {
+        if (!canManageWorld || actionStatusRef.current !== 'idle') {
+            return;
+        }
+        imageUploadWorldRef.current = world;
+        imageUploadInputRef.current?.click();
+    }
+
+    function onFileChangeWorldImage(event: ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0] || null;
+        event.target.value = '';
+        if (!file) {
+            return;
+        }
+        const validation = validateImageUploadFile(file);
+        if (!validation.ok) {
+            const message =
+                validation.reason === 'too_large'
+                    ? t('dialog.world.error.selected_image_is_too_large')
+                    : t('dialog.world.error.selected_file_is_not_an_image');
+            setDetail(message);
+            toast.add({ type: 'error', title: message });
+            return;
+        }
+        const selectedWorld = imageUploadWorldRef.current || world;
+        if (!selectedWorld?.id) {
+            return;
+        }
+        imageUploadWorldRef.current = selectedWorld;
+        setImageCropRequest({
+            file,
+            world: selectedWorld
+        });
+    }
+
+    async function confirmWorldImageUpload(blob: Blob | null | undefined) {
+        const request = imageCropRequest;
+        const selectedWorld =
+            request?.world || imageUploadWorldRef.current || world;
+        if (!selectedWorld) {
+            return;
+        }
+        const selectedWorldId = normalizeString(selectedWorld?.id);
+        const requestEndpoint = currentEndpoint;
+        if (!blob || !selectedWorldId) {
+            return;
+        }
+
+        actionStatusRef.current = 'image-upload';
+        setActionStatus('image-upload');
+        try {
+            const base64Body = await readFileAsBase64(blob);
+            const base64File =
+                await commands.appResizeImageToFitLimits(base64Body);
+            const result = await withUploadTimeout(
+                vrchatMediaRepository.uploadWorldImageLegacy({
+                    worldId: selectedWorldId,
+                    imageUrl:
+                        selectedWorld.imageUrl ||
+                        selectedWorld.thumbnailImageUrl ||
+                        '',
+                    base64File
+                })
+            );
+            const activeTarget = activeWorldTargetRef.current;
+            if (
+                activeTarget.worldId !== selectedWorldId ||
+                activeTarget.endpoint !== requestEndpoint
+            ) {
+                return;
+            }
+            setWorld(worldProfileRepository.normalize(result.world));
+            setDetail(
+                t('dialog.world.dynamic.world_image_updated_for_value', {
+                    value: selectedWorld.name || selectedWorldId
+                })
+            );
+            toast.add({
+                type: 'success',
+                title: t('dialog.world.success.world_image_updated')
+            });
+        } catch (error) {
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : t('dialog.world.toast.failed_to_upload_world_image');
+            setDetail(message);
+            toast.add({ type: 'error', title: message });
+        } finally {
+            imageUploadWorldRef.current = null;
+            setImageCropRequest(null);
+            actionStatusRef.current = 'idle';
+            setActionStatus('idle');
+        }
+    }
+
+    return {
+        imageCropRequest,
+        setImageCropRequest,
+        imageUploadInputRef,
+        imageUploadWorldRef,
+        beginWorldImageUpload,
+        onFileChangeWorldImage,
+        confirmWorldImageUpload
+    };
+}

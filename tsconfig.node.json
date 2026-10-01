@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "composite": false,
+        "incremental": false,
+        "lib": ["esnext"],
+        "noEmit": true,
+        "types": ["node"]
+    },
+    "include": ["vite.config.mts", "vitest.config.mts", "scripts/**/*.ts"],
+    "exclude": ["node_modules", "build", "dist"]
+}

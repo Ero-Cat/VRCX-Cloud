@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.idea/
+*.log
+
+# Tauri / Rust
+target/
+src-tauri/gen/
+docs/
+src-tauri/resources/licenses/THIRD_PARTY_NOTICES.txt
+
+# Misc
+AGENTS.md
+CLAUDE.md
+coverage/
+bun.lock
+.codex
+scripts/package-windows-release.ps1
+.claude/
+.agents/
+.mcp.json
+tsconfig.tsbuildinfo

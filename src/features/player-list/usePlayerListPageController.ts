@@ -1,0 +1,84 @@
+import { useCurrentInstanceRoster } from '@/lib/useCurrentInstanceRoster';
+import { parseLocation } from '@/shared/utils/location';
+
+import { usePlayerListActions } from './usePlayerListActions';
+import { usePlayerListClock } from './usePlayerListClock';
+import { usePlayerListLogLocation } from './usePlayerListLogLocation';
+import { usePlayerListModeration } from './usePlayerListModeration';
+import { usePlayerListProfileData } from './usePlayerListProfileData';
+import { usePlayerListRuntime } from './usePlayerListRuntime';
+import { usePlayerListSourceRows } from './usePlayerListSourceRows';
+import { usePlayerListViewData } from './usePlayerListViewData';
+
+export function usePlayerListPageController() {
+    const runtime = usePlayerListRuntime();
+    const clockNow = usePlayerListClock();
+    const logLocationSnapshot = usePlayerListLogLocation(runtime);
+    const playerListLocation =
+        runtime.currentUserLocation || logLocationSnapshot?.location || '';
+    const playerListWorldId =
+        runtime.currentUserWorldId ||
+        parseLocation(playerListLocation).worldId ||
+        '';
+    const playerListStartedAt =
+        runtime.currentLocationStartedAt ||
+        logLocationSnapshot?.createdAt ||
+        '';
+    const rowsState = useCurrentInstanceRoster({
+        currentUserEndpoint: runtime.currentUserEndpoint,
+        currentUserId: runtime.currentUserId,
+        currentUserSnapshot: runtime.currentUserSnapshot,
+        isGameRunning: runtime.isGameRunning,
+        logLocationSnapshot,
+        playerListLocation,
+        playerListStartedAt,
+        playerListWorldId,
+        refreshRevision: runtime.addGameLogEventCount,
+        tailSyncRevision: runtime.gameLogTailSyncedAt
+    });
+    const instanceSnapshot = rowsState.context;
+    const moderationByUserId = usePlayerListModeration(runtime.currentUserId);
+    const playerSourceRows = usePlayerListSourceRows({
+        context: instanceSnapshot,
+        currentLocationStartedAt: playerListStartedAt,
+        currentUserId: runtime.currentUserId,
+        currentUserLocation: playerListLocation,
+        currentUserSnapshot: runtime.currentUserSnapshot,
+        isGameRunning: runtime.isGameRunning,
+        playerRows: rowsState.playerRows
+    });
+    const profileData = usePlayerListProfileData({
+        currentUserEndpoint: runtime.currentUserEndpoint,
+        currentUserId: runtime.currentUserId,
+        playerSourceRows
+    });
+    const viewData = usePlayerListViewData({
+        clockNow,
+        context: instanceSnapshot,
+        currentUserId: runtime.currentUserId,
+        currentUserLocation: playerListLocation,
+        currentUserSnapshot: runtime.currentUserSnapshot,
+        isGameRunning: runtime.isGameRunning,
+        knownUsersById: profileData.knownUsersById,
+        languageOptionsMap: profileData.languageOptionsMap,
+        loadStatus: rowsState.loadStatus,
+        moderationByUserId,
+        playerSourceRows,
+        profilesByUserId: profileData.profilesByUserId
+    });
+    const actions = usePlayerListActions({
+        currentUserEndpoint: runtime.currentUserEndpoint
+    });
+
+    return {
+        actions,
+        clockNow,
+        detail: rowsState.detail,
+        instanceSnapshot,
+        isGameRunning: runtime.isGameRunning,
+        loadStatus: rowsState.loadStatus,
+        playerListLocation,
+        playerListStartedAt,
+        viewData
+    };
+}

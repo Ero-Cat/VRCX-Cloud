@@ -1,0 +1,22 @@
+[package]
+name = "vrcx-0-assistant"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "AI assistant runtime"
+
+[dependencies]
+chrono = { workspace = true }
+futures-util = "0.3"
+getrandom = "0.4"
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+specta = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["macros", "sync", "time"] }
+tokio-util = { workspace = true }
+tracing = { workspace = true }
+vrcx-0-contracts = { path = "../contracts" }
+vrcx-0-application-core = { path = "../application-core" }
+vrcx-0-core = { path = "../core" }
+vrcx-0-mcp = { path = "../mcp" }

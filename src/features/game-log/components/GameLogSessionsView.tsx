@@ -1,0 +1,641 @@
+import { ChevronRightIcon, UserIcon } from 'lucide-react';
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { Location } from '@/components/Location';
+import { UserHoverCard } from '@/components/user-hover-card/UserHoverCard';
+import { formatDateFilter, timeToText } from '@/lib/dateTime';
+import { useKnownUserFacts } from '@/lib/useKnownUser';
+import { cn } from '@/lib/utils';
+import { userImage } from '@/services/entityMediaService';
+import { openGameLogUser } from '@/services/gameLogUserDialogService';
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarGroup,
+    AvatarImage
+} from '@/ui/shadcn/avatar';
+import { Badge } from '@/ui/shadcn/badge';
+import { Button } from '@/ui/shadcn/button';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger
+} from '@/ui/shadcn/collapsible';
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger
+} from '@/ui/shadcn/hover-card';
+import { Separator } from '@/ui/shadcn/separator';
+import { Spinner } from '@/ui/shadcn/spinner';
+
+import {
+    collectGameLogSessionFriends,
+    getGameLogSessionKey,
+    resolveGameLogSessionDuration as resolveSessionDuration,
+    resolveGameLogWorldTarget as resolveWorldTarget
+} from '../gameLogRows';
+import { useGameLogSessionAffinity } from '../gameLogSessionAffinity';
+import { buildGameLogSessionDurationDetails } from '../gameLogSessionDurations';
+import type { GameLogSession, GameLogSessionEvent } from '../gameLogTypes';
+import { SessionEventGroups } from './GameLogSessionEventRow';
+
+const FACEPILE_AVATAR_LIMIT = 5;
+
+const FACEPILE_CLASSES = [
+    'bg-rose-800 text-rose-100',
+    'bg-orange-800 text-orange-100',
+    'bg-amber-800 text-amber-100',
+    'bg-emerald-800 text-emerald-100',
+    'bg-teal-800 text-teal-100',
+    'bg-cyan-800 text-cyan-100',
+    'bg-sky-800 text-sky-100',
+    'bg-blue-800 text-blue-100',
+    'bg-indigo-800 text-indigo-100',
+    'bg-violet-800 text-violet-100',
+    'bg-fuchsia-800 text-fuchsia-100',
+    'bg-pink-800 text-pink-100'
+];
+
+function facepileClass(key: string) {
+    let hash = 0;
+    for (let index = 0; index < key.length; index += 1) {
+        hash = (hash * 31 + key.charCodeAt(index)) | 0;
+    }
+    return FACEPILE_CLASSES[Math.abs(hash) % FACEPILE_CLASSES.length];
+}
+
+function facepileInitial(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) {
+        return '?';
+    }
+    return Array.from(trimmed)[0].toUpperCase();
+}
+
+type GameLogSessionFriend = ReturnType<
+    typeof collectGameLogSessionFriends
+>[number];
+
+function SessionFriendList({
+    friends
+}: {
+    friends: readonly GameLogSessionFriend[];
+}) {
+    const friendUserIds = useMemo(
+        () => friends.map((friend) => friend.userId).filter(Boolean),
+        [friends]
+    );
+    const knownFriendsById = useKnownUserFacts(friendUserIds);
+
+    return (
+        <ul className="max-h-72 overflow-y-auto py-1">
+            {friends.map((friend) => {
+                const knownFriend = knownFriendsById[friend.userId] || null;
+                const displayName =
+                    friend.displayName ||
+                    knownFriend?.displayName ||
+                    friend.userId;
+                const avatarUrl = userImage(knownFriend, 64);
+
+                return (
+                    <li
+                        key={friend.key}
+                        className="flex min-w-0 items-center gap-2 px-2 py-1.5"
+                    >
+                        <Avatar size="sm">
+                            {avatarUrl ? (
+                                <AvatarImage
+                                    src={avatarUrl}
+                                    alt=""
+                                    loading="lazy"
+                                />
+                            ) : null}
+                            <AvatarFallback
+                                className={cn(
+                                    'text-[10px]',
+                                    facepileClass(friend.key)
+                                )}
+                            >
+                                {facepileInitial(displayName)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <span className="min-w-0 flex-1 truncate text-sm">
+                            {displayName}
+                        </span>
+                    </li>
+                );
+            })}
+        </ul>
+    );
+}
+
+function SessionFriendFacepile({
+    friends
+}: {
+    friends: readonly GameLogSessionFriend[];
+}) {
+    const { t } = useTranslation();
+    const shown = friends.slice(0, FACEPILE_AVATAR_LIMIT);
+    const extra = friends.length - shown.length;
+    const friendsCountLabel = t('view.game_log.sessions.friends_count', {
+        count: friends.length
+    });
+    const shownUserIds = useMemo(
+        () =>
+            friends
+                .slice(0, FACEPILE_AVATAR_LIMIT)
+                .map((friend) => friend.userId)
+                .filter(Boolean),
+        [friends]
+    );
+    const knownFriendsById = useKnownUserFacts(shownUserIds);
+
+    return (
+        <div
+            className="flex shrink-0 items-center"
+            aria-label={friendsCountLabel}
+        >
+            <AvatarGroup className="-space-x-1">
+                {shown.map((friend) => {
+                    const avatarUrl = userImage(
+                        knownFriendsById[friend.userId] || null,
+                        64
+                    );
+                    return (
+                        <UserHoverCard
+                            key={friend.key}
+                            userId={friend.userId}
+                            seed={friend}
+                        >
+                            <Avatar
+                                className="size-5 cursor-pointer hover:z-10"
+                                render={
+                                    <button
+                                        type="button"
+                                        title={friend.displayName}
+                                        aria-label={friend.displayName}
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            openGameLogUser(friend, t);
+                                        }}
+                                    />
+                                }
+                            >
+                                {avatarUrl ? (
+                                    <AvatarImage
+                                        src={avatarUrl}
+                                        alt=""
+                                        loading="lazy"
+                                    />
+                                ) : null}
+                                <AvatarFallback>
+                                    <UserIcon className="size-3" />
+                                </AvatarFallback>
+                            </Avatar>
+                        </UserHoverCard>
+                    );
+                })}
+            </AvatarGroup>
+            {extra > 0 ? (
+                <HoverCard>
+                    <HoverCardTrigger
+                        delay={250}
+                        closeDelay={120}
+                        render={
+                            <button
+                                type="button"
+                                aria-label={friendsCountLabel}
+                                className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 ml-1 cursor-pointer rounded-sm text-xs tabular-nums outline-none focus-visible:ring-2"
+                                onClick={(event) => event.stopPropagation()}
+                            >
+                                +{extra}
+                            </button>
+                        }
+                    />
+                    <HoverCardContent
+                        side="bottom"
+                        align="end"
+                        sideOffset={6}
+                        className="w-64 p-1.5"
+                    >
+                        <div className="text-muted-foreground px-2 pt-1 pb-0.5 text-xs font-medium">
+                            {friendsCountLabel}
+                        </div>
+                        <SessionFriendList friends={friends} />
+                    </HoverCardContent>
+                </HoverCard>
+            ) : null}
+        </div>
+    );
+}
+function sessionStartValue(session: GameLogSession) {
+    return session.created_at;
+}
+
+function localDayKey(value: string | number) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return String(value || '').slice(0, 10);
+    }
+    return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0')
+    ].join('-');
+}
+
+function sessionDayKey(session: GameLogSession) {
+    return localDayKey(sessionStartValue(session));
+}
+
+function SessionDayDivider({ session }: { session: GameLogSession }) {
+    const value = sessionStartValue(session);
+    const label = formatDateFilter(value, 'date');
+
+    return (
+        <div className="bg-background flex items-center gap-3 px-3 pt-2.5 pb-1">
+            <span className="text-muted-foreground shrink-0 text-xs font-medium tracking-wide tabular-nums">
+                {label}
+            </span>
+            <Separator className="flex-1 opacity-60" />
+        </div>
+    );
+}
+
+type GameLogSessionSummary = {
+    firstEventAt: string;
+    lastEventAt: string;
+};
+
+function formatSessionEventRange(
+    summary: GameLogSessionSummary,
+    fallbackCreatedAt: string | number
+) {
+    const firstEventAt = summary.firstEventAt;
+    const lastEventAt = summary.lastEventAt;
+    if (firstEventAt && lastEventAt && firstEventAt !== lastEventAt) {
+        const firstDay = localDayKey(firstEventAt);
+        const lastDay = localDayKey(lastEventAt);
+        const format = firstDay && firstDay === lastDay ? 'time' : 'short';
+        return `${formatDateFilter(firstEventAt, format)} – ${formatDateFilter(lastEventAt, format)}`;
+    }
+    return formatDateFilter(firstEventAt || fallbackCreatedAt, 'time');
+}
+
+function buildSessionSummary(
+    events: readonly GameLogSessionEvent[] = []
+): GameLogSessionSummary {
+    let firstEventAt = '';
+    let lastEventAt = '';
+
+    for (const event of events) {
+        const eventTime = String(event?.created_at || '');
+        if (!eventTime) {
+            continue;
+        }
+        const eventEpoch = Date.parse(eventTime);
+        const firstEpoch = Date.parse(firstEventAt);
+        const lastEpoch = Date.parse(lastEventAt);
+        if (
+            !firstEventAt ||
+            (Number.isFinite(eventEpoch) &&
+                (!Number.isFinite(firstEpoch) || eventEpoch < firstEpoch))
+        ) {
+            firstEventAt = eventTime;
+        }
+        if (
+            !lastEventAt ||
+            (Number.isFinite(eventEpoch) &&
+                (!Number.isFinite(lastEpoch) || eventEpoch > lastEpoch))
+        ) {
+            lastEventAt = eventTime;
+        }
+    }
+
+    return {
+        firstEventAt,
+        lastEventAt
+    };
+}
+
+type GameLogSessionSegmentProps = {
+    sessionKey: string;
+    session: GameLogSession;
+    isLast: boolean;
+    isLatest: boolean;
+    isGameRunning: boolean;
+    isOpen?: boolean;
+    onOpenChange?: (sessionKey: string, nextOpen: boolean) => void;
+};
+
+const GameLogSessionSegment = memo(function GameLogSessionSegment({
+    sessionKey,
+    session,
+    isLast,
+    isLatest,
+    isGameRunning,
+    isOpen = false,
+    onOpenChange
+}: GameLogSessionSegmentProps) {
+    const { t } = useTranslation();
+    const { favoriteIdSet, friendIdSet } = useGameLogSessionAffinity();
+    const worldTarget = resolveWorldTarget(session);
+    const durationMs = resolveSessionDuration(session);
+    const sessionStartedAt = Date.parse(session?.created_at || '');
+    const sessionLocation = session.location || '';
+    const playerDurationDetails = useMemo(
+        () =>
+            buildGameLogSessionDurationDetails(
+                Array.isArray(session.playerDurationRows)
+                    ? session.playerDurationRows
+                    : []
+            ),
+        [session.playerDurationRows]
+    );
+    const playerMaxDurationMs = playerDurationDetails.maxDurationMs;
+    const effectiveDurationMs = Math.max(durationMs, playerMaxDurationMs);
+    const shouldShowLiveDuration =
+        effectiveDurationMs <= 0 &&
+        isLatest &&
+        isGameRunning &&
+        Number.isFinite(sessionStartedAt);
+    const [liveNow, setLiveNow] = useState(() => Date.now());
+    const liveDurationMs = shouldShowLiveDuration
+        ? Math.max(0, liveNow - sessionStartedAt)
+        : 0;
+    const durationText =
+        effectiveDurationMs > 0
+            ? timeToText(effectiveDurationMs)
+            : liveDurationMs > 0
+              ? timeToText(liveDurationMs)
+              : '';
+    const summary = useMemo(
+        () => buildSessionSummary(session?.events ?? []),
+        [session?.events]
+    );
+    const eventRangeText = formatSessionEventRange(
+        summary,
+        session.created_at || ''
+    );
+    const sessionFriends = useMemo(
+        () =>
+            collectGameLogSessionFriends(
+                session?.events ?? [],
+                favoriteIdSet,
+                friendIdSet
+            ),
+        [session?.events, favoriteIdSet, friendIdSet]
+    );
+    const durationByKey = playerDurationDetails.durationByKey;
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (sessionKey) {
+            onOpenChange?.(sessionKey, nextOpen);
+        }
+    };
+
+    useEffect(() => {
+        if (!shouldShowLiveDuration) {
+            return undefined;
+        }
+        const timerId = window.setInterval(
+            () => setLiveNow(Date.now()),
+            30_000
+        );
+        return () => {
+            window.clearInterval(timerId);
+        };
+    }, [shouldShowLiveDuration]);
+
+    return (
+        <Collapsible
+            open={isOpen}
+            onOpenChange={handleOpenChange}
+            className={cn('border-border border-b', isLast && 'border-b-0')}
+        >
+            <div className="border-border bg-muted sticky top-0 z-[5] border-b">
+                <div className="flex min-h-9 w-full items-center gap-2 px-3 py-1.5 text-left">
+                    <CollapsibleTrigger
+                        render={
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-xs"
+                                aria-label={t(
+                                    isOpen
+                                        ? 'view.game_log.sessions.collapse_session'
+                                        : 'view.game_log.sessions.expand_session'
+                                )}
+                                className="-ml-1 shrink-0"
+                            >
+                                <ChevronRightIcon
+                                    data-icon="inline-start"
+                                    className={cn(
+                                        'text-muted-foreground shrink-0 transition-transform duration-150',
+                                        isOpen && 'rotate-90'
+                                    )}
+                                />
+                            </Button>
+                        }
+                    />
+                    <div className="min-w-0 flex-1">
+                        {sessionLocation ? (
+                            <Location
+                                location={sessionLocation}
+                                hint={session.worldName || worldTarget}
+                                grouphint={session.groupName || ''}
+                                enableContextMenu
+                                stopPropagation
+                                className="min-w-0 text-sm font-normal"
+                            />
+                        ) : (
+                            <span className="truncate text-sm" />
+                        )}
+                    </div>
+                    {sessionFriends.length ? (
+                        <SessionFriendFacepile friends={sessionFriends} />
+                    ) : null}
+                    {!durationText && isLatest && isGameRunning ? (
+                        <Badge
+                            variant="outline"
+                            className="h-4 shrink-0 px-1 text-xs"
+                        >
+                            {t('common.current_session')}
+                        </Badge>
+                    ) : null}
+                    <span className="text-muted-foreground ml-auto shrink-0 text-xs tabular-nums">
+                        {durationText
+                            ? `${eventRangeText} · ${durationText}`
+                            : eventRangeText}
+                    </span>
+                </div>
+            </div>
+
+            <CollapsibleContent>
+                <SessionEventGroups
+                    durationByKey={durationByKey}
+                    events={session.events}
+                />
+            </CollapsibleContent>
+        </Collapsible>
+    );
+});
+
+type GameLogSessionsViewProps = {
+    sessions: GameLogSession[];
+    defaultOpen: boolean;
+    sessionOpenOverrides: ReadonlyMap<string, boolean>;
+    onSessionOpenChange: (sessionKey: string, nextOpen: boolean) => void;
+    isGameRunning: boolean;
+    hasMore?: boolean;
+    isLoadingMore?: boolean;
+    autoFill?: boolean;
+    autoFillKey?: string;
+    onLoadMore?: () => void;
+};
+
+export function GameLogSessionsView({
+    sessions,
+    defaultOpen,
+    sessionOpenOverrides,
+    onSessionOpenChange,
+    isGameRunning,
+    hasMore = false,
+    isLoadingMore = false,
+    autoFill = false,
+    autoFillKey = '',
+    onLoadMore
+}: GameLogSessionsViewProps) {
+    const { t } = useTranslation();
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    const [autoFillAttempts, setAutoFillAttempts] = useState(0);
+
+    useEffect(() => {
+        setAutoFillAttempts(0);
+    }, [autoFillKey]);
+
+    useEffect(() => {
+        if (!hasMore || isLoadingMore || typeof onLoadMore !== 'function') {
+            return undefined;
+        }
+
+        const root = scrollRef.current;
+        const sentinel = sentinelRef.current;
+        if (!root || !sentinel || typeof IntersectionObserver !== 'function') {
+            return undefined;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        onLoadMore();
+                    }
+                }
+            },
+            {
+                root,
+                rootMargin: '240px'
+            }
+        );
+
+        observer.observe(sentinel);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [hasMore, isLoadingMore, onLoadMore, sessions.length]);
+
+    useEffect(() => {
+        if (
+            !autoFill ||
+            !hasMore ||
+            isLoadingMore ||
+            autoFillAttempts >= 3 ||
+            typeof onLoadMore !== 'function'
+        ) {
+            return undefined;
+        }
+
+        const root = scrollRef.current;
+        if (!root) {
+            return undefined;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            if (root.scrollHeight <= root.clientHeight + 16) {
+                setAutoFillAttempts((current) => current + 1);
+                onLoadMore();
+            }
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
+    }, [
+        autoFill,
+        autoFillAttempts,
+        hasMore,
+        isLoadingMore,
+        onLoadMore,
+        sessions.length
+    ]);
+
+    return (
+        <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border">
+            <div
+                ref={scrollRef}
+                className="flex-1 overflow-x-hidden overflow-y-auto"
+            >
+                {sessions.map((session, index) => {
+                    const sessionKey = getGameLogSessionKey(session);
+                    const currentDayKey = sessionDayKey(session);
+                    const previousDayKey =
+                        index > 0 ? sessionDayKey(sessions[index - 1]) : '';
+                    const showDayDivider =
+                        Boolean(currentDayKey) &&
+                        currentDayKey !== previousDayKey;
+                    const isOpen = sessionKey
+                        ? (sessionOpenOverrides.get(sessionKey) ?? defaultOpen)
+                        : defaultOpen;
+                    return (
+                        <Fragment key={sessionKey || `session:${index}`}>
+                            {showDayDivider ? (
+                                <SessionDayDivider session={session} />
+                            ) : null}
+                            <GameLogSessionSegment
+                                sessionKey={sessionKey}
+                                session={session}
+                                isLatest={index === 0}
+                                isLast={index === sessions.length - 1}
+                                isGameRunning={isGameRunning}
+                                isOpen={isOpen}
+                                onOpenChange={onSessionOpenChange}
+                            />
+                        </Fragment>
+                    );
+                })}
+                <div
+                    ref={sentinelRef}
+                    className="text-muted-foreground flex items-center justify-center py-4 pb-6 text-sm"
+                >
+                    {isLoadingMore ? (
+                        <>
+                            <Spinner
+                                data-icon="inline-start"
+                                className="mr-2"
+                            />
+                            {t('common.load_more')}...
+                        </>
+                    ) : hasMore ? (
+                        <span>{t('common.load_more')}...</span>
+                    ) : (
+                        <span>{t('common.no_more')}</span>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

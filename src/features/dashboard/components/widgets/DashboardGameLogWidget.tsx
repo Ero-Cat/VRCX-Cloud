@@ -1,0 +1,525 @@
+import {
+    LogInIcon,
+    LogOutIcon,
+    MapPinIcon,
+    PlayIcon,
+    SettingsIcon,
+    WaypointsIcon
+} from 'lucide-react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { AffinityBadge } from '@/components/affinity/AffinityBadge';
+import { Location } from '@/components/Location';
+import { buildFavoriteIdSet } from '@/domain/favorites/favoriteIdSet';
+import type { LoadStatus } from '@/domain/shared/types';
+import { describeGameLogDetail } from '@/features/game-log/gameLogRows';
+import { GAME_LOG_LIVE_REFRESH_THROTTLE_MS } from '@/features/game-log/gameLogTypes';
+import { userFacingErrorMessage } from '@/lib/errorDisplay';
+import { useThrottledValue } from '@/lib/useThrottledValue';
+import { cn } from '@/lib/utils';
+import { GAME_LOG_FILTER_TYPES } from '@/repositories/gameLogRepository';
+import gameLogRepository from '@/repositories/gameLogRepository';
+import { openUserDialog } from '@/services/dialogService';
+import { openExternalLink } from '@/services/entityMediaService';
+import { normalizeString } from '@/shared/utils/string';
+import { useFavoriteStore } from '@/state/favoriteStore';
+import { useFriendRosterStore } from '@/state/friendRosterStore';
+import { useRuntimeStore } from '@/state/runtimeStore';
+import { Button } from '@/ui/shadcn/button';
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/ui/shadcn/dropdown-menu';
+import { Spinner } from '@/ui/shadcn/spinner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/shadcn/tooltip';
+
+import { DashboardWidgetEmptyState } from './DashboardWidgetEmptyState';
+import { DashboardWidgetHeader } from './DashboardWidgetHeader';
+import { DashboardWidgetTimelineRow } from './DashboardWidgetTimeline';
+import {
+    getNextDashboardWidgetFilterConfig,
+    isDashboardWidgetFilterActive
+} from './dashboardWidgetUtils';
+
+const GAME_LOG_WIDGET_MAX_ROWS = 200;
+
+type DashboardGameLogRow = {
+    created_at?: string;
+    displayName?: string;
+    location?: string;
+    rowId?: number;
+    time?: number;
+    type?: string;
+    userId?: string;
+    resourceUrl?: string;
+    videoId?: string;
+    videoName?: string;
+    videoUrl?: string;
+    groupName?: string;
+    worldId?: string;
+    worldName?: string;
+    data?: string;
+    message?: string;
+    isFavorite?: boolean;
+    isFriend?: boolean;
+    [key: string]: unknown;
+};
+
+type DashboardGameLogWidgetProps = {
+    config?: Record<string, unknown>;
+    configUpdater?: ((nextConfig: Record<string, unknown>) => void) | null;
+};
+
+type DashboardGameLogLoadStatus = LoadStatus;
+
+function isDashboardGameLogRow(value: unknown): value is DashboardGameLogRow {
+    return typeof value === 'object' && value !== null;
+}
+
+function openGameLogWidgetUser(row: DashboardGameLogRow) {
+    const userId = normalizeString(row?.userId);
+    if (!userId) {
+        return;
+    }
+    openUserDialog({
+        userId,
+        title: row?.displayName || undefined,
+        seedData: row
+    });
+}
+
+function GameLogWidgetUserName({
+    row,
+    className = ''
+}: {
+    row: DashboardGameLogRow;
+    className?: string;
+}) {
+    const displayName = row?.displayName || '';
+    const userId = normalizeString(row?.userId);
+    if (!userId) {
+        return <span className={className}>{displayName}</span>;
+    }
+
+    return (
+        <Button
+            type="button"
+            variant="ghost"
+            className={cn(
+                'h-auto min-w-0 cursor-pointer justify-start p-0 text-left font-normal',
+                className
+            )}
+            onClick={() => openGameLogWidgetUser(row)}
+        >
+            {displayName}
+        </Button>
+    );
+}
+
+function GameLogWidgetAffinity({ row }: { row: DashboardGameLogRow }) {
+    return (
+        <span
+            className="mr-1 flex w-4 shrink-0 justify-center"
+            data-dashboard-widget-affinity-slot
+        >
+            <AffinityBadge
+                isFriend={Boolean(row.isFriend)}
+                isFavorite={Boolean(row.isFavorite)}
+                iconOnly
+            />
+        </span>
+    );
+}
+
+function GameLogWidgetLocation({ row }: { row: DashboardGameLogRow }) {
+    if (!row?.location) {
+        return (
+            <span className="text-muted-foreground">
+                {row?.worldName || ''}
+            </span>
+        );
+    }
+
+    return (
+        <div className="min-w-0 flex-1 truncate">
+            <Location
+                location={row.location}
+                hint={row.worldName || ''}
+                grouphint={row.groupName || ''}
+                enableContextMenu
+                disableTooltip
+            />
+        </div>
+    );
+}
+
+function GameLogEntryContent({
+    row,
+    showDetail
+}: {
+    row: DashboardGameLogRow;
+    showDetail: boolean;
+}) {
+    switch (row?.type) {
+        case 'Location':
+            return (
+                <div className="flex min-w-0 items-center">
+                    <MapPinIcon className="text-muted-foreground mr-1 size-3.5 shrink-0" />
+                    <GameLogWidgetLocation row={row} />
+                </div>
+            );
+        case 'OnPlayerJoined':
+            return (
+                <div className="flex min-w-0 items-center">
+                    <LogInIcon className="text-muted-foreground mr-1 size-3.5 shrink-0" />
+                    <GameLogWidgetAffinity row={row} />
+                    <GameLogWidgetUserName row={row} />
+                </div>
+            );
+        case 'OnPlayerLeft':
+            return (
+                <div className="flex min-w-0 items-center">
+                    <LogOutIcon className="text-muted-foreground mr-1 size-3.5 shrink-0" />
+                    <GameLogWidgetAffinity row={row} />
+                    <GameLogWidgetUserName
+                        row={row}
+                        className="text-muted-foreground/70"
+                    />
+                </div>
+            );
+        case 'PortalSpawn':
+            return (
+                <div className="flex min-w-0 items-center">
+                    <WaypointsIcon className="text-muted-foreground mr-1 size-3.5 shrink-0" />
+                    <GameLogWidgetAffinity row={row} />
+                    <GameLogWidgetUserName row={row} />
+                    <span className="text-muted-foreground mx-1 shrink-0">
+                        →
+                    </span>
+                    <GameLogWidgetLocation row={row} />
+                </div>
+            );
+        case 'VideoPlay': {
+            const videoLabel = row?.videoName || row?.videoUrl || '';
+            const canOpenVideo = Boolean(
+                row?.videoUrl &&
+                row?.videoId !== 'LSMedia' &&
+                row?.videoId !== 'PopcornPalace'
+            );
+            return (
+                <Tooltip>
+                    <TooltipTrigger
+                        render={
+                            <div className="flex min-w-0 items-center">
+                                <PlayIcon className="text-muted-foreground mr-1 size-3.5 shrink-0" />
+                                {row?.videoId ? (
+                                    <span className="text-muted-foreground mr-1 shrink-0">
+                                        {row.videoId}:
+                                    </span>
+                                ) : null}
+                                {canOpenVideo ? (
+                                    <Button
+                                        type="button"
+                                        variant="link"
+                                        className="text-muted-foreground h-auto min-w-0 justify-start p-0 text-left font-normal"
+                                        onClick={() => {
+                                            openExternalLink(row.videoUrl);
+                                        }}
+                                    >
+                                        <span className="truncate">
+                                            {videoLabel}
+                                        </span>
+                                    </Button>
+                                ) : (
+                                    <span className="text-muted-foreground min-w-0 truncate">
+                                        {videoLabel}
+                                    </span>
+                                )}
+                            </div>
+                        }
+                    />
+                    <TooltipContent>
+                        {row?.videoId
+                            ? `${row.videoId}: ${videoLabel}`
+                            : videoLabel}
+                    </TooltipContent>
+                </Tooltip>
+            );
+        }
+        default: {
+            const detail = describeGameLogDetail(row).primary || '';
+            const label = row?.displayName || detail;
+            const expandedDetail =
+                showDetail && row?.displayName && detail !== row.displayName
+                    ? detail
+                    : '';
+
+            return (
+                <div className="flex min-w-0 items-center">
+                    <span className="truncate">{label}</span>
+                    {expandedDetail ? (
+                        <span className="text-muted-foreground ml-1 min-w-0 truncate">
+                            — {expandedDetail}
+                        </span>
+                    ) : null}
+                </div>
+            );
+        }
+    }
+}
+
+export function DashboardGameLogWidget({
+    config = {},
+    configUpdater = null
+}: DashboardGameLogWidgetProps) {
+    const { t } = useTranslation();
+    const currentUserId = useRuntimeStore((state) => state.auth.currentUserId);
+    const addGameLogEventCount = useRuntimeStore(
+        (state) => state.runtimeEvents.addGameLogEvent.count
+    );
+    const throttledGameLogEventCount = useThrottledValue(
+        addGameLogEventCount,
+        GAME_LOG_LIVE_REFRESH_THROTTLE_MS
+    );
+    const remoteFavoriteFriendIds = useFavoriteStore(
+        (state) => state.favoriteFriendIds
+    );
+    const localFriendFavorites = useFavoriteStore(
+        (state) => state.localFriendFavorites
+    );
+    const friendsById = useFriendRosterStore((state) => state.friendsById);
+
+    const [rows, setRows] = useState<DashboardGameLogRow[]>([]);
+    const [loadStatus, setLoadStatus] =
+        useState<DashboardGameLogLoadStatus>('idle');
+    const [detail, setDetail] = useState('');
+
+    const favoriteIdSet = useMemo(
+        () => buildFavoriteIdSet(remoteFavoriteFriendIds, localFriendFavorites),
+        [localFriendFavorites, remoteFavoriteFriendIds]
+    );
+
+    useEffect(() => {
+        let active = true;
+
+        if (!currentUserId) {
+            setRows([]);
+            setLoadStatus('idle');
+            setDetail('');
+            return () => {
+                active = false;
+            };
+        }
+
+        setLoadStatus('running');
+        setDetail('');
+
+        gameLogRepository
+            .queryGameLog({
+                currentUserId,
+                filters: Array.isArray(config.filters) ? config.filters : [],
+                limit: GAME_LOG_WIDGET_MAX_ROWS
+            })
+            .then((nextRows: unknown) => {
+                if (!active) {
+                    return;
+                }
+
+                setRows(
+                    Array.isArray(nextRows)
+                        ? nextRows
+                              .filter(isDashboardGameLogRow)
+                              .slice(0, GAME_LOG_WIDGET_MAX_ROWS)
+                        : []
+                );
+                setLoadStatus('ready');
+                setDetail('');
+            })
+            .catch((error: unknown) => {
+                if (!active) {
+                    return;
+                }
+
+                setRows([]);
+                setLoadStatus('error');
+                setDetail(
+                    userFacingErrorMessage(
+                        error,
+                        'Failed to load game-log widget.'
+                    )
+                );
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [throttledGameLogEventCount, config.filters, currentUserId]);
+
+    const annotatedRows = useMemo(
+        () =>
+            rows.map((row) => {
+                const normalizedUserId = normalizeString(row?.userId);
+                return {
+                    ...row,
+                    isFavorite: normalizedUserId
+                        ? favoriteIdSet.has(normalizedUserId)
+                        : false,
+                    isFriend: normalizedUserId
+                        ? Boolean(friendsById[normalizedUserId])
+                        : false
+                };
+            }),
+        [favoriteIdSet, friendsById, rows]
+    );
+
+    const showDetail = Boolean(config.showDetail);
+    const settingsMenu = configUpdater ? (
+        <DropdownMenu>
+            <DropdownMenuTrigger
+                render={
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={'Widget settings'}
+                    >
+                        <SettingsIcon data-icon="inline-start" />
+                    </Button>
+                }
+            />
+            <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuGroup>
+                    {GAME_LOG_FILTER_TYPES.map((filterType) => (
+                        <DropdownMenuCheckboxItem
+                            key={filterType}
+                            checked={isDashboardWidgetFilterActive(
+                                config,
+                                filterType
+                            )}
+                            onClick={(event) => event.preventDefault()}
+                            onCheckedChange={() =>
+                                configUpdater(
+                                    getNextDashboardWidgetFilterConfig(
+                                        config,
+                                        filterType,
+                                        GAME_LOG_FILTER_TYPES
+                                    )
+                                )
+                            }
+                        >
+                            {t(`view.game_log.filters.${filterType}`)}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <DropdownMenuCheckboxItem
+                        checked={showDetail}
+                        onClick={(event) => event.preventDefault()}
+                        onCheckedChange={(checked) =>
+                            configUpdater({
+                                ...config,
+                                showDetail: Boolean(checked)
+                            })
+                        }
+                    >
+                        {t('dashboard.widget.config.detail')}
+                    </DropdownMenuCheckboxItem>
+                </DropdownMenuGroup>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    ) : null;
+    const renderShell = (children: ReactNode) => (
+        <div className="flex h-full min-h-0 flex-col">
+            <DashboardWidgetHeader
+                title={t('dashboard.registry.game_log')}
+                icon="ri-history-line"
+                path="/game-log"
+                meta={annotatedRows.length || null}
+            >
+                {settingsMenu}
+            </DashboardWidgetHeader>
+            {children}
+        </div>
+    );
+
+    if (!currentUserId) {
+        return renderShell(
+            <DashboardWidgetEmptyState
+                title={t('view.dashboard.error.game_log_unavailable')}
+                description={t(
+                    'view.dashboard.label.sign_in_before_the_dashboard_can_query_game_log_rows'
+                )}
+            />
+        );
+    }
+
+    if (loadStatus === 'error') {
+        return renderShell(
+            <DashboardWidgetEmptyState
+                title={t('view.dashboard.error.game_log_widget_failed')}
+                description={userFacingErrorMessage(
+                    detail,
+                    'The local game-log query did not complete.'
+                )}
+            />
+        );
+    }
+
+    if (loadStatus === 'running' && annotatedRows.length === 0) {
+        return renderShell(
+            <div className="text-muted-foreground flex min-h-[180px] flex-1 items-center justify-center gap-2 text-sm">
+                <Spinner />
+                {t('view.dashboard.loading.loading_game_log_widget')}
+            </div>
+        );
+    }
+
+    if (!annotatedRows.length) {
+        return renderShell(
+            <DashboardWidgetEmptyState
+                title={t('view.dashboard.empty.no_game_log_rows')}
+                description={t(
+                    'view.dashboard.label.the_current_filter_set_did_not_return_any_recent_game_log_activity'
+                )}
+            />
+        );
+    }
+
+    return renderShell(
+        <div className="min-h-0 flex-1 overflow-auto">
+            {annotatedRows.map((row, index) => {
+                return (
+                    <DashboardWidgetTimelineRow
+                        key={`${row.type || 'gamelog'}-${row.created_at || index}-${index}`}
+                        value={row.created_at}
+                        previousValue={annotatedRows[index - 1]?.created_at}
+                        isFirst={index === 0}
+                    >
+                        <div className="flex min-w-0 items-center gap-2">
+                            <div className="min-w-0 flex-1 truncate">
+                                <GameLogEntryContent
+                                    row={row}
+                                    showDetail={showDetail}
+                                />
+                            </div>
+                            <span
+                                className="text-muted-foreground w-20 shrink-0 truncate text-right text-xs"
+                                data-dashboard-widget-event-type
+                            >
+                                {t(`view.game_log.filters.${row.type || ''}`, {
+                                    defaultValue: row.type || ''
+                                })}
+                            </span>
+                        </div>
+                    </DashboardWidgetTimelineRow>
+                );
+            })}
+        </div>
+    );
+}
