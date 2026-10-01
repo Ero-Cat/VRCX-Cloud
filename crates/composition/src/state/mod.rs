@@ -22,6 +22,7 @@ mod capabilities;
 mod combined_snapshot;
 mod frontend_session;
 mod profile_lock;
+mod remote_sync;
 mod runtime_host_state;
 mod services;
 mod startup;
@@ -42,6 +43,7 @@ pub use combined_snapshot::BackendRuntimeCombinedSnapshot;
 use profile_lock::{AtomicFlagGuard, SharedAtomicFlagGuard};
 #[cfg(test)]
 use runtime_host_state::web_ua_app_version;
+pub use remote_sync::{RemoteSyncHost, RemoteSyncSettings};
 pub use runtime_host_state::{RuntimeHostOptions, RuntimeHostState, RuntimeHostStateBuilder};
 use vrcx_0_application::auth::replace_authenticated_session_user_if_session_matches;
 pub use vrcx_0_application::social::SocialBaselineRefreshOutput;
