@@ -2,7 +2,6 @@ import {
     BanIcon,
     CheckCircleIcon,
     DownloadIcon,
-    FolderOpenIcon,
     ImageIcon,
     PencilIcon,
     PersonStandingIcon,
@@ -39,7 +38,6 @@ export function AvatarDialogHeaderActions({
         onDeleteCache: AvatarControls['onDeleteCache'];
         onDeleteImposter: AvatarControls['onDeleteImposter'];
         onEditDetails: AvatarControls['onEditDetails'];
-        onOpenCache: AvatarControls['onOpenCache'];
         onOpenLink(url: string): void;
         onRefresh: AvatarControls['onRefresh'];
         onRegenerateImposter: AvatarControls['onRegenerateImposter'];
@@ -80,7 +78,6 @@ export function AvatarDialogHeaderActions({
         onDeleteCache,
         onDeleteImposter,
         onEditDetails,
-        onOpenCache,
         onOpenLink,
         onRefresh,
         onRegenerateImposter,
@@ -219,19 +216,6 @@ export function AvatarDialogHeaderActions({
                         <EntityActionSeparator />
                         {avatar.$isCached ? (
                             <>
-                                <EntityActionItem
-                                    icon={FolderOpenIcon}
-                                    onClick={onOpenCache}
-                                    shortcut={
-                                        avatar.$cacheSize ? (
-                                            <span className="text-muted-foreground text-xs tabular-nums">
-                                                {avatar.$cacheSize}
-                                            </span>
-                                        ) : null
-                                    }
-                                >
-                                    {t('dialog.avatar.actions.open_cache')}
-                                </EntityActionItem>
                                 <EntityActionItem
                                     icon={Trash2Icon}
                                     disabled={actionStatus === 'cache'}

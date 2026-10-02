@@ -16,7 +16,6 @@ type ThemeSourceSelectorProps = Pick<
     | 'customCssBadge'
     | 'visibleSource'
     | 'selectBuiltInSource'
-    | 'selectBackgroundSource'
     | 'selectCommunitySource'
     | 'themeMode'
     | 'updateThemeMode'
@@ -26,7 +25,6 @@ export function ThemeSourceSelector({
     customCssBadge,
     visibleSource,
     selectBuiltInSource,
-    selectBackgroundSource,
     selectCommunitySource,
     themeMode,
     updateThemeMode
@@ -61,13 +59,6 @@ export function ThemeSourceSelector({
                         onClick={selectBuiltInSource}
                     >
                         {t('view.themes.source.built_in')}
-                    </ToggleGroupItem>
-                    <ToggleGroupSeparator />
-                    <ToggleGroupItem
-                        value="background"
-                        onClick={selectBackgroundSource}
-                    >
-                        {t('view.themes.source.background')}
                     </ToggleGroupItem>
                     <ToggleGroupSeparator />
                     <ToggleGroupItem

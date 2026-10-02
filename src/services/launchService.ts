@@ -1,8 +1,5 @@
-import { commands } from '@/platform/native/bindings';
-import configRepository from '@/repositories/configRepository';
 import vrchatInstanceRepository from '@/repositories/vrchatInstanceRepository';
 import { resolveVrcLaunchUrl } from '@/services/directAccessService';
-import { requireHostCapabilitySupported } from '@/services/hostCapabilityService';
 import i18n from '@/services/i18nService';
 import {
     joinInstanceWithFallback,
@@ -151,44 +148,17 @@ export async function selfInviteToInstance(
 export async function launchVrchat(
     location: string,
     shortName: string = '',
-    desktopMode: boolean = false
+    _desktopMode: boolean = false
 ): Promise<void> {
-    requireHostCapabilitySupported('gameLaunch');
+    // Web build: hand the vrchat:// deep link to the user's browser; their
+    // local VRChat client picks it up if installed.
     const launchLocation = normalizeString(location);
     const launchShortName = normalizeString(shortName);
     const launchUrl = await resolveVrcLaunchUrl(
         launchLocation,
         launchShortName
     );
-    const args = [launchUrl];
-    const launchArguments = normalizeString(
-        await configRepository.getString('launchArguments', '')
-    );
-    const launchPathOverride = normalizeString(
-        await configRepository.getString('vrcLaunchPathOverride', '')
-    );
-
-    if (launchArguments) {
-        args.push(launchArguments);
-    }
-    if (desktopMode) {
-        args.push('--no-vr');
-    }
-
-    const argumentString = args.join(' ');
-    const launched = launchPathOverride
-        ? await commands.appStartGameFromPath(
-              launchPathOverride,
-              argumentString
-          )
-        : await commands.appStartGame(argumentString);
-    if (!launched) {
-        throw new Error(
-            launchPathOverride
-                ? 'Failed to launch VRChat from the configured custom path.'
-                : 'Failed to find VRChat. Configure a custom launch path in launch options.'
-        );
-    }
+    window.location.href = launchUrl;
     toast.add({
         type: 'success',
         title: i18n.t('common.label.vrchat_launched')

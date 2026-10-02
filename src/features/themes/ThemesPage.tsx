@@ -8,10 +8,8 @@ import {
 } from '@/components/layout/PageScaffold';
 
 import { AccentColorPicker } from './components/AccentColorPicker';
-import { BackgroundImageSection } from './components/BackgroundImageSection';
 import { CommunityThemesSection } from './components/CommunityThemesSection';
 import { CustomCssSection } from './components/CustomCssSection';
-import { DeveloperThemesSection } from './components/DeveloperThemesSection';
 import { ThemeSourceSelector } from './components/ThemeSourceSelector';
 import { useThemesController } from './useThemesController';
 
@@ -25,7 +23,6 @@ export function ThemesPage() {
         installedTheme,
         installedThemes,
         installedThemeById,
-        localPreview,
         overrideCssLength,
         loading,
         error,
@@ -33,14 +30,7 @@ export function ThemesPage() {
         setOverrideDraft,
         customCssOpen,
         setCustomCssOpen,
-        devFolderPath,
-        devLoading,
-        devSectionOpen,
-        setDevSectionOpen,
         themeStatsById,
-        devWatchEnabled,
-        devError,
-        developerToolsAvailable,
         visibleSource,
         accentControlled,
         customCssBadge,
@@ -52,12 +42,7 @@ export function ThemesPage() {
         clearOverride,
         disableOverride,
         selectBuiltInSource,
-        selectBackgroundSource,
         selectCommunitySource,
-        loadLocalPreview,
-        toggleLocalPreviewWatch,
-        pickLocalThemeFolder,
-        stopLocalPreview,
         updateThemeMode,
         updateThemeColor
     } = useThemesController();
@@ -74,15 +59,10 @@ export function ThemesPage() {
                             customCssBadge={customCssBadge}
                             visibleSource={visibleSource}
                             selectBuiltInSource={selectBuiltInSource}
-                            selectBackgroundSource={selectBackgroundSource}
                             selectCommunitySource={selectCommunitySource}
                             themeMode={themeMode}
                             updateThemeMode={updateThemeMode}
                         />
-
-                        {visibleSource === 'background' ? (
-                            <BackgroundImageSection />
-                        ) : null}
 
                         {visibleSource === 'community' ? (
                             <CommunityThemesSection
@@ -118,24 +98,6 @@ export function ThemesPage() {
                             disableOverride={disableOverride}
                             clearOverride={clearOverride}
                         />
-
-                        {developerToolsAvailable ? (
-                            <DeveloperThemesSection
-                                devSectionOpen={devSectionOpen}
-                                setDevSectionOpen={setDevSectionOpen}
-                                localPreview={localPreview}
-                                devFolderPath={devFolderPath}
-                                devLoading={devLoading}
-                                devWatchEnabled={devWatchEnabled}
-                                devError={devError}
-                                pickLocalThemeFolder={pickLocalThemeFolder}
-                                loadLocalPreview={loadLocalPreview}
-                                toggleLocalPreviewWatch={
-                                    toggleLocalPreviewWatch
-                                }
-                                stopLocalPreview={stopLocalPreview}
-                            />
-                        ) : null}
                     </div>
                 </div>
             </PageBody>

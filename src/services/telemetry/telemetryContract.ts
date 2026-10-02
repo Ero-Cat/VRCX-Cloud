@@ -19,21 +19,10 @@ export const TELEMETRY_ROUTE_KEYS = [
 ] as const;
 
 export const TELEMETRY_TOOL_KEYS = [
-    'screenshot-metadata',
     'gallery',
     'inventory',
-    'vrc-photos',
-    'steam-screenshots',
-    'vrcx-data',
-    'vrchat-data',
-    'vrchat-log',
     'profile-backup',
     'llm-endpoints',
-    'crash-dumps',
-    'vrchat-config',
-    'launch-options',
-    'app-launcher',
-    'registry-backup',
     'presence-schedule',
     'presence-room-rules',
     'presence-invite-requests',

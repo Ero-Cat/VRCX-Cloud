@@ -8,15 +8,7 @@ type ToolCategoryKey =
     | 'debug'
     | 'other';
 
-export type ToolAppApiMethod =
-    | 'OpenVrcPhotosFolder'
-    | 'OpenVrcScreenshotsFolder'
-    | 'OpenVrcxAppDataFolder'
-    | 'OpenVrcAppDataFolder'
-    | 'OpenCrashVrcCrashDumps';
-
 export type ToolDialogKey =
-    | 'app-launcher'
     | 'presence-schedule'
     | 'presence-room-rules'
     | 'presence-invite-requests'
@@ -37,10 +29,8 @@ type ToolHostCapabilityKey =
     | 'vrchatPathDiscovery';
 
 export type ToolRouteName =
-    | 'screenshot-metadata'
     | 'gallery'
     | 'inventory'
-    | 'vrchat-log'
     | 'group-moderation'
     | 'my-groups';
 
@@ -48,20 +38,6 @@ type ToolAction =
     | {
           type: 'route';
           routeName: ToolRouteName;
-      }
-    | {
-          type: 'app-api';
-          method: ToolAppApiMethod;
-          successMessageKey: string;
-          errorMessageKey: string;
-      }
-    | {
-          type: 'store-action';
-          target: 'advancedSettings' | 'launch' | 'vrcx';
-          method:
-              | 'showVRChatConfig'
-              | 'showLaunchOptions'
-              | 'showRegistryBackupDialog';
       }
     | {
           type: 'dialog';
@@ -113,17 +89,6 @@ const toolCategories: ToolCategory[] = [
 
 const toolDefinitions: ToolDefinition[] = [
     {
-        key: 'screenshot-metadata',
-        category: 'image',
-        iconKey: 'camera',
-        navIcon: 'lucide:Camera',
-        titleKey: 'view.tools.pictures.screenshot',
-        descriptionKey: 'view.tools.pictures.screenshot_description',
-        navEligible: true,
-        requiredCapability: 'screenshotCache',
-        action: { type: 'route', routeName: 'screenshot-metadata' }
-    },
-    {
         key: 'gallery',
         category: 'image',
         iconKey: 'image',
@@ -131,7 +96,6 @@ const toolDefinitions: ToolDefinition[] = [
         titleKey: 'view.tools.pictures.gallery',
         descriptionKey: 'view.tools.pictures.gallery_description',
         navEligible: true,
-        requiredCapability: 'screenshotCache',
         action: { type: 'route', routeName: 'gallery' }
     },
     {
@@ -143,81 +107,6 @@ const toolDefinitions: ToolDefinition[] = [
         descriptionKey: 'view.tools.pictures.inventory_description',
         navEligible: true,
         action: { type: 'route', routeName: 'inventory' }
-    },
-    {
-        key: 'vrc-photos',
-        category: 'shortcuts',
-        iconKey: 'folder-open',
-        navIcon: 'lucide:Folder',
-        titleKey: 'view.tools.pictures.pictures.vrc_photos',
-        descriptionKey: 'view.tools.pictures.pictures.vrc_photos_description',
-        navEligible: true,
-        requiredCapability: 'vrchatPathDiscovery',
-        action: {
-            type: 'app-api',
-            method: 'OpenVrcPhotosFolder',
-            successMessageKey: 'message.file.folder_opened',
-            errorMessageKey: 'message.file.folder_missing'
-        }
-    },
-    {
-        key: 'steam-screenshots',
-        category: 'shortcuts',
-        iconKey: 'folder-image',
-        navIcon: 'lucide:Image',
-        titleKey: 'view.tools.pictures.pictures.steam_screenshots',
-        descriptionKey:
-            'view.tools.pictures.pictures.steam_screenshots_description',
-        navEligible: true,
-        requiredCapability: 'screenshotCache',
-        action: {
-            type: 'app-api',
-            method: 'OpenVrcScreenshotsFolder',
-            successMessageKey: 'message.file.folder_opened',
-            errorMessageKey: 'message.file.folder_missing'
-        }
-    },
-    {
-        key: 'vrcx-data',
-        category: 'shortcuts',
-        iconKey: 'folder-cog',
-        navIcon: 'lucide:Database',
-        titleKey: 'view.tools.shortcuts.vrcx_data',
-        descriptionKey: 'view.tools.shortcuts.vrcx_data_description',
-        navEligible: true,
-        action: {
-            type: 'app-api',
-            method: 'OpenVrcxAppDataFolder',
-            successMessageKey: 'message.file.folder_opened',
-            errorMessageKey: 'message.file.folder_missing'
-        }
-    },
-    {
-        key: 'vrchat-data',
-        category: 'shortcuts',
-        iconKey: 'folder-cog',
-        navIcon: 'lucide:ServerCog',
-        titleKey: 'view.tools.shortcuts.vrchat_data',
-        descriptionKey: 'view.tools.shortcuts.vrchat_data_description',
-        navEligible: true,
-        requiredCapability: 'vrchatPathDiscovery',
-        action: {
-            type: 'app-api',
-            method: 'OpenVrcAppDataFolder',
-            successMessageKey: 'message.file.folder_opened',
-            errorMessageKey: 'message.file.folder_missing'
-        }
-    },
-    {
-        key: 'vrchat-log',
-        category: 'debug',
-        iconKey: 'file-text',
-        navIcon: 'lucide:FileText',
-        titleKey: 'view.tools.system_tools.vrchat_log',
-        descriptionKey: 'view.tools.system_tools.vrchat_log_description',
-        navEligible: true,
-        requiredCapability: 'vrchatPathDiscovery',
-        action: { type: 'route', routeName: 'vrchat-log' }
     },
     {
         key: 'profile-backup',
@@ -238,82 +127,6 @@ const toolDefinitions: ToolDefinition[] = [
         descriptionKey: 'view.tools.system_tools.llm_endpoints_description',
         navEligible: true,
         action: { type: 'dialog', dialogKey: 'llm-endpoints' }
-    },
-    {
-        key: 'crash-dumps',
-        category: 'shortcuts',
-        iconKey: 'folder-x',
-        navIcon: 'lucide:Archive',
-        titleKey: 'view.tools.shortcuts.crash_dumps',
-        descriptionKey: 'view.tools.shortcuts.crash_dumps_description',
-        navEligible: true,
-        requiredCapability: 'vrchatPathDiscovery',
-        action: {
-            type: 'app-api',
-            method: 'OpenCrashVrcCrashDumps',
-            successMessageKey: 'message.file.folder_opened',
-            errorMessageKey: 'message.file.folder_missing'
-        }
-    },
-    {
-        key: 'vrchat-config',
-        category: 'vrchat',
-        iconKey: 'sliders-horizontal',
-        navIcon: 'lucide:SlidersHorizontal',
-        titleKey: 'view.tools.system_tools.vrchat_config',
-        descriptionKey: 'view.tools.system_tools.vrchat_config_description',
-        navEligible: true,
-        requiredCapability: 'vrchatPathDiscovery',
-        action: {
-            type: 'store-action',
-            target: 'advancedSettings',
-            method: 'showVRChatConfig'
-        }
-    },
-    {
-        key: 'launch-options',
-        category: 'vrchat',
-        iconKey: 'terminal',
-        navIcon: 'lucide:SquareTerminal',
-        titleKey: 'view.settings.advanced.advanced.launch_options',
-        descriptionKey: 'view.tools.system_tools.launch_options_description',
-        navEligible: true,
-        requiredCapability: 'gameLaunch',
-        requiredCapabilityMode: 'supported',
-        action: {
-            type: 'store-action',
-            target: 'launch',
-            method: 'showLaunchOptions'
-        }
-    },
-    {
-        key: 'app-launcher',
-        category: 'automation',
-        iconKey: 'rocket',
-        navIcon: 'lucide:Rocket',
-        titleKey: 'view.tools.system_tools.app_launcher',
-        descriptionKey: 'view.tools.system_tools.app_launcher_description',
-        navEligible: true,
-        requiredCapabilities: ['gameProcessMonitor', 'gameLaunch'],
-        action: {
-            type: 'dialog',
-            dialogKey: 'app-launcher'
-        }
-    },
-    {
-        key: 'registry-backup',
-        category: 'data',
-        iconKey: 'archive',
-        navIcon: 'lucide:Archive',
-        titleKey: 'view.settings.advanced.advanced.vrc_registry_backup',
-        descriptionKey: 'view.tools.system_tools.registry_backup_description',
-        navEligible: true,
-        requiredCapability: 'registryPrefs',
-        action: {
-            type: 'store-action',
-            target: 'vrcx',
-            method: 'showRegistryBackupDialog'
-        }
     },
     {
         key: 'presence-schedule',

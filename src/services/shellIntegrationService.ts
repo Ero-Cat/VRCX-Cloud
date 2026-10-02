@@ -2,7 +2,7 @@ import { commands } from '@/platform/native/bindings';
 import type { AppDataDirState } from '@/platform/native/bindings';
 
 export async function openExternalLink(url: string): Promise<void> {
-    await commands.appOpenLink(url);
+    window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 export async function restartApplication(): Promise<void> {
@@ -28,35 +28,28 @@ export async function setTaskbarOverlayNotification(
     await commands.appSetTaskbarOverlayNotification(notify);
 }
 
-export async function openUGCPhotosFolder(ugcPath: string): Promise<void> {
-    await commands.appOpenUgcPhotosFolder(ugcPath);
-}
-
-export async function openFolderAndSelectItem(
-    path: string,
-    isFolder: boolean
-): Promise<void> {
-    await commands.appOpenFolderAndSelectItem(path, isFolder);
-}
-
+/**
+ * Web build: folder/file locations live on the server host. Ask for the
+ * path directly instead of an OS dialog.
+ */
 export async function openFolderSelectorDialog(
     defaultPath: string
 ): Promise<string> {
-    const selected = await commands.appOpenFolderSelectorDialog(defaultPath);
-    return typeof selected === 'string' ? selected : '';
+    const input = window.prompt('Folder path on the server', defaultPath || '');
+    return input === null ? '' : input.trim();
 }
 
 export async function openFileSelectorDialog(
     defaultPath: string,
     defaultExt: string,
-    defaultFilter: string
+    _defaultFilter: string
 ): Promise<string> {
-    const selected = await commands.appOpenFileSelectorDialog(
-        defaultPath,
-        defaultExt,
-        defaultFilter
+    void _defaultFilter;
+    const input = window.prompt(
+        `File path on the server (*${defaultExt})`,
+        defaultPath || ''
     );
-    return typeof selected === 'string' ? selected : '';
+    return input === null ? '' : input.trim();
 }
 
 export async function saveFileSelectorDialog(

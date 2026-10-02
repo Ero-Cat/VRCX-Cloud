@@ -6,12 +6,7 @@ import type {
     CommunityThemeManifest,
     CommunityThemeStatsById
 } from '@/domain/themes/types';
-import { commands } from '@/platform/native/bindings';
-import {
-    type BackgroundImageSelectionMode,
-    disableBackgroundImage,
-    setBackgroundImageMode
-} from '@/services/background-image/backgroundImageService';
+import { disableBackgroundImage } from '@/services/background-image/backgroundImageService';
 import {
     clearCommunityThemeOverrideCss,
     deleteInstalledCommunityTheme,
@@ -47,8 +42,8 @@ export function useThemesController() {
         themeMode,
         themeColor,
         backgroundImageEnabled,
-        backgroundImageMode,
-        backgroundImageCustomSource,
+        backgroundImageMode: _backgroundImageMode,
+        backgroundImageCustomSource: _backgroundImageCustomSource,
         catalog,
         enabled,
         installedTheme,
@@ -298,38 +293,6 @@ export function useThemesController() {
         }
     }
 
-    async function selectBackgroundSource() {
-        setSelectedSource('background');
-        try {
-            let nextMode: BackgroundImageSelectionMode = 'daily';
-            if (
-                backgroundImageMode === 'custom' &&
-                backgroundImageCustomSource
-            ) {
-                nextMode = 'custom';
-            } else if (backgroundImageMode === 'decoration') {
-                nextMode = 'decoration';
-            }
-            if (nextMode === 'decoration') {
-                if (enabled) {
-                    await disableInstalledCommunityTheme();
-                }
-                if (localPreview) {
-                    await stopLocalCommunityThemePreview();
-                }
-            }
-            await setBackgroundImageMode(nextMode);
-        } catch (sourceError) {
-            toast.add({
-                type: 'error',
-                title:
-                    sourceError instanceof Error
-                        ? sourceError.message
-                        : t('view.background_image.toast.failed')
-            });
-        }
-    }
-
     async function selectCommunitySource() {
         setSelectedSource('community');
         try {
@@ -387,27 +350,6 @@ export function useThemesController() {
             return;
         }
         startLocalCommunityThemePreviewWatch(nextFolderPath);
-    }
-
-    async function pickLocalThemeFolder() {
-        try {
-            const folderPath = await commands.appOpenFolderSelectorDialog(
-                devFolderPath || localPreview?.folderPath || null
-            );
-            if (!folderPath) {
-                return;
-            }
-            setDevFolderPath(folderPath);
-            await loadLocalPreview(folderPath);
-        } catch (pickError) {
-            toast.add({
-                type: 'error',
-                title:
-                    pickError instanceof Error
-                        ? pickError.message
-                        : t('view.community_themes.developer.load_failed')
-            });
-        }
     }
 
     async function stopLocalPreview() {
@@ -514,11 +456,9 @@ export function useThemesController() {
         clearOverride,
         disableOverride,
         selectBuiltInSource,
-        selectBackgroundSource,
         selectCommunitySource,
         loadLocalPreview,
         toggleLocalPreviewWatch,
-        pickLocalThemeFolder,
         stopLocalPreview,
         updateThemeMode,
         updateThemeColor

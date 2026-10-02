@@ -12,7 +12,6 @@ import { copyTextToClipboard } from '@/services/clipboardService';
 import currentUserProfileService from '@/services/currentUserProfileService';
 import { tryOpenLaunchLocation } from '@/services/directAccessService';
 import { persistFavoriteWorldDetails } from '@/services/favoriteWorldCacheService';
-import { openFolderAndSelectItem } from '@/services/shellIntegrationService';
 import { toast } from '@/services/toastService';
 import { mergeCurrentUserPresenceFields } from '@/shared/utils/currentUserPresence';
 import { normalizeString } from '@/shared/utils/string';
@@ -70,7 +69,7 @@ export function useWorldActions({
     memoRevisionRef,
     memo,
     setMemo,
-    worldSideData,
+    worldSideData: _worldSideData,
     setWorldSideData,
     isCurrentWorldTarget,
     confirm,
@@ -288,26 +287,6 @@ export function useWorldActions({
         }
     }
 
-    async function openWorldCacheFolder() {
-        const cachePath = worldSideData.cache.cachePath;
-        if (!cachePath) {
-            return;
-        }
-        try {
-            await openFolderAndSelectItem(cachePath, true);
-        } catch (error) {
-            toast.add({
-                type: 'error',
-                title:
-                    error instanceof Error
-                        ? error.message
-                        : t(
-                              'dialog.world.toast.failed_to_open_world_cache_folder'
-                          )
-            });
-        }
-    }
-
     async function deleteWorldCache() {
         if (!world || actionStatusRef.current !== 'idle') {
             return;
@@ -395,7 +374,6 @@ export function useWorldActions({
         updateHomeLocation,
         saveMemo,
         editMemo,
-        openWorldCacheFolder,
         deleteWorldCache
     };
 }

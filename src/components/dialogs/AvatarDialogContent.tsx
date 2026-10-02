@@ -90,9 +90,6 @@ export function AvatarDialogContent({
                     },
                     onSaveMemo: (nextMemo: string) =>
                         avatarActions.saveMemo(nextMemo),
-                    onOpenCache: () => {
-                        avatarActions.openAvatarCacheFolder();
-                    },
                     onDeleteCache: () => {
                         avatarActions.deleteAvatarCache();
                     },

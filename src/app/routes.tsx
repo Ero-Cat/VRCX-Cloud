@@ -293,25 +293,6 @@ export const protectedRoutes: AppRouteDefinition[] = [
         )
     },
     {
-        path: '/tools/screenshot-metadata',
-        titleKey: 'app.routes.screenshot_metadata',
-        descriptionKey:
-            'app.routes.screenshot_metadata_browser_and_file_actions',
-        element: lazyRouteElement(
-            () => import('@/features/tools/ScreenshotMetadataPage'),
-            'ScreenshotMetadataPage'
-        )
-    },
-    {
-        path: '/tools/vrchat-log',
-        titleKey: 'app.routes.vrchat_log',
-        descriptionKey: 'app.routes.vrchat_log_viewer_for_local_output_logs',
-        element: lazyRouteElement(
-            () => import('@/features/tools/VrchatLogPage'),
-            'VrchatLogPage'
-        )
-    },
-    {
         path: '/themes',
         titleKey: 'app.routes.themes',
         descriptionKey: 'app.routes.themes_description',

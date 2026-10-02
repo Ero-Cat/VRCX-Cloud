@@ -381,16 +381,15 @@ export function createAvatarDialogActions({
         setImageCropRequest,
         t
     });
-    const { deleteAvatarCache, openAvatarCacheFolder } =
-        createAvatarCacheActions({
-            actionStatusRef,
-            avatar,
-            avatarSideData,
-            setActionStatus,
-            setAvatar,
-            setAvatarSideData,
-            t
-        });
+    const { deleteAvatarCache } = createAvatarCacheActions({
+        actionStatusRef,
+        avatar,
+        avatarSideData,
+        setActionStatus,
+        setAvatar,
+        setAvatarSideData,
+        t
+    });
     const { beginAvatarGalleryUpload, onFileChangeAvatarGallery } =
         createAvatarGalleryUploadActions({
             actionStatusRef,
@@ -445,7 +444,6 @@ export function createAvatarDialogActions({
         editMemo,
         onFileChangeAvatarGallery,
         onFileChangeAvatarImage,
-        openAvatarCacheFolder,
         refreshAvatarProfile,
         saveMemo,
         selectAvatar,

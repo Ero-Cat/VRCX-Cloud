@@ -242,7 +242,6 @@ function WorldOverviewActions({
         onHome,
         onNewInstance,
         onNewInstanceSelfInvite,
-        onOpenCache,
         onOpenPackage,
         onPublication,
         onRefresh
@@ -380,19 +379,6 @@ function WorldOverviewActions({
                         >
                             {world.$isCached ? (
                                 <>
-                                    <EntityActionItem
-                                        icon={FolderOpenIcon}
-                                        onClick={onOpenCache}
-                                        shortcut={
-                                            world.$cacheSize ? (
-                                                <span className="text-muted-foreground text-xs tabular-nums">
-                                                    {world.$cacheSize}
-                                                </span>
-                                            ) : null
-                                        }
-                                    >
-                                        {t('dialog.world.actions.open_cache')}
-                                    </EntityActionItem>
                                     <EntityActionItem
                                         icon={Trash2Icon}
                                         disabled={actionStatus === 'cache'}

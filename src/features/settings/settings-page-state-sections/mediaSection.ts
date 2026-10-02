@@ -1,4 +1,3 @@
-import { openUGCPhotosFolder } from '@/services/shellIntegrationService';
 import { normalizeAutoDeletePrintsLimit } from '@/state/preferencesStore';
 
 import type { SettingsSectionInput } from '../settingsPageStateSectionTypes';
@@ -19,10 +18,7 @@ type MediaSectionInput = SettingsSectionInput<
 >;
 
 export function buildMediaSection({
-    prefs,
     commit,
-    openUgcFolderSelector,
-    resetUgcFolder,
     setSaveInstancePrintsPreference,
     handleCropInstancePrintsChange,
     setSaveInstanceStickersPreference,
@@ -34,22 +30,11 @@ export function buildMediaSection({
 }: MediaSectionInput) {
     return {
         commit,
-        openUgcFolderSelector,
-        resetUgcFolder,
         setSaveInstancePrintsPreference,
         handleCropInstancePrintsChange,
         setSaveInstanceStickersPreference,
         setSaveInstanceEmojiPreference,
         setPrefs,
-        onOpenUgcPhotosFolder: () => {
-            commit(() => openUGCPhotosFolder(prefs.userGeneratedContentPath));
-        },
-        onOpenUgcFolderSelector: () => {
-            openUgcFolderSelector();
-        },
-        onResetUgcFolder: () => {
-            resetUgcFolder();
-        },
         onSaveInstancePrintsChange: (checked: boolean) => {
             savePreferenceValue('saveInstancePrints', checked, () =>
                 setSaveInstancePrintsPreference(checked)

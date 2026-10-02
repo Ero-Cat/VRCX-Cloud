@@ -114,7 +114,6 @@ export type AvatarControls = {
     onReleaseStatus(status: AvatarReleaseStatus): void;
     onAvatarBlock(enabled: boolean): void;
     onSaveMemo(memo: string): void | Promise<void>;
-    onOpenCache(): void;
     onDeleteCache(): void;
     onUploadGallery(): void;
     onEditDetails(): void;

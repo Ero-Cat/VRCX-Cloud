@@ -379,9 +379,6 @@ export function WorldDialogContentWorkflow({
                     },
                     onSaveMemo: (nextMemo: string) =>
                         worldActions.saveMemo(nextMemo),
-                    onOpenCache: () => {
-                        worldActions.openWorldCacheFolder();
-                    },
                     onDeleteCache: () => {
                         worldActions.deleteWorldCache();
                     },

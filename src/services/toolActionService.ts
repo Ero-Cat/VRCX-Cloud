@@ -1,4 +1,3 @@
-import { commands } from '@/platform/native/bindings';
 import type { HostCapabilities } from '@/platform/native/bindings';
 import {
     getHostCapabilityUnavailableReason,
@@ -11,7 +10,6 @@ import { toast } from '@/services/toastService';
 import { recordRecentToolOpen } from '@/services/toolRecentService';
 import {
     toolDefinitionMap,
-    type ToolAppApiMethod,
     type ToolDialogKey,
     type ToolDefinition,
     type ToolRouteName
@@ -41,14 +39,11 @@ type ToolDialogHostKey =
 const toolRouteMap = {
     gallery: '/tools/gallery',
     inventory: '/tools/inventory',
-    'screenshot-metadata': '/tools/screenshot-metadata',
-    'vrchat-log': '/tools/vrchat-log',
     'group-moderation': '/tools/group-moderation',
     'my-groups': '/tools/my-groups'
 } satisfies Record<ToolRouteName, string>;
 
 const toolDialogHostMap: Record<ToolDialogKey, ToolDialogHostKey> = {
-    'app-launcher': 'appLauncherOpen',
     'presence-schedule': 'presenceScheduleOpen',
     'presence-room-rules': 'presenceRoomRulesOpen',
     'presence-invite-requests': 'presenceInviteRequestsOpen',
@@ -60,14 +55,6 @@ const toolDialogHostMap: Record<ToolDialogKey, ToolDialogHostKey> = {
     'edit-invite-messages': 'editInviteMessagesOpen',
     'llm-endpoints': 'llmEndpointsOpen',
     'profile-backup': 'profileBackupOpen'
-};
-
-const toolAppApiCommands: Record<ToolAppApiMethod, () => Promise<boolean>> = {
-    OpenVrcPhotosFolder: () => commands.appOpenVrcPhotosFolder(),
-    OpenVrcScreenshotsFolder: () => commands.appOpenVrcScreenshotsFolder(),
-    OpenVrcxAppDataFolder: () => commands.appOpenVrcxAppDataFolder(),
-    OpenVrcAppDataFolder: () => commands.appOpenVrcAppDataFolder(),
-    OpenCrashVrcCrashDumps: () => commands.appOpenCrashVrcCrashDumps()
 };
 
 const legacyToolAliases: Record<string, string> = {
@@ -115,7 +102,7 @@ function getToolCapabilityUnavailableReason(
 
 export async function triggerToolByKey(
     toolKey: string,
-    { navigate, t }: TriggerToolOptions
+    { navigate, t: _t }: TriggerToolOptions
 ): Promise<void> {
     const resolvedToolKey = legacyToolAliases[toolKey] ?? toolKey;
     const tool = toolDefinitionMap.get(resolvedToolKey);
@@ -145,52 +132,6 @@ export async function triggerToolByKey(
     if (action.type === 'route') {
         navigate(toolRouteMap[action.routeName] ?? '/tools');
         return;
-    }
-
-    if (action.type === 'app-api') {
-        try {
-            const result = await toolAppApiCommands[action.method]();
-            toast.add({
-                type: result ? 'success' : 'error',
-                title: t(
-                    result ? action.successMessageKey : action.errorMessageKey
-                )
-            });
-        } catch (error) {
-            toast.add({
-                type: 'error',
-                title:
-                    error instanceof Error
-                        ? error.message
-                        : t(action.errorMessageKey)
-            });
-        }
-        return;
-    }
-
-    if (action.type === 'store-action') {
-        const setSystemHostOpen = useRuntimeStore.getState().setSystemHostOpen;
-        if (
-            action.target === 'vrcx' &&
-            action.method === 'showRegistryBackupDialog'
-        ) {
-            setSystemHostOpen('registryBackupOpen', true);
-            return;
-        }
-        if (
-            action.target === 'launch' &&
-            action.method === 'showLaunchOptions'
-        ) {
-            setSystemHostOpen('launchOptionsOpen', true);
-            return;
-        }
-        if (
-            action.target === 'advancedSettings' &&
-            action.method === 'showVRChatConfig'
-        ) {
-            setSystemHostOpen('vrchatConfigOpen', true);
-            return;
-        }
     }
 
     if (action.type === 'dialog') {

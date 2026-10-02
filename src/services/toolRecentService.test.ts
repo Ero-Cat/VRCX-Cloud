@@ -22,10 +22,10 @@ describe('toolRecentService', () => {
             JSON.stringify([
                 'inventory',
                 'gallery',
-                'screenshot-metadata',
-                'vrc-photos',
-                'steam-screenshots',
-                'vrcx-data'
+                'gallery',
+                'inventory',
+                'group-calendar',
+                'note-export'
             ])
         );
 
@@ -33,7 +33,7 @@ describe('toolRecentService', () => {
 
         expect(configRepository.setString).toHaveBeenCalledWith(
             'VRCX_toolsRecentList',
-            JSON.stringify(['gallery', 'inventory', 'screenshot-metadata'])
+            JSON.stringify(['gallery', 'inventory', 'group-calendar'])
         );
     });
 

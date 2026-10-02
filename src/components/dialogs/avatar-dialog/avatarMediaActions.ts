@@ -3,7 +3,6 @@ import type { ChangeEvent } from 'react';
 import { commands } from '@/platform/native/bindings';
 import avatarProfileRepository from '@/repositories/avatarProfileRepository';
 import vrchatMediaRepository from '@/repositories/vrchatMediaRepository';
-import { openFolderAndSelectItem } from '@/services/shellIntegrationService';
 import { toast } from '@/services/toastService';
 import {
     readFileAsBase64,
@@ -158,32 +157,12 @@ export function createAvatarImageUploadActions({
 export function createAvatarCacheActions({
     actionStatusRef,
     avatar,
-    avatarSideData,
+    avatarSideData: _avatarSideData,
     setActionStatus,
     setAvatar,
     setAvatarSideData,
     t
 }: AvatarCacheActionDependencies) {
-    async function openAvatarCacheFolder() {
-        const cachePath = avatarSideData.cache.cachePath;
-        if (!cachePath) {
-            return;
-        }
-        try {
-            await openFolderAndSelectItem(cachePath, true);
-        } catch (error) {
-            toast.add({
-                type: 'error',
-                title:
-                    error instanceof Error
-                        ? error.message
-                        : t(
-                              'dialog.avatar.toast.failed_to_open_avatar_cache_folder'
-                          )
-            });
-        }
-    }
-
     async function deleteAvatarCache() {
         if (actionStatusRef.current !== 'idle') {
             return;
@@ -234,8 +213,7 @@ export function createAvatarCacheActions({
     }
 
     return {
-        deleteAvatarCache,
-        openAvatarCacheFolder
+        deleteAvatarCache
     };
 }
 

@@ -8,6 +8,15 @@
 experience in a browser, powered by one Rust binary that runs beside your
 desktop VRCX-0 and converges with it over a PostgreSQL sync mesh.
 
+> 🛠️ This project is a modified fork (魔改版) of
+> [VRCX-0](https://github.com/Map1en/VRCX-0) by
+> [Map1en](https://github.com/Map1en) — all credit for the underlying
+> runtime and sync engine goes upstream.
+>
+> 🔗 The desktop client that pairs with this project over the sync mesh
+> (its local database converges with the same remote PostgreSQL) is
+> **[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)**.
+
 [![CI](https://img.shields.io/github/actions/workflow/Ero-Cat/VRCX-Cloud/ci.yml?branch=master&style=flat-square&label=CI&logo=github)](https://github.com/Ero-Cat/VRCX-Cloud/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Ero-Cat/VRCX-Cloud?style=flat-square&color=blue&label=version)](https://github.com/Ero-Cat/VRCX-Cloud/releases)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
@@ -16,6 +25,8 @@ desktop VRCX-0 and converges with it over a PostgreSQL sync mesh.
 [![PostgreSQL](https://img.shields.io/badge/sync-PostgreSQL-336791?style=flat-square&logo=postgresql)](.env.example)
 
 **[Quickstart](#-quickstart) · [Features](#-features) · [Install](#-installation) · [Usage](#-usage-manual) · [Philosophy](#%EF%B8%8F-why-another-vrcx) · [FAQ](#-faq)**
+
+**English** · [简体中文](README.zh-CN.md)
 
 </div>
 
@@ -154,7 +165,10 @@ Environment variables (or `server.toml`, path via `VRCX_CLOUD_CONFIG`):
 
 ### Pairing your desktop VRCX-0
 
-Desktop VRCX-0 ships the same sync engine:
+The desktop build that pairs with this project is
+**[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)** — a VRCX-0 fork
+shipping the same sync engine, so its local database converges with the
+remote PostgreSQL this server uses:
 
 1. Desktop VRCX-0 → **Settings → Data Sync**.
 2. Enter the PostgreSQL connection your server uses:
@@ -302,6 +316,9 @@ version-guarded; desktop and server versions can differ briefly.
 - **[VRCX-0](https://github.com/Map1en/VRCX-0)** by Map1en — the Rust
   rewrite this project is forked from, and the sync engine both sides
   share.
+- **[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)** — the
+  companion desktop client this server is designed to pair with over
+  the sync mesh (desktop database ⇄ remote PostgreSQL).
 - **[VRCX](https://github.com/vrcx-team/VRCX)** — the original Electron
   companion, and its community.
 - VRChat is a trademark of VRChat Inc. This project is not affiliated

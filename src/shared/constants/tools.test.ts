@@ -27,31 +27,23 @@ describe('tool catalog categories', () => {
                 ])
             )
         ).toEqual({
-            image: ['screenshot-metadata', 'gallery', 'inventory'],
-            shortcuts: [
-                'vrc-photos',
-                'steam-screenshots',
-                'vrcx-data',
-                'vrchat-data',
-                'crash-dumps'
-            ],
+            image: ['gallery', 'inventory'],
+            shortcuts: [],
             automation: [
-                'app-launcher',
                 'presence-schedule',
                 'presence-room-rules',
                 'presence-invite-requests'
             ],
             group: ['group-calendar', 'my-groups', 'group-moderation'],
-            vrchat: ['vrchat-config', 'launch-options'],
+            vrchat: [],
             data: [
                 'profile-backup',
-                'registry-backup',
                 'discord-names',
                 'export-notes',
                 'export-friend-list',
                 'export-own-avatars'
             ],
-            debug: ['vrchat-log'],
+            debug: [],
             other: ['llm-endpoints', 'edit-invite-message']
         });
     });

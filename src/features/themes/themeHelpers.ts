@@ -6,7 +6,7 @@ import { links } from '@/shared/constants/link';
 import type { THEME_COLORS } from '@/shared/constants/themes';
 import type { ThemeMode } from '@/state/shellStore';
 
-export type ThemeSource = 'built-in' | 'background' | 'community';
+export type ThemeSource = 'built-in' | 'community';
 
 export const THEME_MODE_OPTIONS = [
     'system',
@@ -36,9 +36,6 @@ export function resolveActiveThemeSource(
 ): ThemeSource {
     if (localPreview || communityThemeEnabled) {
         return 'community';
-    }
-    if (backgroundImageEnabled) {
-        return 'background';
     }
     return 'built-in';
 }

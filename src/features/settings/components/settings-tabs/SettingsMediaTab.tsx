@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { Button } from '@/ui/shadcn/button';
 import {
     NumberField,
     NumberFieldDecrement,
@@ -21,7 +20,6 @@ export function SettingsMediaTab() {
     const media = useSettingsPageSection('media');
     const prefs = usePreferencesStore(
         useShallow((state) => ({
-            userGeneratedContentPath: state.userGeneratedContentPath,
             saveInstancePrints: state.saveInstancePrints,
             cropInstancePrints: state.cropInstancePrints,
             autoDeleteOldPrints: state.autoDeleteOldPrints,
@@ -31,9 +29,6 @@ export function SettingsMediaTab() {
         }))
     );
     const {
-        onOpenUgcPhotosFolder,
-        onOpenUgcFolderSelector,
-        onResetUgcFolder,
         onSaveInstancePrintsChange,
         onCropInstancePrintsChange,
         onAutoDeleteOldPrintsChange,
@@ -45,48 +40,6 @@ export function SettingsMediaTab() {
     const { t } = useTranslation();
     return (
         <SettingsTabContent value="media">
-            <SettingsCard
-                cardId="media.user-content"
-                title={t('view.settings.advanced.advanced.user_content.header')}
-                description={t(
-                    'view.settings.advanced.advanced.user_content.description'
-                )}
-            >
-                <div className="flex flex-wrap gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={onOpenUgcPhotosFolder}
-                    >
-                        {t(
-                            'view.settings.advanced.advanced.user_content.folder'
-                        )}
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={onOpenUgcFolderSelector}
-                    >
-                        {t(
-                            'view.settings.advanced.advanced.user_content.set_folder'
-                        )}
-                    </Button>
-                    {prefs.userGeneratedContentPath ? (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={onResetUgcFolder}
-                        >
-                            {t(
-                                'view.settings.advanced.advanced.user_content.reset_override'
-                            )}
-                        </Button>
-                    ) : null}
-                </div>
-            </SettingsCard>
             <SettingsCard
                 cardId="media.prints"
                 title={t(

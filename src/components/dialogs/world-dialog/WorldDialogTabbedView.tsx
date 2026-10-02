@@ -100,7 +100,6 @@ export interface WorldDialogHeaderCommands {
     onNewInstance: () => void;
     onNewInstanceSelfInvite: () => void;
     onOpenAuthor: () => void;
-    onOpenCache: () => void;
     onOpenImage?: () => void;
     onOpenPackage: () => void;
     onOpenWorldPage: () => void;
@@ -176,7 +175,6 @@ type WorldDialogTabbedViewProps = {
         onNewInstanceSelfInvite: () => void;
         onPublication: (published: boolean) => void;
         onSaveMemo: (memo: string) => void | Promise<void>;
-        onOpenCache: () => void;
         onDeleteCache: () => void;
         onDeletePersistentData: () => void;
         onDelete: () => void;
@@ -228,7 +226,6 @@ export function WorldDialogTabbedView({
         onNewInstanceSelfInvite,
         onPublication,
         onSaveMemo,
-        onOpenCache,
         onDeleteCache,
         onDeletePersistentData,
         onDelete,
@@ -522,7 +519,6 @@ export function WorldDialogTabbedView({
                 userId: world.authorId,
                 title: world.authorName || undefined
             }),
-        onOpenCache,
         onOpenImage: () =>
             openImagePreview({
                 url: convertFileUrlToImageUrl(world.imageUrl || imageUrl, 1024),
