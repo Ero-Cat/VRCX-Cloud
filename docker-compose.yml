@@ -2,22 +2,9 @@ services:
     app:
         build: .
         restart: unless-stopped
-        environment:
-            VRCX_CLOUD_LISTEN: '0.0.0.0:8800'
-            # Web auth is disabled for this deployment (trusted LAN); set
-      # VRCX_WEB_PASSWORD in .env to re-enable the login gate.
-      VRCX_CLOUD_WEB_PASSWORD: ${VRCX_WEB_PASSWORD}
-      VRCX_CLOUD_WEB_AUTH_DISABLED: ${VRCX_WEB_AUTH_DISABLED:-true}
-            # Remote sync database (bring your own PostgreSQL; the desktop
-            # VRCX-0 sync settings must point at the same server).
-            VRCX_CLOUD_SYNC_HOST: ${VRCX_SYNC_HOST}
-            VRCX_CLOUD_SYNC_PORT: ${VRCX_SYNC_PORT:-5432}
-            VRCX_CLOUD_SYNC_USER: ${VRCX_SYNC_USER:-vrcx}
-            VRCX_CLOUD_SYNC_PASSWORD: ${VRCX_SYNC_PASSWORD:?set VRCX_SYNC_PASSWORD in .env}
-            VRCX_CLOUD_SYNC_DATABASE: ${VRCX_SYNC_DATABASE:-vrcx}
-            VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT: ${VRCX_SYNC_ALLOW_PLAINTEXT:-true}
-            VRCX_CLOUD_SYNC_INTERVAL_SEC: ${VRCX_SYNC_INTERVAL_SEC:-15}
-            VRCX_CLOUD_REALTIME_MODE: ${VRCX_CLOUD_REALTIME_MODE:-auto}
+        # All configuration comes from .env (see .env.example); the server
+        # applies conventional defaults for anything left unset.
+        env_file: .env
         volumes:
             - app-data:/data
         ports:

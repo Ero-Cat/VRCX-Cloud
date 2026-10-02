@@ -1,6 +1,11 @@
 //! Server configuration: a TOML file next to the data directory plus
 //! `VRCX_CLOUD_*` environment overrides.
 //!
+//! Only `VRCX_CLOUD_SYNC_HOST` and `VRCX_CLOUD_SYNC_PASSWORD` are ever
+//! required: once a sync host is configured, conventional defaults are
+//! applied to the remaining connection fields (port 5432, user/database
+//! `vrcx`, 15s cadence), so a minimal deployment sets two variables.
+//!
 //! Sync connection fields provided here are seeded into the runtime's
 //! SQLite `configs` table on boot (before the remote sync engine starts),
 //! so the server joins the user's sync mesh without touching the UI.
@@ -33,12 +38,6 @@ pub struct ServerSection {
 #[derive(Clone, Debug, Default, serde::Deserialize)]
 #[serde(deny_unknown_fields, default)]
 pub struct WebSection {
-    /// Password for the web UI (single account). Also settable via
-    /// `VRCX_CLOUD_WEB_PASSWORD`. When neither is set the web layer is
-    /// open — only acceptable on a trusted LAN.
-    pub password: Option<String>,
-    /// Explicitly disable web authentication (trusted LAN only).
-    pub auth_disabled: Option<bool>,
     /// Directory with the built frontend (index.html + assets).
     /// Also settable via `VRCX_CLOUD_DIST_DIR`; defaults to `./dist`.
     pub dist_dir: Option<String>,
@@ -54,8 +53,10 @@ pub struct SyncSection {
     pub database: Option<String>,
     pub tls_verify: Option<bool>,
     /// Explicit opt-in for unencrypted connections (trusted LAN only).
+    /// The runtime itself already permits plaintext by default.
     pub allow_plaintext: Option<bool>,
-    /// Sync cadence in seconds (5..=3600, default 60).
+    /// Sync cadence in seconds (5..=3600; defaults to 15 on the server
+    /// once a sync host is configured).
     pub interval_sec: Option<i64>,
 }
 
@@ -84,6 +85,19 @@ pub struct SyncSettings {
 }
 
 impl SyncSettings {
+    /// Apply the server's conventional defaults once a sync host is
+    /// configured, so only `VRCX_CLOUD_SYNC_HOST` and
+    /// `VRCX_CLOUD_SYNC_PASSWORD` are required for a working connection.
+    fn apply_server_defaults(&mut self) {
+        if self.host.is_none() {
+            return;
+        }
+        self.port.get_or_insert(5432);
+        self.user.get_or_insert("vrcx".to_string());
+        self.database.get_or_insert("vrcx".to_string());
+        self.interval_sec.get_or_insert(15);
+    }
+
     pub fn is_complete(&self) -> bool {
         self.host.as_deref().is_some_and(|v| !v.trim().is_empty())
             && self.user.as_deref().is_some_and(|v| !v.trim().is_empty())
@@ -123,7 +137,7 @@ impl ServerConfig {
             .unwrap_or_else(|| DEFAULT_LISTEN_ADDR.to_string());
 
         let sync_file = file.sync.unwrap_or_default();
-        let sync = SyncSettings {
+        let mut sync = SyncSettings {
             host: env_non_empty("VRCX_CLOUD_SYNC_HOST").or(sync_file.host),
             port: env_i64("VRCX_CLOUD_SYNC_PORT").or(sync_file.port),
             user: env_non_empty("VRCX_CLOUD_SYNC_USER").or(sync_file.user),
@@ -134,17 +148,10 @@ impl ServerConfig {
                 .or(sync_file.allow_plaintext),
             interval_sec: env_i64("VRCX_CLOUD_SYNC_INTERVAL_SEC").or(sync_file.interval_sec),
         };
+        sync.apply_server_defaults();
 
         let web_file = file.web.unwrap_or_default();
-        let auth_disabled = env_bool("VRCX_CLOUD_WEB_AUTH_DISABLED")
-            .or(web_file.auth_disabled)
-            .unwrap_or(false);
-        let password = env_non_empty("VRCX_CLOUD_WEB_PASSWORD").or(web_file.password);
         let web = WebSettings {
-            // Auth is enabled when a password exists unless explicitly
-            // disabled; with no password at all the UI is open (LAN trust).
-            auth_enabled: !auth_disabled && password.is_some(),
-            password,
             dist_dir: env_non_empty("VRCX_CLOUD_DIST_DIR")
                 .or(web_file.dist_dir)
                 .map(PathBuf::from)
@@ -194,11 +201,9 @@ pub struct RealtimeSection {
     pub mode: Option<String>,
 }
 
-/// Web UI access settings.
+/// Web UI serving settings.
 #[derive(Clone, Debug)]
 pub struct WebSettings {
-    pub auth_enabled: bool,
-    pub password: Option<String>,
     pub dist_dir: PathBuf,
 }
 
@@ -221,4 +226,61 @@ fn env_i64(key: &str) -> Option<i64> {
 
 fn env_bool(key: &str) -> Option<bool> {
     env_non_empty(key).map(|v| matches!(v.to_ascii_lowercase().as_str(), "1" | "true" | "yes"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SyncSettings;
+
+    #[test]
+    fn server_defaults_complete_a_host_plus_password_config() {
+        let mut settings = SyncSettings {
+            host: Some("192.168.0.5".into()),
+            password: Some("secret".into()),
+            ..SyncSettings::default()
+        };
+
+        settings.apply_server_defaults();
+
+        assert_eq!(settings.port, Some(5432));
+        assert_eq!(settings.user.as_deref(), Some("vrcx"));
+        assert_eq!(settings.database.as_deref(), Some("vrcx"));
+        assert_eq!(settings.interval_sec, Some(15));
+        assert!(settings.is_complete());
+    }
+
+    #[test]
+    fn server_defaults_never_replace_explicit_values() {
+        let mut settings = SyncSettings {
+            host: Some("db.example.test".into()),
+            port: Some(5433),
+            user: Some("bob".into()),
+            database: Some("vrcx2".into()),
+            interval_sec: Some(60),
+            ..SyncSettings::default()
+        };
+
+        settings.apply_server_defaults();
+
+        assert_eq!(settings.port, Some(5433));
+        assert_eq!(settings.user.as_deref(), Some("bob"));
+        assert_eq!(settings.database.as_deref(), Some("vrcx2"));
+        assert_eq!(settings.interval_sec, Some(60));
+    }
+
+    #[test]
+    fn server_defaults_do_not_apply_without_a_host() {
+        let mut settings = SyncSettings {
+            password: Some("secret".into()),
+            ..SyncSettings::default()
+        };
+
+        settings.apply_server_defaults();
+
+        assert_eq!(settings.port, None);
+        assert_eq!(settings.user, None);
+        assert_eq!(settings.database, None);
+        assert_eq!(settings.interval_sec, None);
+        assert!(!settings.is_complete());
+    }
 }

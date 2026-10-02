@@ -15,7 +15,6 @@ PostgreSQL 同步网格保持数据一致。
 > 🔗 与本项目联动的桌面客户端（客户端数据库同步到远程线上数据库）为
 > **[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)**。
 
-[![CI](https://img.shields.io/github/actions/workflow/Ero-Cat/VRCX-Cloud/ci.yml?branch=master&style=flat-square&label=CI&logo=github)](https://github.com/Ero-Cat/VRCX-Cloud/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Ero-Cat/VRCX-Cloud?style=flat-square&color=blue&label=version)](https://github.com/Ero-Cat/VRCX-Cloud/releases)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
 [![Rust](https://img.shields.io/badge/backend-Rust%201-dea584?style=flat-square&logo=rust)](Cargo.toml)
@@ -92,13 +91,13 @@ SQLite↔PostgreSQL 协议与桌面版 VRCX-0 同步每一行数据。PC 上记�
 git clone https://github.com/Ero-Cat/VRCX-Cloud.git
 cd VRCX-Cloud
 
-cp .env.example .env      # 将 VRCX_SYNC_* 指向你的远程 PostgreSQL
+cp .env.example .env      # 只需填 VRCX_CLOUD_SYNC_HOST + PASSWORD 两行
 docker compose up -d --build
 
-open http://localhost:8800   # 默认免登录（可信局域网）
+open http://localhost:8800   # 免登录（可信局域网）
 ```
 
-你会看到登录门 → 登录后是 VRChat 登录页。输入你的 VRChat 凭据（支持
+你会直接进入 VRChat 登录页。输入你的 VRChat 凭据（支持
 2FA），服务器接管会话。就这么简单 —— 随时可以去
 [配对桌面端](#配对你的桌面版-vrcx-0)。
 
@@ -107,16 +106,15 @@ open http://localhost:8800   # 默认免登录（可信局域网）
 ### Docker Compose（推荐）
 
 ```bash
-cp .env.example .env      # 设置 VRCX_WEB_PASSWORD（必填）和 VRCX_PG_PASSWORD
+cp .env.example .env      # 只需填 VRCX_CLOUD_SYNC_HOST + PASSWORD 两行
 docker compose up -d --build
 ```
 
 启动的服务：
 
-| 服务       | 地址                             | 用途                  |
-| ---------- | -------------------------------- | --------------------- |
-| `app`      | `http://<host>:8800`             | VRCX-Cloud Web 服务器 |
-| `postgres` | `127.0.0.1:5432`（仅本机可访问） | 同步数据库            |
+| 服务  | 地址                 | 用途                                     |
+| ----- | -------------------- | ---------------------------------------- |
+| `app` | `http://<host>:8800` | VRCX-Cloud Web 服务器（自备 PostgreSQL） |
 
 ### 裸机
 
@@ -127,34 +125,36 @@ npm ci && npm run build                    # 前端 -> dist/
 cargo build --release -p vrcx-0-server
 
 VRCX_CLOUD_DATA_DIR=/var/lib/vrcx-cloud \
-VRCX_CLOUD_WEB_PASSWORD=... \
-VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_USER=vrcx \
-VRCX_CLOUD_SYNC_PASSWORD=... VRCX_CLOUD_SYNC_DATABASE=vrcx \
+VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_PASSWORD=... \
 ./target/release/vrcx-0-server
 ```
 
 ### ⚙️ 配置参考
 
-环境变量（或 `server.toml`，路径由 `VRCX_CLOUD_CONFIG` 指定）：
+环境变量（或 `server.toml`，路径由 `VRCX_CLOUD_CONFIG` 指定）。
+同步只需 `VRCX_CLOUD_SYNC_HOST` + `VRCX_CLOUD_SYNC_PASSWORD`，
+其余连接字段按下表默认值生效。
 
-| 环境变量                                           | TOML                      | 默认值                   | 含义                                                   |
-| -------------------------------------------------- | ------------------------- | ------------------------ | ------------------------------------------------------ |
-| `VRCX_CLOUD_DATA_DIR`                              | `[server] data_dir`       | `<config>/VRCX-0-Server` | SQLite 配置与图片缓存                                  |
-| `VRCX_CLOUD_LISTEN`                                | `[server] listen_addr`    | `0.0.0.0:8800`           | HTTP 监听地址                                          |
-| `VRCX_CLOUD_WEB_PASSWORD`                          | `[web] password`          | —（开放）                | 网页登录密码                                           |
-| `VRCX_CLOUD_WEB_AUTH_DISABLED`                     | `[web] auth_disabled`     | `false`                  | 关闭认证（可信局域网）                                 |
-| `VRCX_CLOUD_DIST_DIR`                              | `[web] dist_dir`          | `./dist`                 | 前端静态文件目录                                       |
-| `VRCX_CLOUD_SYNC_HOST/PORT/USER/PASSWORD/DATABASE` | `[sync] …`                | —                        | 远程同步 DSN，启动时注入                               |
-| `VRCX_CLOUD_SYNC_INTERVAL_SEC`                     | `[sync] interval_sec`     | `60`                     | 同步周期（5–3600 秒）                                  |
-| `VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT`                  | `[sync] allow_plaintext`  | `false`                  | 允许无加密 PG（局域网）                                |
-| `VRCX_CLOUD_REALTIME_MODE`                         | `[realtime] mode`         | `auto`                   | `auto`：桌面端活跃时暂停服务端会话；`always`：始终开启 |
-| `VRCX_CLOUD_FEED_LOGGING`                          | `[realtime] feed_logging` | `true`                   | `false`：服务端永不记录动态（由桌面端记录）            |
+| 环境变量                          | TOML                      | 默认值                   | 含义                                                   |
+| --------------------------------- | ------------------------- | ------------------------ | ------------------------------------------------------ |
+| `VRCX_CLOUD_DATA_DIR`             | `[server] data_dir`       | `<config>/VRCX-0-Server` | SQLite 配置与图片缓存                                  |
+| `VRCX_CLOUD_LISTEN`               | `[server] listen_addr`    | `0.0.0.0:8800`           | HTTP 监听地址                                          |
+| `VRCX_CLOUD_DIST_DIR`             | `[web] dist_dir`          | `./dist`                 | 前端静态文件目录                                       |
+| `VRCX_CLOUD_SYNC_HOST`            | `[sync] host`             | —（必填）                | 远程同步 PostgreSQL 主机                               |
+| `VRCX_CLOUD_SYNC_PASSWORD`        | `[sync] password`         | —（必填）                | 远程同步 PostgreSQL 密码                               |
+| `VRCX_CLOUD_SYNC_PORT`            | `[sync] port`             | `5432`                   | 远程同步 PostgreSQL 端口                               |
+| `VRCX_CLOUD_SYNC_USER`            | `[sync] user`             | `vrcx`                   | 远程同步 PostgreSQL 用户                               |
+| `VRCX_CLOUD_SYNC_DATABASE`        | `[sync] database`         | `vrcx`                   | 远程同步 PostgreSQL 数据库                             |
+| `VRCX_CLOUD_SYNC_INTERVAL_SEC`    | `[sync] interval_sec`     | `15`                     | 同步周期（5–3600 秒）                                  |
+| `VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT` | `[sync] allow_plaintext`  | `true`                   | PostgreSQL 要求 TLS 时设为 `false`                     |
+| `VRCX_CLOUD_REALTIME_MODE`        | `[realtime] mode`         | `auto`                   | `auto`：桌面端活跃时暂停服务端会话；`always`：始终开启 |
+| `VRCX_CLOUD_FEED_LOGGING`         | `[realtime] feed_logging` | `true`                   | `false`：服务端永不记录动态（由桌面端记录）            |
 
 ## 📖 使用手册
 
 ### 首次登录
 
-1. 打开 `http://<server>:8800`（未设置网页密码则无需登录）。
+1. 打开 `http://<server>:8800`。
 2. 在 VRChat 登录页用你的账号登录（支持 TOTP / 邮件 OTP）。服务器会将
    会话加密存储。
 3. 应用打开后进入动态页。仅存在于桌面端的数据会在
@@ -199,7 +199,7 @@ VRCX_CLOUD_SYNC_PASSWORD=... VRCX_CLOUD_SYNC_DATABASE=vrcx \
 
 ## 🎥 演示
 
-首次启动全流程（登录门 → VRChat 登录 → 动态页）：
+首次启动全流程（VRChat 登录 → 动态页）：
 
 ```
 $ docker compose up -d --build
@@ -210,7 +210,6 @@ $ curl -s localhost:8800/healthz
 {"ok":true,"phase":"Running","authStatus":"Authenticated",...}
 
 浏览器 → http://localhost:8800
- ├─ 输入网页密码登录
  ├─ VRChat 登录（2FA）… 完成 —— 重启后会话自动恢复
  ├─ 设置 → 数据同步 → 桌面设备 "PC-Win11" 最近拉取：12 秒前
  └─ 桌面端进图 → 15 秒后网页动态显示
@@ -288,8 +287,8 @@ PostgreSQL。数据不会离开你的网络；遥测已被编译移除。
 
 ## 🔒 安全说明
 
-- 网页认证：单密码、恒定时间比较、会话 cookie（`HttpOnly`、
-  `SameSite=Lax`）、登录限流。局域网定位；需要时经反向代理加 TLS。
+- 网页端：无内置认证 —— 仅限可信局域网使用；如需对外暴露，请前置
+  反向代理（TLS + Basic Auth）。
 - PostgreSQL：每次部署独立凭据，可信局域网可选 TLS，compose 文件不会
   公开暴露。
 - VRChat 会话 cookie：以机器派生密钥静态加密。

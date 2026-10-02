@@ -17,7 +17,6 @@ desktop VRCX-0 and converges with it over a PostgreSQL sync mesh.
 > (its local database converges with the same remote PostgreSQL) is
 > **[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)**.
 
-[![CI](https://img.shields.io/github/actions/workflow/Ero-Cat/VRCX-Cloud/ci.yml?branch=master&style=flat-square&label=CI&logo=github)](https://github.com/Ero-Cat/VRCX-Cloud/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Ero-Cat/VRCX-Cloud?style=flat-square&color=blue&label=version)](https://github.com/Ero-Cat/VRCX-Cloud/releases)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
 [![Rust](https://img.shields.io/badge/backend-Rust%201-dea584?style=flat-square&logo=rust)](Cargo.toml)
@@ -94,32 +93,30 @@ write on the web land on your desktop — within one sync interval.
 git clone https://github.com/Ero-Cat/VRCX-Cloud.git
 cd VRCX-Cloud
 
-cp .env.example .env      # point VRCX_SYNC_* at your remote PostgreSQL
+cp .env.example .env      # set VRCX_CLOUD_SYNC_HOST + PASSWORD — that's all
 docker compose up -d --build
 
-open http://localhost:8800   # no login step by default (trusted LAN)
+open http://localhost:8800   # no login step (trusted LAN)
 ```
 
-You will see the login gate → after signing in, the VRChat login page.
-Enter your VRChat credentials (2FA supported) and the server takes over
-the session. That's it — [pair your desktop](#pairing-your-desktop-vrcx-0)
-whenever you're ready.
+You will land on the VRChat login page. Enter your VRChat credentials
+(2FA supported) and the server takes over the session. That's it —
+[pair your desktop](#pairing-your-desktop-vrcx-0) whenever you're ready.
 
 ## 📦 Installation
 
 ### Docker Compose (recommended)
 
 ```bash
-cp .env.example .env      # set VRCX_WEB_PASSWORD (required) and VRCX_PG_PASSWORD
+cp .env.example .env      # set VRCX_CLOUD_SYNC_HOST + PASSWORD — that's all
 docker compose up -d --build
 ```
 
 Services started:
 
-| Service    | Address                            | Purpose               |
-| ---------- | ---------------------------------- | --------------------- |
-| `app`      | `http://<host>:8800`               | VRCX-Cloud web server |
-| `postgres` | `127.0.0.1:5432` (host-local only) | sync database         |
+| Service | Address              | Purpose                                |
+| ------- | -------------------- | -------------------------------------- |
+| `app`   | `http://<host>:8800` | VRCX-Cloud web server (BYO PostgreSQL) |
 
 ### Bare metal
 
@@ -130,34 +127,36 @@ npm ci && npm run build                    # frontend -> dist/
 cargo build --release -p vrcx-0-server
 
 VRCX_CLOUD_DATA_DIR=/var/lib/vrcx-cloud \
-VRCX_CLOUD_WEB_PASSWORD=... \
-VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_USER=vrcx \
-VRCX_CLOUD_SYNC_PASSWORD=... VRCX_CLOUD_SYNC_DATABASE=vrcx \
+VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_PASSWORD=... \
 ./target/release/vrcx-0-server
 ```
 
 ### ⚙️ Configuration reference
 
-Environment variables (or `server.toml`, path via `VRCX_CLOUD_CONFIG`):
+Environment variables (or `server.toml`, path via `VRCX_CLOUD_CONFIG`).
+Sync needs only `VRCX_CLOUD_SYNC_HOST` + `VRCX_CLOUD_SYNC_PASSWORD`; the
+remaining connection fields default to the values shown.
 
-| Env                                                | TOML                      | Default                  | Meaning                                                                 |
-| -------------------------------------------------- | ------------------------- | ------------------------ | ----------------------------------------------------------------------- |
-| `VRCX_CLOUD_DATA_DIR`                              | `[server] data_dir`       | `<config>/VRCX-0-Server` | SQLite profile + image cache                                            |
-| `VRCX_CLOUD_LISTEN`                                | `[server] listen_addr`    | `0.0.0.0:8800`           | HTTP listen address                                                     |
-| `VRCX_CLOUD_WEB_PASSWORD`                          | `[web] password`          | — (open)                 | web login password                                                      |
-| `VRCX_CLOUD_WEB_AUTH_DISABLED`                     | `[web] auth_disabled`     | `false`                  | disable auth (trusted LAN)                                              |
-| `VRCX_CLOUD_DIST_DIR`                              | `[web] dist_dir`          | `./dist`                 | frontend static files                                                   |
-| `VRCX_CLOUD_SYNC_HOST/PORT/USER/PASSWORD/DATABASE` | `[sync] …`                | —                        | remote sync DSN, seeded at boot                                         |
-| `VRCX_CLOUD_SYNC_INTERVAL_SEC`                     | `[sync] interval_sec`     | `60`                     | sync cadence (5–3600)                                                   |
-| `VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT`                  | `[sync] allow_plaintext`  | `false`                  | allow unencrypted PG (LAN)                                              |
-| `VRCX_CLOUD_REALTIME_MODE`                         | `[realtime] mode`         | `auto`                   | `auto`: pause server session while desktop active; `always`: keep it on |
-| `VRCX_CLOUD_FEED_LOGGING`                          | `[realtime] feed_logging` | `true`                   | `false`: server never records feed rows (desktop is recorder)           |
+| Env                               | TOML                      | Default                  | Meaning                                                                 |
+| --------------------------------- | ------------------------- | ------------------------ | ----------------------------------------------------------------------- |
+| `VRCX_CLOUD_DATA_DIR`             | `[server] data_dir`       | `<config>/VRCX-0-Server` | SQLite profile + image cache                                            |
+| `VRCX_CLOUD_LISTEN`               | `[server] listen_addr`    | `0.0.0.0:8800`           | HTTP listen address                                                     |
+| `VRCX_CLOUD_DIST_DIR`             | `[web] dist_dir`          | `./dist`                 | frontend static files                                                   |
+| `VRCX_CLOUD_SYNC_HOST`            | `[sync] host`             | — (required)             | remote sync PostgreSQL host                                             |
+| `VRCX_CLOUD_SYNC_PASSWORD`        | `[sync] password`         | — (required)             | remote sync PostgreSQL password                                         |
+| `VRCX_CLOUD_SYNC_PORT`            | `[sync] port`             | `5432`                   | remote sync PostgreSQL port                                             |
+| `VRCX_CLOUD_SYNC_USER`            | `[sync] user`             | `vrcx`                   | remote sync PostgreSQL user                                             |
+| `VRCX_CLOUD_SYNC_DATABASE`        | `[sync] database`         | `vrcx`                   | remote sync PostgreSQL database                                         |
+| `VRCX_CLOUD_SYNC_INTERVAL_SEC`    | `[sync] interval_sec`     | `15`                     | sync cadence (5–3600)                                                   |
+| `VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT` | `[sync] allow_plaintext`  | `true`                   | set `false` when your PostgreSQL requires TLS                           |
+| `VRCX_CLOUD_REALTIME_MODE`        | `[realtime] mode`         | `auto`                   | `auto`: pause server session while desktop active; `always`: keep it on |
+| `VRCX_CLOUD_FEED_LOGGING`         | `[realtime] feed_logging` | `true`                   | `false`: server never records feed rows (desktop is recorder)           |
 
 ## 📖 Usage manual
 
 ### First login
 
-1. Open `http://<server>:8800` (no web password unless you set one).
+1. Open `http://<server>:8800`.
 2. On the VRChat login page, sign in with your account (TOTP / email OTP
    supported). The server stores the session encrypted at rest.
 3. The app opens on your feed. Data that existed only on your desktop
@@ -206,7 +205,7 @@ Set `mode = "always"` if you want the server session on at all times, or
 
 ## 🎥 Demo
 
-A first-boot walkthrough (login gate → VRChat login → feed):
+A first-boot walkthrough (VRChat login → feed):
 
 ```
 $ docker compose up -d --build
@@ -217,7 +216,6 @@ $ curl -s localhost:8800/healthz
 {"ok":true,"phase":"Running","authStatus":"Authenticated",...}
 
 Browser → http://localhost:8800
- ├─ sign in with web password
  ├─ VRChat login (2FA) … done — session restored on restart
  ├─ Settings → Data Sync → desktop device "PC-Win11" last pull: 12s ago
  └─ desktop joins a world → 15s later the web feed shows it
@@ -302,9 +300,8 @@ version-guarded; desktop and server versions can differ briefly.
 
 ## 🔒 Security notes
 
-- Web auth: single password, constant-time compare, session cookies
-  (`HttpOnly`, `SameSite=Lax`), login rate-limiting. LAN-only posture;
-  use TLS via a reverse proxy if needed.
+- Web UI: no built-in auth — trusted-LAN posture only; front it with a
+  reverse proxy (TLS + basic auth) before exposing it beyond your LAN.
 - PostgreSQL: per-deployment credentials, TLS optional for trusted LANs,
   never exposed publicly by the compose file.
 - VRChat session cookie: encrypted at rest with a machine-derived key.
