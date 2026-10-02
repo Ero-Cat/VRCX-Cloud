@@ -18,6 +18,7 @@ axum = { version = "0.8", default-features = false, features = [
 ] }
 dirs = "7"
 futures-util = "0.3"
+rustls = { version = "0.23", features = ["aws_lc_rs"] }
 thiserror = { workspace = true }
 uuid = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

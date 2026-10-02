@@ -49,6 +49,7 @@ fn build_adaptive_tokio_runtime() -> tokio::runtime::Runtime {
 }
 
 async fn async_main() -> ExitCode {
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
     init_tracing();
 
     let config = match ServerConfig::load() {

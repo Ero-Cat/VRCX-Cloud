@@ -13,5 +13,6 @@
     },
     "sortTailwindcss": {
         "functions": ["cn", "clsx", "cva"]
-    }
+    },
+    "ignorePatterns": ["docker-compose.yml"]
 }

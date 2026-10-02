@@ -83,10 +83,10 @@ write on the web land on your desktop — within one sync interval.
 git clone https://github.com/Ero-Cat/VRCX-Cloud.git
 cd VRCX-Cloud
 
-cp .env.example .env      # set web password + your remote PostgreSQL
+cp .env.example .env      # point VRCX_SYNC_* at your remote PostgreSQL
 docker compose up -d --build
 
-open http://localhost:8800
+open http://localhost:8800   # no login step by default (trusted LAN)
 ```
 
 You will see the login gate → after signing in, the VRChat login page.
@@ -146,7 +146,7 @@ Environment variables (or `server.toml`, path via `VRCX_CLOUD_CONFIG`):
 
 ### First login
 
-1. Open `http://<server>:8800`, enter the web password.
+1. Open `http://<server>:8800` (no web password unless you set one).
 2. On the VRChat login page, sign in with your account (TOTP / email OTP
    supported). The server stores the session encrypted at rest.
 3. The app opens on your feed. Data that existed only on your desktop
