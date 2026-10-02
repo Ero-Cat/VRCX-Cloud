@@ -9,7 +9,7 @@ RUN npm run build
 # ---- Server build ---------------------------------------------------------
 FROM rust:1-bookworm AS server
 WORKDIR /app
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml Cargo.lock package.json ./
 COPY crates crates
 # vrcx-0-i18n's build script reads language codes + locale files from src/localization.
 COPY src/localization src/localization
