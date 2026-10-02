@@ -36,7 +36,9 @@
         "test:watch": "vitest",
         "build:licenses": "node ./scripts/generate-third-party-licenses.ts",
         "build": "vite build && npm run build:licenses",
-        "generate:web-bindings": "echo \"web bindings codegen lands in P2\""
+        "generate:web-bindings": "echo \"web bindings codegen lands in P2\"",
+        "rust:clean": "cargo clean",
+        "rust:clean:debug": "rm -rf target/debug"
     },
     "dependencies": {
         "@base-ui/react": "^1.8.0",

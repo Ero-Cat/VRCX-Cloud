@@ -13,7 +13,7 @@ desktop VRCX-0 and converges with it over a PostgreSQL sync mesh.
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
 [![Rust](https://img.shields.io/badge/backend-Rust%201-dea584?style=flat-square&logo=rust)](Cargo.toml)
 [![Frontend](https://img.shields.io/badge/frontend-React%2019-61dafb?style=flat-square&logo=react)](package.json)
-[![PostgreSQL](https://img.shields.io/badge/sync-PostgreSQL-336791?style=flat-square&logo=postgresql)](docker-compose.yml)
+[![PostgreSQL](https://img.shields.io/badge/sync-PostgreSQL-336791?style=flat-square&logo=postgresql)](.env.example)
 
 **[Quickstart](#-quickstart) · [Features](#-features) · [Install](#-installation) · [Usage](#-usage-manual) · [Philosophy](#%EF%B8%8F-why-another-vrcx) · [FAQ](#-faq)**
 
@@ -83,7 +83,7 @@ write on the web land on your desktop — within one sync interval.
 git clone https://github.com/Ero-Cat/VRCX-Cloud.git
 cd VRCX-Cloud
 
-echo "VRCX_WEB_PASSWORD=change-me" > .env          # web login password
+cp .env.example .env      # set web password + your remote PostgreSQL
 docker compose up -d --build
 
 open http://localhost:8800
@@ -112,7 +112,7 @@ Services started:
 
 ### Bare metal
 
-Requirements: Rust 1.85+, Node 24, a PostgreSQL server.
+Requirements: Rust 1.85+, Node 24, a reachable PostgreSQL server.
 
 ```bash
 npm ci && npm run build                    # frontend -> dist/
@@ -224,6 +224,22 @@ Browser → http://localhost:8800
 Desktop-only subsystems (game-log watcher, VR overlay, tray, updater,
 registry backup, TTS) were removed rather than disabled — the server tree
 contains no dead desktop code.
+
+## 🧹 Disk hygiene
+
+Rust `target/` grows fast (this workspace's debug artifacts reached 25 GB
+during heavy development). Keep it in check:
+
+```bash
+npm run rust:clean:debug        # drop target/debug (biggest win, anytime)
+scripts/cargo-target-hygiene.sh # incremental caches + cargo-sweep >30d
+npm run rust:clean              # full cargo clean
+```
+
+The workspace already compiles with `debug = "line-tables-only"` and
+skips debuginfo for dependencies; if you work across many Rust repos,
+point `CARGO_TARGET_DIR` at one shared directory to stop per-project
+duplication.
 
 ## 🤔 Why another VRCX?
 

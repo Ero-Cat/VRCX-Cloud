@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 # ---- Frontend build -------------------------------------------------------
 FROM node:24-bookworm-slim AS frontend
 WORKDIR /app
@@ -11,14 +9,12 @@ RUN npm run build
 # ---- Server build ---------------------------------------------------------
 FROM rust:1-bookworm AS server
 WORKDIR /app
-# Cache workspace manifests first
 COPY Cargo.toml Cargo.lock ./
 COPY crates crates
-RUN cargo build --release --locked -p vrcx-0-server \
-    --bin vrcx-0-server
+RUN cargo build --release --locked -p vrcx-0-server --bin vrcx-0-server
 
 # ---- Runtime --------------------------------------------------------------
-FROM debian:bookworm-slim AS runtime
+FROM debian:bookworm-slim
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
