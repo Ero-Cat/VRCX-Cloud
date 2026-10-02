@@ -139,6 +139,11 @@ async fn async_main() -> ExitCode {
     // Dual realtime sessions (desktop + server) can double-record feed
     // rows; users running the desktop as primary can turn the server's
     // own feed logging off.
+    // Activity aggregates are derived caches the desktop rebuilds when
+    // its game log ingests; on the server rows arrive via sync, so
+    // re-derive on a cadence to keep the activity pages current.
+    spawn_activity_refresh(Arc::clone(&state));
+
     if let Some(gate) = pause_gate.clone() {
         realtime_supervisor::spawn(Arc::clone(&state), gate);
         tracing::info!(
@@ -328,6 +333,58 @@ fn seed_sync_settings(
         tracing::debug!("seeded remote sync settings from server config");
     }
     Ok(())
+}
+
+fn spawn_activity_refresh(state: Arc<ServerRuntimeHostState>) {
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(300)).await;
+            let scope = state.auth_scope_snapshot();
+            if !scope.active || scope.current_user_id.is_empty() {
+                continue;
+            }
+            let owner = vrcx_0_core::OwnerId::new(scope.current_user_id.clone());
+            let local_data = state.local_data().clone();
+            let refresh = tokio::task::spawn_blocking(move || {
+                let refresh_input =
+                    vrcx_0_persistence::activity::ActivitySelfSessionsRefreshInput {
+                        user_id: owner.as_str().to_string(),
+                        mode: vrcx_0_persistence::activity::ActivityRefreshMode::Incremental,
+                        range_days: serde_json::json!(365i64),
+                        now_ms: None,
+                    };
+                vrcx_0_persistence::activity::activity_self_sessions_refresh(
+                    local_data.database(),
+                    &owner,
+                    refresh_input,
+                )?;
+                for range_days in [30i64, 90, 180, 365] {
+                    let _ = local_data.activity_view(
+                        vrcx_0_persistence::activity::ActivityViewBuildInput {
+                            owner_user_id: owner.clone(),
+                            target_user_id: owner.as_str().to_string(),
+                            is_self: true,
+                            range_days,
+                            utc_offset_minutes: 0,
+                            now_ms: 0,
+                            force_refresh: true,
+                        },
+                    );
+                }
+                Ok::<(), vrcx_0_persistence::Error>(())
+            })
+            .await;
+            match refresh {
+                Ok(Ok(())) => tracing::debug!("activity refresh cycle completed"),
+                Ok(Err(error)) => {
+                    tracing::warn!(error = %error, "activity refresh failed")
+                }
+                Err(error) => {
+                    tracing::warn!(error = %error, "activity refresh task failed")
+                }
+            }
+        }
+    });
 }
 
 fn shutdown(state: &Arc<ServerRuntimeHostState>, reason: &str) {

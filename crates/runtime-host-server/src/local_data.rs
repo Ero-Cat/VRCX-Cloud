@@ -352,6 +352,10 @@ impl LocalDataRuntime {
         )?)
     }
 
+    pub fn database(&self) -> &vrcx_0_persistence::DatabaseService {
+        self.db.as_ref()
+    }
+
     pub fn activity_view(&self, input: ActivityViewBuildInput) -> Result<ActivityViewOutput> {
         Ok(vrcx_0_persistence::activity::activity_view_build(
             self.db.as_ref(),
