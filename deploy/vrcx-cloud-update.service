@@ -1,0 +1,13 @@
+# Install to /etc/systemd/system/. Adjust WorkingDirectory and ExecStart
+# if the clone does not live at /opt/VRCX-Cloud.
+
+[Unit]
+Description=VRCX-Cloud - pull latest image and redeploy when it changed
+Requires=docker.service
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/VRCX-Cloud
+ExecStart=/opt/VRCX-Cloud/scripts/auto-update.sh

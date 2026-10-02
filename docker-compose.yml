@@ -1,5 +1,10 @@
 services:
     app:
+        # Pulled from GHCR by scripts/auto-update.sh when the image digest
+        # changes; `docker compose up -d --build` still forces a local
+        # source build (fallback for fresh clones before the package
+        # exists, or offline builds).
+        image: ghcr.io/ero-cat/vrcx-cloud:latest
         build: .
         restart: unless-stopped
         # All configuration comes from .env (see .env.example); the server

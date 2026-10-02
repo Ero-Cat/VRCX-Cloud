@@ -76,16 +76,19 @@ write on the web land on your desktop — within one sync interval.
 
 ## ✨ Features
 
-|     | Feature                           | Notes                                                                                                                                                               |
-| --- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🖥   | **Full VRCX-0 UI in the browser** | feed, friends, game-log history, favorites, notifications, stats graphs, AI assistant — the same React app, served by the server                                    |
-| ⚡  | **Server-side VRChat session**    | login (incl. 2FA) once in the browser; the server keeps a realtime websocket so the web stays live even with the desktop off                                        |
-| 🔁  | **Bidirectional sync mesh**       | op-log protocol with HLC conflict arbitration, idempotent pushes, resume-after-restart — shared with desktop VRCX-0                                                 |
-| 🤝  | **Desktop-aware handoff**         | while your desktop VRCX-0 is actively syncing, the server pauses its own VRChat session and lets the desktop collect — no doubled API traffic, no doubled feed rows |
-| 🧠  | **344-command API**               | the exact desktop command surface over `POST /api/invoke` + WebSocket events                                                                                        |
-| 🔐  | **Single-password web auth**      | cookie sessions, login rate-limit, explicit LAN-open mode                                                                                                           |
-| 🐳  | **One container**                 | server + PostgreSQL via docker-compose; single binary for bare metal                                                                                                |
-| 🧩  | **Graceful degradation**          | desktop-only features (game launch, VR overlay, tray) are reported unsupported and hidden automatically                                                             |
+|     | Feature                            | Notes                                                                                                                                                                     |
+| --- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🖥   | **Full VRCX-0 UI in the browser**  | feed, friends, game-log history, favorites, notifications, stats graphs, AI assistant — the same React app, served by the server                                          |
+| ⚡  | **Server-side VRChat session**     | login (incl. 2FA) once in the browser; the server keeps a realtime websocket so the web stays live even with the desktop off                                              |
+| 🔁  | **Bidirectional sync mesh**        | op-log protocol with HLC conflict arbitration, idempotent pushes, resume-after-restart — shared with desktop VRCX-0                                                       |
+| 🤝  | **Desktop-aware handoff**          | while your desktop VRCX-0 is actively syncing, the server pauses its own VRChat session and lets the desktop collect — no doubled API traffic, no doubled feed rows       |
+| 🧠  | **344-command API**                | the exact desktop command surface over `POST /api/invoke` + WebSocket events                                                                                              |
+| 🔐  | **Single-password web auth**       | cookie sessions, login rate-limit, explicit LAN-open mode                                                                                                                 |
+| 🐳  | **One container**                  | server + PostgreSQL via docker-compose; single binary for bare metal                                                                                                      |
+| 🧩  | **Graceful degradation**           | desktop-only features (game launch, VR overlay, tray) are reported unsupported and hidden automatically                                                                   |
+| 🔍  | **Social analytics**               | bio diff history, status-light distribution, shared-instance query (with the mutual-start marker), and a social density timeline — all derived from the feed event stream |
+| 🕸   | **Graph enhancements**             | manual links and pinned non-friend nodes join the mutual-friends graph, stored separately from API data and synced across devices                                         |
+| 👁   | **Watched users (off by default)** | polls public profile changes of non-friends into your feed; only data your account can already see                                                                        |
 
 ## 🚀 Quickstart
 
@@ -117,6 +120,23 @@ Services started:
 | Service | Address              | Purpose                                |
 | ------- | -------------------- | -------------------------------------- |
 | `app`   | `http://<host>:8800` | VRCX-Cloud web server (BYO PostgreSQL) |
+
+### Automated updates (optional)
+
+Every push to `master` builds an image on GitHub Actions and publishes it
+to `ghcr.io/ero-cat/vrcx-cloud:latest`. A server-side systemd timer polls
+it and redeploys when the digest changes — outbound-only, works behind
+NAT, no server credentials in the repo:
+
+```bash
+# one-time on the deployment host (clone + .env already in place)
+cp deploy/vrcx-cloud-update.{service,timer} /etc/systemd/system/   # adjust paths if the clone isn't at /opt/VRCX-Cloud
+systemctl daemon-reload && systemctl enable --now vrcx-cloud-update.timer
+```
+
+After the first successful build, set the package visibility on GitHub
+(Public pulls anonymously; Private needs a `read:packages` PAT and
+`docker login ghcr.io` on the server).
 
 ### Bare metal
 
@@ -295,6 +315,8 @@ Behind a VPN (Tailscale/WireGuard), sure. Directly? Please don't — the
 web layer fronts your full VRChat session.
 
 **How do upgrades work?**
+With the update timer installed: push to `master` → image builds on
+GitHub → the server picks it up within a minute. Manually:
 `git pull && docker compose up -d --build`. The sync protocol is
 version-guarded; desktop and server versions can differ briefly.
 
@@ -307,6 +329,10 @@ version-guarded; desktop and server versions can differ briefly.
 - VRChat session cookie: encrypted at rest with a machine-derived key.
 - Keep server + desktop NTP-synced — sync arbitration uses hybrid logical
   clocks.
+- The **watched users** feature is off by default; when enabled it only
+  polls public profile data your account can already see (VRChat hides
+  status from non-friends on orange/red), and the results stay in your own
+  database.
 
 ## 🤝 Credits
 

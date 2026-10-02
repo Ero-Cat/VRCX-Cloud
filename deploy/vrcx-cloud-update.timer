@@ -1,0 +1,12 @@
+# Install to /etc/systemd/system/ next to vrcx-cloud-update.service.
+
+[Unit]
+Description=Poll GHCR for a new VRCX-Cloud image every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=60s
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

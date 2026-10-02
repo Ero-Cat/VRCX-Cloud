@@ -6,6 +6,8 @@ node_modules
 dist
 target
 data
+.env
+.env.*
 *.md
 images
 signatures
