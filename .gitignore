@@ -22,3 +22,7 @@ scripts/package-windows-release.ps1
 tsconfig.tsbuildinfo
 .env
 data/
+
+# Desktop shell remnants (build artifacts only)
+src-tauri/
+.DS_Store
