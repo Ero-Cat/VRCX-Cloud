@@ -1,4 +1,5 @@
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use vrcx_0_core::activity_heatmap::{
     activity_normalize_config, activity_peak_indices_from_buckets, compute_activity_view,
     compute_overlap_view, overlap_best_indices_from_buckets, overlap_normalize_config,
@@ -22,7 +23,9 @@ use super::types::{
     ActivitySelfSessionsRefreshOutput, ActivityViewBuildInput, ActivityViewKind,
     ActivityViewOutput,
 };
+use crate::database::schema::ensure_user_store_tables;
 use crate::ownership::OwnerId;
+use crate::realtime::normalize_user_table_prefix;
 
 const BUCKET_COUNT: usize = 168;
 const DEFAULT_MAX_SESSION_MS: i64 = 8 * 60 * 60 * 1000;
@@ -279,7 +282,7 @@ fn friend_activity_source(
         ActivityFriendPresenceSliceInput {
             owner_user_id: owner_user_id.clone(),
             user_id: target_user_id.to_string(),
-            from_date_iso,
+            from_date_iso: from_date_iso.clone(),
             to_date_iso: String::new(),
         },
     )?;
@@ -299,14 +302,103 @@ fn friend_activity_source(
         })
         .collect();
     let (_, mut sessions) = sessions_from_presence(&events, None);
+    let mut fallback = false;
+    if sessions.is_empty() {
+        // Continuously-online friends (common with VRChat+) never produce
+        // an Online↔Offline pair, leaving their activity chart empty even
+        // though their presence is recorded elsewhere. Fall back to
+        // clusters of location changes: each cluster separated by more
+        // than the inactivity gap is one approximate activity session.
+        fallback = true;
+        sessions =
+            friend_activity_sessions_from_gps(db, owner_user_id, target_user_id, &from_date_iso)?;
+    }
     for session in &mut sessions {
-        session.source_revision = cursor.clone();
+        if session.source_revision.is_empty() {
+            session.source_revision = if fallback {
+                format!("gps:{cursor}")
+            } else {
+                cursor.clone()
+            };
+        }
     }
     Ok(ActivitySource {
         has_any_data: !sessions.is_empty(),
         sessions,
         cursor,
     })
+}
+
+/// Approximate activity sessions from the target's location-change feed:
+/// GPS events closer than [`GPS_ACTIVITY_GAP_MS`] join into one session;
+/// a trailing open cluster becomes an open-tail session.
+fn friend_activity_sessions_from_gps(
+    db: &DatabaseService,
+    owner_user_id: &OwnerId,
+    target_user_id: &str,
+    from_date_iso: &str,
+) -> Result<Vec<ActivitySession>, Error> {
+    const GPS_ACTIVITY_GAP_MS: i64 = 15 * 60 * 1000;
+    const GPS_SESSION_MIN_MS: i64 = 60 * 1000;
+    let user_prefix = normalize_user_table_prefix(owner_user_id.as_str())?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    let mut params = HashMap::new();
+    params.insert("@user_id".into(), Value::String(target_user_id.to_string()));
+    params.insert(
+        "@from_date_iso".into(),
+        Value::String(from_date_iso.to_string()),
+    );
+    let stamps: Vec<i64> = db
+        .execute(
+            &format!(
+                "SELECT created_at FROM {user_prefix}_feed_gps
+                 WHERE user_id = @user_id AND created_at >= @from_date_iso
+                 ORDER BY created_at"
+            ),
+            &params,
+        )?
+        .into_iter()
+        .filter_map(|row| {
+            row.first()
+                .and_then(Value::as_str)
+                .and_then(parse_activity_time_ms)
+        })
+        .collect();
+    let mut sessions = Vec::new();
+    let mut cluster_start: Option<i64> = None;
+    let mut cluster_last = 0i64;
+    for stamp in stamps {
+        match cluster_start {
+            Some(_) if stamp - cluster_last <= GPS_ACTIVITY_GAP_MS => {
+                cluster_last = stamp;
+            }
+            Some(start) => {
+                if cluster_last - start >= GPS_SESSION_MIN_MS {
+                    sessions.push(ActivitySession {
+                        start,
+                        end: cluster_last,
+                        is_open_tail: false,
+                        source_revision: String::new(),
+                    });
+                }
+                cluster_start = Some(stamp);
+                cluster_last = stamp;
+            }
+            None => {
+                cluster_start = Some(stamp);
+                cluster_last = stamp;
+            }
+        }
+    }
+    if let Some(start) = cluster_start {
+        sessions.push(ActivitySession {
+            start,
+            end: cluster_last,
+            is_open_tail: true,
+            source_revision: String::new(),
+        });
+    }
+    Ok(sessions)
 }
 
 fn cached_activity_output(
