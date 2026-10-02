@@ -814,3 +814,15 @@ pub fn register(registry: &mut CommandRegistry) {
         },
     );
 }
+
+// Restored after the server gained an ancillary snapshot: hydrates the
+// privacy-lock state (and neutral defaults for desktop-only surfaces)
+// so the web app does not wait on the lock overlay forever.
+pub fn register_ancillary(registry: &mut CommandRegistry) {
+    registry.register(
+        "app__ancillary_runtime_snapshot_get",
+        |state: Arc<ServerRuntimeHostState>, _args| async move {
+            ok(state.ancillary_runtime_snapshot().await)
+        },
+    );
+}

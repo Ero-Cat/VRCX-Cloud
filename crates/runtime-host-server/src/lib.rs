@@ -6,6 +6,7 @@
 //! shell and other player-machine capabilities intentionally do not exist
 //! here; that data arrives via the remote sync protocol instead.
 
+mod ancillary_snapshot;
 mod assistant_adapters;
 pub mod auth_failure;
 mod avatar;

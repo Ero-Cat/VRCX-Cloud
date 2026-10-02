@@ -47,6 +47,7 @@ pub fn build_registry() -> CommandRegistry {
     local_game_log::register_restored(&mut registry);
     application_social::register(&mut registry);
     application_misc::register(&mut registry);
+    application_misc::register_ancillary(&mut registry);
     auth::register(&mut registry);
     core::register(&mut registry);
     local::register(&mut registry);

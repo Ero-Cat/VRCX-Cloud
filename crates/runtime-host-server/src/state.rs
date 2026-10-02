@@ -1519,6 +1519,12 @@ impl ServerRuntimeHostState {
         self.services.privacy_lock()
     }
 
+    pub async fn ancillary_runtime_snapshot(
+        &self,
+    ) -> crate::ancillary_snapshot::AncillaryRuntimeSnapshot {
+        crate::ancillary_snapshot::ancillary_runtime_snapshot(self).await
+    }
+
     pub fn reload_overlay_activity_filters(&self) {
         self.services.reload_overlay_activity_filters();
     }
