@@ -43,7 +43,6 @@ pub(in crate::state) async fn run_background_presence_tick(
         BackgroundPresenceFactsInput {
             session,
             is_game_running: host_session.is_game_running,
-            is_steamvr_running: host_session.is_steamvr_running,
             is_game_no_vr: context
                 .config
                 .get_bool("isGameNoVR", false)

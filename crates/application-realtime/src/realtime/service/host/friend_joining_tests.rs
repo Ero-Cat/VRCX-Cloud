@@ -73,7 +73,6 @@ fn player_joining_only_reaches_overlay_for_current_instance_absent_player() -> R
         .session
         .apply_game_process_status(GameProcessStatus {
             is_game_running: true,
-            is_steamvr_running: true,
             changed_at: "2026-07-13T09:59:00Z".into(),
         });
     apply_joining("wrld_other:789");

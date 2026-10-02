@@ -12,7 +12,6 @@ import type {
 
 export type StatusBarVisibilityKey =
     | 'vrchat'
-    | 'steamvr'
     | 'proxy'
     | 'ws'
     | 'instanceQueue'
@@ -107,7 +106,6 @@ type StatusBarFooterModel = {
     gameStartedAt: number;
     instanceQueue: StatusBarInstanceQueue;
     isGameRunning: boolean | null;
-    isSteamVRRunning: boolean | null;
     friendProfileLoad: StatusBarFriendProfileLoad;
     mutualGraph: StatusBarMutualGraph;
     nowPlaying: StatusBarNowPlaying;

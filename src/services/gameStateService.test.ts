@@ -44,7 +44,6 @@ describe('gameStateService lifecycle transitions', () => {
     it('starts a new game session by clearing location mirrors and starting avatar timing', async () => {
         useRuntimeStore.getState().setGameState({
             isGameRunning: false,
-            isSteamVRRunning: false,
             currentLocation: 'wrld_old:123',
             currentWorldId: 'wrld_old',
             currentWorldName: 'Old World',
@@ -60,18 +59,15 @@ describe('gameStateService lifecycle transitions', () => {
 
         await handleGameRunningUpdate({
             isGameRunning: true,
-            isSteamVRRunning: true,
             lastGameStartedAt: '2026-06-08T10:00:00.000Z',
             lastGameStateChangedAt: '2026-06-08T10:00:00.000Z',
             generation: 1,
             gameChanged: true,
-            steamvrChanged: true,
             changedAt: '2026-06-08T10:00:00.000Z'
         });
 
         expect(useRuntimeStore.getState().gameState).toMatchObject({
             isGameRunning: true,
-            isSteamVRRunning: true,
             currentLocation: '',
             currentWorldId: '',
             currentWorldName: '',
@@ -92,14 +88,13 @@ describe('gameStateService lifecycle transitions', () => {
         expect(useNotificationStore.getState().items[0]).toMatchObject({
             level: 'info',
             title: 'VRChat running',
-            message: 'SteamVR is running.'
+            message: 'A VRChat game session is active.'
         });
     });
 
     it('stops a game session by clearing the local game state', async () => {
         useRuntimeStore.getState().setGameState({
             isGameRunning: true,
-            isSteamVRRunning: true,
             currentLocation: 'wrld_old:123',
             currentWorldId: 'wrld_old',
             currentWorldName: 'Old World',
@@ -115,16 +110,13 @@ describe('gameStateService lifecycle transitions', () => {
         });
         await handleGameRunningUpdate({
             isGameRunning: false,
-            isSteamVRRunning: false,
             generation: 2,
             gameChanged: true,
-            steamvrChanged: true,
             changedAt: '2026-06-08T10:00:00.000Z'
         });
 
         expect(useRuntimeStore.getState().gameState).toMatchObject({
             isGameRunning: false,
-            isSteamVRRunning: false,
             currentLocation: '',
             currentWorldId: '',
             currentWorldName: '',
@@ -142,7 +134,7 @@ describe('gameStateService lifecycle transitions', () => {
         expect(useNotificationStore.getState().items[0]).toMatchObject({
             level: 'info',
             title: 'VRChat stopped',
-            message: 'SteamVR is not running.'
+            message: 'The VRChat game session has ended.'
         });
     });
 });

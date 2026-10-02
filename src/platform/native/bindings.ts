@@ -4870,12 +4870,10 @@ export type HostCapabilities = {
 export type HostPlatform = 'windows' | 'linux' | 'macos' | 'unknown';
 export type HostSessionProjection = {
     isGameRunning: boolean;
-    isSteamVRRunning: boolean;
     lastGameStartedAt?: string | null;
     lastGameStateChangedAt?: string | null;
     generation: number;
     gameChanged: boolean;
-    steamvrChanged: boolean;
     changedAt: string;
 };
 export type HttpApiExecuteResponse = { status: number; data: string };

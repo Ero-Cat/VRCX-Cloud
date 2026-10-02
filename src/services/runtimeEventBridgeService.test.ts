@@ -160,12 +160,10 @@ function createGameProcessProjection(
 ): HostSessionProjection {
     return {
         isGameRunning: false,
-        isSteamVRRunning: false,
         lastGameStartedAt: null,
         lastGameStateChangedAt: null,
         generation: 0,
         gameChanged: false,
-        steamvrChanged: false,
         changedAt: '',
         ...patch
     };
@@ -698,14 +696,12 @@ describe('runtimeEventBridgeService', () => {
     it('hydrates an already-running game over a stale mirror after subscribing', async () => {
         mocks.isHostCapabilityAvailable.mockReturnValue(true);
         useRuntimeStore.getState().setGameState({
-            isGameRunning: false,
-            isSteamVRRunning: false
+            isGameRunning: false
         });
         mocks.getAncillaryRuntimeSnapshot.mockResolvedValue(
             createAncillaryRuntimeSnapshot({
                 gameProcessSnapshot: createGameProcessProjection({
                     isGameRunning: true,
-                    isSteamVRRunning: true,
                     lastGameStartedAt: '2026-08-05T00:00:00.000Z',
                     lastGameStateChangedAt: '2026-08-05T00:00:00.000Z',
                     generation: 1,
@@ -725,8 +721,7 @@ describe('runtimeEventBridgeService', () => {
         );
         expect(mocks.handleGameRunningUpdate).toHaveBeenCalledWith(
             expect.objectContaining({
-                isGameRunning: true,
-                isSteamVRRunning: true
+                isGameRunning: true
             })
         );
     });
@@ -759,12 +754,10 @@ describe('runtimeEventBridgeService', () => {
         });
         const liveProjection = createGameProcessProjection({
             isGameRunning: true,
-            isSteamVRRunning: true,
             lastGameStartedAt: '2026-08-05T00:01:00.000Z',
             lastGameStateChangedAt: '2026-08-05T00:01:00.000Z',
             generation: 1,
             gameChanged: true,
-            steamvrChanged: true,
             changedAt: '2026-08-05T00:01:00.000Z'
         });
         updateGameProcess(liveProjection);

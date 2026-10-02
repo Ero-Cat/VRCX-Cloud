@@ -17,7 +17,6 @@ use vrcx_0_core::OwnerId;
 pub struct BackgroundPresenceFactsInput<'a> {
     pub session: BackgroundCapabilitySession,
     pub is_game_running: bool,
-    pub is_steamvr_running: bool,
     pub is_game_no_vr: bool,
     pub last_game_started_at: Option<String>,
     pub game_log_snapshot: Arc<RuntimeSnapshot>,
@@ -34,7 +33,6 @@ pub struct BackgroundPresenceFacts {
     pub websocket: String,
     pub current_user: CurrentUserSnapshot,
     pub is_game_running: bool,
-    pub is_steamvr_running: bool,
     pub is_game_no_vr: bool,
     pub last_game_started_at: Option<String>,
     pub current_location: String,
@@ -117,7 +115,6 @@ pub fn build_background_presence_facts(
         websocket: input.session.websocket,
         current_user,
         is_game_running: input.is_game_running,
-        is_steamvr_running: input.is_steamvr_running,
         is_game_no_vr: input.is_game_no_vr,
         last_game_started_at: input.last_game_started_at,
         current_location,
@@ -319,7 +316,6 @@ mod roster_tests {
             BackgroundPresenceFactsInput {
                 session: Default::default(),
                 is_game_running: true,
-                is_steamvr_running: false,
                 is_game_no_vr: true,
                 last_game_started_at: None,
                 game_log_snapshot: Arc::new(RuntimeSnapshot {
@@ -354,7 +350,6 @@ mod roster_tests {
                 BackgroundPresenceFactsInput {
                     session: Default::default(),
                     is_game_running: true,
-                    is_steamvr_running: false,
                     is_game_no_vr: true,
                     last_game_started_at: None,
                     game_log_snapshot: Arc::new(RuntimeSnapshot {

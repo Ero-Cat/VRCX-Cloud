@@ -51,7 +51,6 @@ import type {
 
 const DEFAULT_VISIBILITY: StatusBarVisibility = {
     vrchat: true,
-    steamvr: true,
     proxy: true,
     ws: true,
     instanceQueue: true,
@@ -263,9 +262,6 @@ export function AppStatusBar({
     );
     const isGameRunning = useRuntimeStore(
         (state) => state.gameState.isGameRunning
-    );
-    const isSteamVRRunning = useRuntimeStore(
-        (state) => state.gameState.isSteamVRRunning
     );
     const vrcStatusIndicator = useRuntimeStore(
         (state) => state.vrcStatus.indicator
@@ -792,7 +788,6 @@ export function AppStatusBar({
         friendProfileLoad,
         gameStartedAt,
         isGameRunning,
-        isSteamVRRunning,
         instanceQueue,
         mutualGraph,
         nowPlaying,

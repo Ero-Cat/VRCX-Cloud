@@ -56,12 +56,8 @@ export async function handleGameRunningUpdate(
 ) {
     const runtimeStore = useRuntimeStore.getState();
     const previousGameRunning = runtimeStore.gameState.isGameRunning;
-    const previousSteamVrRunning = runtimeStore.gameState.isSteamVRRunning;
     const nextGameRunning = projection.isGameRunning;
-    const nextSteamVrRunning = projection.isSteamVRRunning;
     const gameRunningChanged = previousGameRunning !== nextGameRunning;
-    const steamVrRunningChanged = previousSteamVrRunning !== nextSteamVrRunning;
-    const changed = gameRunningChanged || steamVrRunningChanged;
     const payloadChangedAt =
         projection.lastGameStateChangedAt || projection.changedAt;
     const payloadStartedAt = projection.lastGameStartedAt || '';
@@ -85,8 +81,7 @@ export async function handleGameRunningUpdate(
 
     runtimeStore.setGameState({
         isGameRunning: nextGameRunning,
-        isSteamVRRunning: nextSteamVrRunning,
-        lastGameStateChangedAt: changed
+        lastGameStateChangedAt: gameRunningChanged
             ? now
             : runtimeStore.gameState.lastGameStateChangedAt,
         lastGameStartedAt: gameStartedAt,
@@ -98,9 +93,9 @@ export async function handleGameRunningUpdate(
         useNotificationStore.getState().pushNotification({
             level: 'info',
             title: nextGameRunning ? 'VRChat running' : 'VRChat stopped',
-            message: nextSteamVrRunning
-                ? 'SteamVR is running.'
-                : 'SteamVR is not running.'
+            message: nextGameRunning
+                ? 'A VRChat game session is active.'
+                : 'The VRChat game session has ended.'
         });
     }
 

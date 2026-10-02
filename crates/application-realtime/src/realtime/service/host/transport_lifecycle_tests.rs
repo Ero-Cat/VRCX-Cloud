@@ -215,7 +215,6 @@ fn transport_start_announces_friends_already_traveling_to_the_current_instance()
         .session
         .apply_game_process_status(GameProcessStatus {
             is_game_running: true,
-            is_steamvr_running: true,
             changed_at: "2026-07-13T09:59:00Z".into(),
         });
     runtime

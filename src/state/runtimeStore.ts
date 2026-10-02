@@ -179,7 +179,6 @@ type RuntimeStore = {
     transport: TransportState;
     gameState: {
         isGameRunning: boolean | null;
-        isSteamVRRunning: boolean | null;
         isGameNoVR: boolean;
         currentLocation: string;
         currentWorldId: string;
@@ -550,7 +549,6 @@ const initialState: RuntimeStoreState = {
     transport: createTransportState(),
     gameState: {
         isGameRunning: null,
-        isSteamVRRunning: null,
         isGameNoVR: false,
         currentLocation: '',
         currentWorldId: '',

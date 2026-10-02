@@ -183,7 +183,6 @@ export const StatusBarFooter = forwardRef<HTMLElement, StatusBarFooterProps>(
             dataDirMigration,
             gameStartedAt,
             isGameRunning,
-            isSteamVRRunning,
             friendProfileLoad,
             instanceQueue,
             mutualGraph,
@@ -452,12 +451,6 @@ export const StatusBarFooter = forwardRef<HTMLElement, StatusBarFooterProps>(
                                     )}
                                 </div>
                             }
-                        />
-                        <StatusSegment
-                            visible={visibility.steamvr}
-                            active={Boolean(isSteamVRRunning)}
-                            dimWhenInactive
-                            label="SteamVR"
                         />
                         <StatusSegment
                             visible={
