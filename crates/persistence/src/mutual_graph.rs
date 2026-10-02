@@ -36,6 +36,24 @@ pub struct MutualGraphLinkOutput {
     pub mutual_id: String,
 }
 
+#[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MutualGraphManualLinkOutput {
+    pub friend_id: String,
+    pub mutual_id: String,
+    pub note: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MutualGraphExternalUserOutput {
+    pub user_id: String,
+    pub display_name: String,
+    pub avatar_url: String,
+    pub added_at: String,
+}
+
 #[derive(Debug, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct MutualGraphMetaOutput {
@@ -51,6 +69,11 @@ pub struct MutualGraphSnapshotOutput {
     pub friend_ids: Vec<String>,
     pub links: Vec<MutualGraphLinkOutput>,
     pub meta: Vec<MutualGraphMetaOutput>,
+    /// User-drawn links, kept separate from the API-derived tables so the
+    /// full-replace snapshot refresh never touches them.
+    pub manual_links: Vec<MutualGraphManualLinkOutput>,
+    /// Non-friend nodes the user pinned into the graph.
+    pub external_users: Vec<MutualGraphExternalUserOutput>,
 }
 
 pub fn mutual_graph_snapshot_get(
@@ -113,11 +136,53 @@ pub fn mutual_graph_snapshot_get(
             }
         })
         .collect();
+    let manual_links = db
+        .execute(
+            &format!(
+                "SELECT friend_id, mutual_id, note, created_at FROM {user_prefix}_mutual_graph_manual_links"
+            ),
+            &Default::default(),
+        )?
+        .into_iter()
+        .filter_map(|row| {
+            let friend_id = row_string(&row, 0);
+            let mutual_id = row_string(&row, 1);
+            if friend_id.is_empty() || mutual_id.is_empty() {
+                return None;
+            }
+            Some(MutualGraphManualLinkOutput {
+                friend_id,
+                mutual_id,
+                note: row_string(&row, 2),
+                created_at: row_string(&row, 3),
+            })
+        })
+        .collect();
+    let external_users = db
+        .execute(
+            &format!(
+                "SELECT user_id, display_name, avatar_url, added_at FROM {user_prefix}_mutual_graph_external_users"
+            ),
+            &Default::default(),
+        )?
+        .into_iter()
+        .filter_map(|row| {
+            let user_id = row_string(&row, 0);
+            (!user_id.is_empty()).then_some(MutualGraphExternalUserOutput {
+                user_id,
+                display_name: row_string(&row, 1),
+                avatar_url: row_string(&row, 2),
+                added_at: row_string(&row, 3),
+            })
+        })
+        .collect();
 
     Ok(MutualGraphSnapshotOutput {
         friend_ids,
         links,
         meta,
+        manual_links,
+        external_users,
     })
 }
 
@@ -288,4 +353,116 @@ pub fn mutual_graph_friend_refresh_commit(
         Ok(())
     })?;
     Ok(())
+}
+
+pub fn mutual_graph_manual_link_add(
+    db: &DatabaseService,
+    user_id: String,
+    friend_id: String,
+    mutual_id: String,
+    note: String,
+) -> Result<(), Error> {
+    let user_prefix = normalize_user_table_prefix(&user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    let friend_id = normalize_text(&friend_id);
+    let mutual_id = normalize_text(&mutual_id);
+    if friend_id.is_empty() || mutual_id.is_empty() || friend_id == mutual_id {
+        return Ok(());
+    }
+    // Store the pair canonically so (a, b) and (b, a) are one link.
+    let (left, right) = if friend_id < mutual_id {
+        (friend_id, mutual_id)
+    } else {
+        (mutual_id, friend_id)
+    };
+    db.execute_non_query(
+        &format!(
+            "INSERT OR IGNORE INTO {user_prefix}_mutual_graph_manual_links (friend_id, mutual_id, note, created_at)
+             VALUES (@friend_id, @mutual_id, @note, @created_at)"
+        ),
+        &ParamsBuilder::new()
+            .set("friend_id", left)
+            .set("mutual_id", right)
+            .set("note", normalize_text(&note))
+            .set("created_at", now_iso())
+            .build(),
+    )?;
+    Ok(())
+}
+
+pub fn mutual_graph_manual_link_remove(
+    db: &DatabaseService,
+    user_id: String,
+    friend_id: String,
+    mutual_id: String,
+) -> Result<i64, Error> {
+    let user_prefix = normalize_user_table_prefix(&user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    let friend_id = normalize_text(&friend_id);
+    let mutual_id = normalize_text(&mutual_id);
+    if friend_id.is_empty() || mutual_id.is_empty() {
+        return Ok(0);
+    }
+    let (left, right) = if friend_id < mutual_id {
+        (friend_id, mutual_id)
+    } else {
+        (mutual_id, friend_id)
+    };
+    db.execute_non_query(
+        &format!(
+            "DELETE FROM {user_prefix}_mutual_graph_manual_links WHERE friend_id = @friend_id AND mutual_id = @mutual_id"
+        ),
+        &ParamsBuilder::new()
+            .set("friend_id", left)
+            .set("mutual_id", right)
+            .build(),
+    )?;
+    Ok(1)
+}
+
+pub fn mutual_graph_external_user_add(
+    db: &DatabaseService,
+    user_id: String,
+    target_user_id: String,
+    display_name: String,
+    avatar_url: String,
+) -> Result<(), Error> {
+    let user_prefix = normalize_user_table_prefix(&user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    let target_user_id = normalize_text(&target_user_id);
+    if target_user_id.is_empty() {
+        return Ok(());
+    }
+    db.execute_non_query(
+        &format!(
+            "INSERT INTO {user_prefix}_mutual_graph_external_users (user_id, display_name, avatar_url, added_at)
+             VALUES (@user_id, @display_name, @avatar_url, @added_at)
+             ON CONFLICT(user_id) DO UPDATE SET display_name = excluded.display_name, avatar_url = excluded.avatar_url"
+        ),
+        &ParamsBuilder::new()
+            .set("user_id", target_user_id)
+            .set("display_name", normalize_text(&display_name))
+            .set("avatar_url", normalize_text(&avatar_url))
+            .set("added_at", now_iso())
+            .build(),
+    )?;
+    Ok(())
+}
+
+pub fn mutual_graph_external_user_remove(
+    db: &DatabaseService,
+    user_id: String,
+    target_user_id: String,
+) -> Result<i64, Error> {
+    let user_prefix = normalize_user_table_prefix(&user_id)?;
+    ensure_user_store_tables(db, &user_prefix)?;
+    let target_user_id = normalize_text(&target_user_id);
+    if target_user_id.is_empty() {
+        return Ok(0);
+    }
+    db.execute_non_query(
+        &format!("DELETE FROM {user_prefix}_mutual_graph_external_users WHERE user_id = @user_id"),
+        &ParamsBuilder::new().set("user_id", target_user_id).build(),
+    )?;
+    Ok(1)
 }

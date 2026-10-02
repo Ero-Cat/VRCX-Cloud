@@ -7,11 +7,20 @@ export interface MutualFriendNode {
     optedOut: boolean;
     degree: number;
     mutualCount: number;
+    /** Pinned non-friend node added by the user. */
+    external?: boolean;
 }
 
 export interface MutualFriendLink {
     source: string;
     target: string;
+    /** User-drawn link, not derived from the mutual-friends API. */
+    manual?: boolean;
+}
+
+export interface MutualFriendsGraphExtras {
+    manualLinks?: Array<{ left: string; right: string; note: string }>;
+    externalUsers?: Array<{ id: string; displayName: string }>;
 }
 
 export interface MutualFriendGraph {

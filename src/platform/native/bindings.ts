@@ -1059,6 +1059,30 @@ const generatedCommands = {
     ): Promise<ActivityOverlapViewOutput> {
         return await TAURI_INVOKE('app__activity_overlap_view', { input });
     },
+    async appFeedBioHistoryQuery(
+        query: FeedBioHistoryQueryInput
+    ): Promise<FeedBioHistoryOutput> {
+        return await TAURI_INVOKE('app__feed_bio_history_query', { query });
+    },
+    async appStatusStatsView(
+        input: StatusStatsViewInput
+    ): Promise<StatusStatsViewOutput> {
+        return await TAURI_INVOKE('app__status_stats_view', { input });
+    },
+    async appTwoPersonRelationshipQuery(
+        input: TwoPersonRelationshipQueryInput
+    ): Promise<TwoPersonRelationshipOutput> {
+        return await TAURI_INVOKE('app__two_person_relationship_query', {
+            input
+        });
+    },
+    async appRelationshipTimelineRows(
+        input: RelationshipTimelineRowsInput
+    ): Promise<RelationshipTimelineRowsOutput> {
+        return await TAURI_INVOKE('app__relationship_timeline_rows', {
+            input
+        });
+    },
     async appMutualGraphSnapshotGet(
         userId: string
     ): Promise<MutualGraphSnapshotOutput> {
@@ -1073,6 +1097,77 @@ const generatedCommands = {
         input: MutualGraphFetchStartInput
     ): Promise<MutualGraphFetchStatus> {
         return await TAURI_INVOKE('app__mutual_graph_fetch_start', { input });
+    },
+    async appWatchedUsersList(
+        ownerUserId: string
+    ): Promise<WatchedUserOutput[]> {
+        return await TAURI_INVOKE('app__watched_users_list', { ownerUserId });
+    },
+    async appWatchedUserAdd(input: {
+        ownerUserId: string;
+        targetUserId: string;
+        displayName?: string;
+    }): Promise<null> {
+        return await TAURI_INVOKE('app__watched_user_add', {
+            ownerUserId: input.ownerUserId,
+            targetUserId: input.targetUserId,
+            displayName: input.displayName ?? ''
+        });
+    },
+    async appWatchedUserRemove(input: {
+        ownerUserId: string;
+        targetUserId: string;
+    }): Promise<number> {
+        return await TAURI_INVOKE('app__watched_user_remove', {
+            ownerUserId: input.ownerUserId,
+            targetUserId: input.targetUserId
+        });
+    },
+    async appMutualGraphManualLinkAdd(input: {
+        userId: string;
+        friendId: string;
+        mutualId: string;
+        note?: string;
+    }): Promise<null> {
+        return await TAURI_INVOKE('app__mutual_graph_manual_link_add', {
+            userId: input.userId,
+            friendId: input.friendId,
+            mutualId: input.mutualId,
+            note: input.note ?? ''
+        });
+    },
+    async appMutualGraphManualLinkRemove(input: {
+        userId: string;
+        friendId: string;
+        mutualId: string;
+    }): Promise<number> {
+        return await TAURI_INVOKE('app__mutual_graph_manual_link_remove', {
+            userId: input.userId,
+            friendId: input.friendId,
+            mutualId: input.mutualId
+        });
+    },
+    async appMutualGraphExternalUserAdd(input: {
+        userId: string;
+        targetUserId: string;
+        displayName?: string;
+        avatarUrl?: string;
+    }): Promise<null> {
+        return await TAURI_INVOKE('app__mutual_graph_external_user_add', {
+            userId: input.userId,
+            targetUserId: input.targetUserId,
+            displayName: input.displayName ?? '',
+            avatarUrl: input.avatarUrl ?? ''
+        });
+    },
+    async appMutualGraphExternalUserRemove(input: {
+        userId: string;
+        targetUserId: string;
+    }): Promise<number> {
+        return await TAURI_INVOKE('app__mutual_graph_external_user_remove', {
+            userId: input.userId,
+            targetUserId: input.targetUserId
+        });
     },
     async appMutualGraphFriendRefresh(
         input: MutualGraphFriendRefreshInput
@@ -4286,6 +4381,85 @@ export type FriendLogNameResolutionInput = {
     requestId: string;
     userIds?: string[];
 };
+export type FeedBioHistoryQueryInput = {
+    userId: string;
+    targetUserId: string;
+    dateFrom?: string;
+    dateTo?: string;
+    limit?: number;
+    mergeHours?: number | null;
+};
+export type FeedBioHistoryRow = {
+    rowId: number;
+    createdAt: string;
+    firstCreatedAt: string;
+    displayName: string | null;
+    previousBio: string | null;
+    bio: string | null;
+    mergedChanges: number;
+};
+export type FeedBioHistoryOutput = {
+    rows: FeedBioHistoryRow[];
+};
+export type StatusStatsTotal = {
+    status: string;
+    minutes: number;
+    share: number;
+};
+export type StatusStatsDailyBucket = {
+    day: string;
+    status: string;
+    minutes: number;
+};
+export type StatusStatsViewInput = {
+    ownerUserId: string;
+    targetUserId: string;
+    rangeDays?: number;
+    utcOffsetMinutes?: number;
+    nowMs?: number;
+    isSelf?: boolean;
+};
+export type StatusStatsViewOutput = {
+    rangeDays: number;
+    totals: StatusStatsTotal[];
+    daily: StatusStatsDailyBucket[];
+    trackedMinutes: number;
+    hasAnyData: boolean;
+    builtAt: string;
+};
+export type TwoPersonRelationshipQueryInput = {
+    ownerUserId: string;
+    userIdA: string;
+    userIdB: string;
+};
+export type TwoPersonOverlapRow = {
+    location: string;
+    friendALeave: string;
+    friendATime: number;
+    friendBLeave: string;
+    friendBTime: number;
+};
+export type TwoPersonSelfPresenceRow = {
+    location: string;
+    selfLeave: string;
+    selfTime: number;
+};
+export type TwoPersonRelationshipOutput = {
+    rows: TwoPersonOverlapRow[];
+    selfPresence: TwoPersonSelfPresenceRow[];
+    maxPlayerCounts: Array<[string, number]>;
+};
+export type RelationshipTimelineRowsInput = { ownerUserId: string };
+export type RelationshipTimelineDayRow = {
+    userId: string;
+    displayName: string;
+    day: string;
+    totalTimeMs: number;
+    joinCount: number;
+};
+export type RelationshipTimelineRowsOutput = {
+    rows: RelationshipTimelineDayRow[];
+};
 export type FriendProfileBulkLoadStatus =
     | 'idle'
     | 'running'
@@ -5337,10 +5511,33 @@ export type MutualGraphMetaOutput = {
     optedOut: boolean;
     totalCount: number | null;
 };
+export type WatchedUserOutput = {
+    userId: string;
+    displayName: string;
+    addedAt: string;
+    lastPolledAt: string;
+    lastStatus: string;
+    lastStatusDescription: string;
+    lastBio: string;
+};
+export type MutualGraphManualLinkOutput = {
+    friendId: string;
+    mutualId: string;
+    note: string;
+    createdAt: string;
+};
+export type MutualGraphExternalUserOutput = {
+    userId: string;
+    displayName: string;
+    avatarUrl: string;
+    addedAt: string;
+};
 export type MutualGraphSnapshotOutput = {
     friendIds: string[];
     links: MutualGraphLinkOutput[];
     meta: MutualGraphMetaOutput[];
+    manualLinks: MutualGraphManualLinkOutput[];
+    externalUsers: MutualGraphExternalUserOutput[];
 };
 export type MyAvatarByIdInput = { avatarId: string };
 export type MyAvatarsInput = {

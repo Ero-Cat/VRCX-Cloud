@@ -54,7 +54,8 @@ export function MutualFriendsHud({
     onRefreshPage,
     onSearchQueryChange,
     searchQuery,
-    settingsSlot
+    settingsSlot,
+    actionsSlot
 }: {
     baseNodeCount: number;
     canFetch: boolean;
@@ -66,6 +67,7 @@ export function MutualFriendsHud({
     onSearchQueryChange: (value: string) => void;
     searchQuery: string;
     settingsSlot: ReactNode;
+    actionsSlot?: ReactNode;
 }) {
     const { t } = useTranslation();
 
@@ -151,6 +153,7 @@ export function MutualFriendsHud({
                 >
                     {isReloading ? <Spinner /> : <RefreshCcwIcon />}
                 </Button>
+                {actionsSlot}
                 {settingsSlot}
             </MutualFriendsSurface>
         </div>

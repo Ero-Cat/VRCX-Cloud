@@ -24,6 +24,7 @@ const navIconEntries: Array<readonly [NavIconKey, string]> = [
     ['lucide:Heart', 'Heart'],
     ['lucide:UserStar', 'Favorite User'],
     ['lucide:UserRoundCheck', 'Friend'],
+    ['lucide:Eye', 'Eye'],
     ['lucide:Globe', 'Globe'],
     ['lucide:MapPinned', 'Map'],
     ['lucide:Smile', 'Smile'],

@@ -1,5 +1,11 @@
-import { RotateCcwIcon, Settings2Icon, XIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import {
+    PlusIcon,
+    RotateCcwIcon,
+    Settings2Icon,
+    UserMinusIcon,
+    XIcon
+} from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { MutualFriendsLayoutControls } from '@/components/mutual-friends/MutualFriendsLayoutControls';
@@ -11,6 +17,7 @@ import type {
 } from '@/lib/mutual-friends/mutualFriendsTypes';
 import { preserveAppTitleBarOnOpenChange } from '@/lib/overlayTitlebar';
 import { Button } from '@/ui/shadcn/button';
+import { Input } from '@/ui/shadcn/input';
 import { Separator } from '@/ui/shadcn/separator';
 import {
     Sheet,
@@ -41,22 +48,30 @@ function SectionLabel({ children }: { children: ReactNode }) {
     );
 }
 
+type ExternalUserEntry = { id: string; displayName: string };
+
 export function MutualFriendsSettingsSheet({
     edgeCount,
     excludePickerOptions,
     excludedFriendIds,
+    externalUsers = [],
     layoutSettings,
     nodeCount,
+    onAddExternalUser,
     onExcludedFriendIdsChange,
+    onRemoveExternalUser,
     onResetLayoutAndHidden,
     setLayoutSetting
 }: {
     edgeCount: number;
     excludePickerOptions: MutualFriendPickerOption[];
     excludedFriendIds: string[];
+    externalUsers?: ExternalUserEntry[];
     layoutSettings: MutualFriendsLayoutSettings;
     nodeCount: number;
+    onAddExternalUser: (userId: string, displayName: string) => void;
     onExcludedFriendIdsChange: (next: string[]) => void;
+    onRemoveExternalUser: (userId: string) => void;
     onResetLayoutAndHidden: () => void;
     setLayoutSetting: (
         key: MutualFriendsLayoutSettingKey,
@@ -64,6 +79,18 @@ export function MutualFriendsSettingsSheet({
     ) => void;
 }) {
     const { t } = useTranslation();
+    const [externalUserId, setExternalUserId] = useState('');
+    const [externalDisplayName, setExternalDisplayName] = useState('');
+
+    function submitExternalUser() {
+        const userId = externalUserId.trim();
+        if (!userId) {
+            return;
+        }
+        onAddExternalUser(userId, externalDisplayName.trim());
+        setExternalUserId('');
+        setExternalDisplayName('');
+    }
 
     return (
         <Sheet
@@ -160,6 +187,86 @@ export function MutualFriendsSettingsSheet({
                                 )}
                                 listClassName="bg-muted/30 h-64"
                             />
+                        </section>
+
+                        <Separator />
+
+                        <section className="flex flex-col gap-2">
+                            <SectionLabel>
+                                {t(
+                                    'view.charts.mutual_friend.settings.external_users'
+                                )}
+                            </SectionLabel>
+                            <p className="text-muted-foreground text-xs">
+                                {t(
+                                    'view.charts.mutual_friend.settings.external_users_help'
+                                )}
+                            </p>
+                            <div className="flex flex-col gap-1.5">
+                                <Input
+                                    value={externalUserId}
+                                    onChange={(event) =>
+                                        setExternalUserId(event.target.value)
+                                    }
+                                    placeholder={t(
+                                        'view.charts.mutual_friend.settings.external_users_id_placeholder'
+                                    )}
+                                    className="h-8 text-xs"
+                                />
+                                <div className="flex gap-1.5">
+                                    <Input
+                                        value={externalDisplayName}
+                                        onChange={(event) =>
+                                            setExternalDisplayName(
+                                                event.target.value
+                                            )
+                                        }
+                                        placeholder={t(
+                                            'view.charts.mutual_friend.settings.external_users_name_placeholder'
+                                        )}
+                                        className="h-8 flex-1 text-xs"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon-sm"
+                                        aria-label={t('common.actions.add')}
+                                        disabled={!externalUserId.trim()}
+                                        onClick={submitExternalUser}
+                                    >
+                                        <PlusIcon />
+                                    </Button>
+                                </div>
+                            </div>
+                            {externalUsers.length > 0 ? (
+                                <div className="flex flex-col gap-0.5">
+                                    {externalUsers.map((entry) => (
+                                        <div
+                                            key={entry.id}
+                                            className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1 text-xs"
+                                        >
+                                            <span className="truncate">
+                                                {entry.displayName || entry.id}
+                                            </span>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon-sm"
+                                                aria-label={t(
+                                                    'common.actions.remove'
+                                                )}
+                                                onClick={() =>
+                                                    onRemoveExternalUser(
+                                                        entry.id
+                                                    )
+                                                }
+                                            >
+                                                <UserMinusIcon className="size-3.5" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : null}
                         </section>
                     </div>
                 </div>

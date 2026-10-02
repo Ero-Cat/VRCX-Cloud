@@ -275,6 +275,20 @@ fn ensure_user_store_statements(db: &DatabaseService, user_prefix: &str) -> Resu
         format!(
             "CREATE TABLE IF NOT EXISTS {user_prefix}_mutual_graph_meta (friend_id TEXT PRIMARY KEY, last_fetched_at TEXT, opted_out INTEGER DEFAULT 0, total_count INTEGER)"
         ),
+        // User-drawn additions to the API-derived mutual graph: manual
+        // links are append-only (GSet) so snapshot refreshes never wipe
+        // them; external users add non-friend nodes to the visualization.
+        format!(
+            "CREATE TABLE IF NOT EXISTS {user_prefix}_mutual_graph_manual_links (friend_id TEXT NOT NULL, mutual_id TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT '', PRIMARY KEY(friend_id, mutual_id))"
+        ),
+        format!(
+            "CREATE TABLE IF NOT EXISTS {user_prefix}_mutual_graph_external_users (user_id TEXT PRIMARY KEY, display_name TEXT NOT NULL DEFAULT '', avatar_url TEXT NOT NULL DEFAULT '', added_at TEXT NOT NULL DEFAULT '')"
+        ),
+        // Watched non-friend profiles: the poller diffs last_status /
+        // last_bio against each poll and publishes changes as feed events.
+        format!(
+            "CREATE TABLE IF NOT EXISTS {user_prefix}_watched_users (user_id TEXT PRIMARY KEY, display_name TEXT NOT NULL DEFAULT '', added_at TEXT NOT NULL DEFAULT '', last_polled_at TEXT NOT NULL DEFAULT '', last_status TEXT NOT NULL DEFAULT '', last_status_description TEXT NOT NULL DEFAULT '', last_bio TEXT NOT NULL DEFAULT '')"
+        ),
     ] {
         db.execute_non_query(&sql, &Default::default())?;
     }

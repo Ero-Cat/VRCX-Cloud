@@ -54,6 +54,7 @@ import type {
     SidePanelSortMethod
 } from './side-panel/sidePanelTypes';
 import { useSidePanelActiveTab } from './side-panel/useSidePanelActiveTab';
+import { TrackedUsersSidebar } from './TrackedUsersSidebar';
 import { useSidePanelSettingsState } from './useSidePanelSettingsState';
 import { useSidePanelTabData } from './useSidePanelTabData';
 import { WorldRoomsSidebar } from './world-rooms/WorldRoomsSidebar';
@@ -231,6 +232,7 @@ export const SidePanel = forwardRef<HTMLElement, SidePanelProps>(
             favoriteGroupItems,
             favoriteLoadStatus,
             groupsTabVisible,
+            trackedTabVisible,
             orderedFavoriteGroupItems,
             resolvedSidebarFavoriteGroups,
             selectedFavoriteGroupLabel,
@@ -423,6 +425,14 @@ export const SidePanel = forwardRef<HTMLElement, SidePanelProps>(
                                 className="min-h-0 flex-1 overflow-hidden data-hidden:hidden"
                             >
                                 <GroupsSidebar filterQuery={filterQuery} />
+                            </TabsContent>
+                        ) : null}
+                        {trackedTabVisible ? (
+                            <TabsContent
+                                value="tracked"
+                                className="min-h-0 flex-1 overflow-hidden data-hidden:hidden"
+                            >
+                                <TrackedUsersSidebar />
                             </TabsContent>
                         ) : null}
                         {visibleTabLayout

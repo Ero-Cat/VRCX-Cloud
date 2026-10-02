@@ -104,6 +104,8 @@ export const routePathByName = Object.freeze({
     'my-avatars': '/my-avatars',
     activity: '/activity',
     'charts-mutual': '/charts/mutual',
+    'charts-two-person': '/charts/two-person',
+    'charts-timeline': '/charts/timeline',
     tools: '/tools',
     gallery: '/tools/gallery',
     inventory: '/tools/inventory',
@@ -167,6 +169,8 @@ export function createBaseDefaultNavLayout(t: TranslateKey): NavLayoutEntry[] {
         { type: 'item', key: 'my-avatars' },
         { type: 'item', key: 'activity' },
         { type: 'item', key: 'charts-mutual' },
+        { type: 'item', key: 'charts-two-person' },
+        { type: 'item', key: 'charts-timeline' },
         { type: 'item', key: 'tools' }
     ];
 }

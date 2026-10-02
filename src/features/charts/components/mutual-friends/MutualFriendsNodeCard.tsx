@@ -1,10 +1,12 @@
 import {
     EyeOffIcon,
+    LinkIcon,
     RefreshCcwIcon,
     ScanSearchIcon,
     UserIcon,
     XIcon
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { FadeInImage } from '@/components/media/FadeInImage';
@@ -16,14 +18,19 @@ import type {
 } from '@/lib/mutual-friends/mutualFriendsTypes';
 import { userImage } from '@/services/entityMediaService';
 import { Button } from '@/ui/shadcn/button';
+import { Input } from '@/ui/shadcn/input';
 import { Spinner } from '@/ui/shadcn/spinner';
 
 import { MutualFriendsSurface } from './MutualFriendsSurface';
 
+type LinkableNodeOption = { value: string; label: string };
+
 export function MutualFriendsNodeCard({
     community,
     isRefreshing,
+    linkableNodeOptions = [],
     node,
+    onAddManualLink,
     onClose,
     onFocusCommunity,
     onHide,
@@ -33,7 +40,9 @@ export function MutualFriendsNodeCard({
 }: {
     community: MutualFriendCommunity | null;
     isRefreshing: boolean;
+    linkableNodeOptions?: LinkableNodeOption[];
     node: MutualFriendNode;
+    onAddManualLink: (targetId: string) => void;
     onClose: () => void;
     onFocusCommunity: () => void;
     onHide: () => void;
@@ -43,6 +52,21 @@ export function MutualFriendsNodeCard({
 }) {
     const { t } = useTranslation();
     const imageUrl = user ? userImage(user, 128) : '';
+    const [linkPickerOpen, setLinkPickerOpen] = useState(false);
+    const [linkQuery, setLinkQuery] = useState('');
+    const filteredLinkOptions = useMemo(() => {
+        const query = linkQuery.trim().toLowerCase();
+        if (!query) {
+            return linkableNodeOptions.slice(0, 12);
+        }
+        return linkableNodeOptions
+            .filter(
+                (option) =>
+                    option.label.toLowerCase().includes(query) ||
+                    option.value.toLowerCase().includes(query)
+            )
+            .slice(0, 12);
+    }, [linkableNodeOptions, linkQuery]);
 
     return (
         <MutualFriendsSurface className="animate-in fade-in-0 slide-in-from-bottom-2 pointer-events-auto absolute right-3 bottom-3 z-10 w-72 p-3 duration-200 ease-out">
@@ -121,6 +145,17 @@ export function MutualFriendsNodeCard({
                     type="button"
                     variant="outline"
                     size="icon-sm"
+                    aria-label={t(
+                        'view.charts.mutual_friend.actions.link_to_node'
+                    )}
+                    onClick={() => setLinkPickerOpen((open) => !open)}
+                >
+                    <LinkIcon />
+                </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
                     aria-label={t('common.actions.refresh')}
                     disabled={isRefreshing}
                     onClick={onRefresh}
@@ -139,6 +174,42 @@ export function MutualFriendsNodeCard({
                     <EyeOffIcon />
                 </Button>
             </div>
+
+            {linkPickerOpen ? (
+                <div className="mt-2 flex flex-col gap-1.5">
+                    <Input
+                        value={linkQuery}
+                        onChange={(event) => setLinkQuery(event.target.value)}
+                        placeholder={t(
+                            'view.charts.mutual_friend.actions.link_to_node'
+                        )}
+                        className="h-8 text-xs"
+                    />
+                    <div className="flex max-h-40 flex-col gap-0.5 overflow-y-auto">
+                        {filteredLinkOptions.map((option) => (
+                            <Button
+                                key={option.value}
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="justify-start text-xs"
+                                onClick={() => {
+                                    onAddManualLink(option.value);
+                                    setLinkPickerOpen(false);
+                                    setLinkQuery('');
+                                }}
+                            >
+                                <span className="truncate">{option.label}</span>
+                            </Button>
+                        ))}
+                        {filteredLinkOptions.length === 0 ? (
+                            <span className="text-muted-foreground px-2 py-1 text-xs">
+                                {t('dialog.mutual_instances.no_results')}
+                            </span>
+                        ) : null}
+                    </div>
+                </div>
+            ) : null}
         </MutualFriendsSurface>
     );
 }

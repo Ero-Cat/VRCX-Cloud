@@ -13,6 +13,7 @@ pub mod core;
 pub mod local;
 pub mod local_data_queries;
 pub mod local_game_log;
+pub mod social_analytics;
 pub mod vrchat_mutations;
 pub mod vrchat_proxy;
 
@@ -45,6 +46,7 @@ pub fn build_registry() -> CommandRegistry {
     local_data_queries::register(&mut registry);
     local_game_log::register(&mut registry);
     local_game_log::register_restored(&mut registry);
+    social_analytics::register(&mut registry);
     application_social::register(&mut registry);
     application_misc::register(&mut registry);
     application_misc::register_ancillary(&mut registry);

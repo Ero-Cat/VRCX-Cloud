@@ -23,6 +23,7 @@ pub mod profile_bio;
 mod profile_config;
 pub mod realtime;
 pub mod social_aggregates;
+pub mod social_analytics;
 pub mod sync;
 pub mod telemetry;
 mod translation;

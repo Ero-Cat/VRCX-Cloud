@@ -4,7 +4,7 @@ use std::sync::{atomic::AtomicBool, Arc, Mutex};
 use super::{
     run_background_current_user_refresh, run_background_group_instance_notification_refresh,
     run_background_group_instance_refresh, run_background_moderation_refresh,
-    run_background_print_cleanup, run_background_profile_bio_scan,
+    run_background_print_cleanup, run_background_profile_bio_scan, run_background_profile_watch,
     run_background_social_baseline_refresh, AuthenticatedSessionProjection, BackendRuntime,
     BackendRuntimePhase, BackendRuntimeSnapshot, BackendRuntimeTelemetryKind,
     BackgroundCapabilitySession, BackgroundCapabilitySessionIdentity, BackgroundTickContext,
@@ -14,7 +14,8 @@ use super::{
 use crate::GroupOrderSource;
 use futures_util::future::BoxFuture;
 use vrcx_0_application::social::{
-    AuthenticatedRuntimeOrchestrator, ProfileBioScanPacer, SocialMaintenanceActions,
+    AuthenticatedRuntimeOrchestrator, ProfileBioScanPacer, ProfileWatchPacer,
+    SocialMaintenanceActions,
 };
 use vrcx_0_application_activity::OverlayFavoriteGroups;
 use vrcx_0_core::OwnerId;
@@ -33,6 +34,7 @@ pub(super) struct RuntimeHostSocialMaintenanceActions {
     pub(super) group_order_source: Arc<dyn GroupOrderSource>,
     pub(super) group_notification_group_ids: Mutex<Option<GroupNotificationGroupIds>>,
     pub(super) profile_bio_pacer: ProfileBioScanPacer,
+    pub(super) profile_watch_pacer: ProfileWatchPacer,
 }
 
 pub(super) struct GroupNotificationGroupIds {
@@ -198,6 +200,12 @@ impl SocialMaintenanceActions for RuntimeHostSocialMaintenanceActions {
     fn scan_profile_bio(&self) -> BoxFuture<'_, ()> {
         Box::pin(async move {
             run_background_profile_bio_scan(&self.tick_context(), &self.profile_bio_pacer).await
+        })
+    }
+
+    fn scan_profile_watch(&self) -> BoxFuture<'_, ()> {
+        Box::pin(async move {
+            run_background_profile_watch(&self.tick_context(), &self.profile_watch_pacer).await
         })
     }
 }

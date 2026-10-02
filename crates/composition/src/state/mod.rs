@@ -36,7 +36,7 @@ use background::{
 use background_ticks::{
     run_background_current_user_refresh, run_background_group_instance_notification_refresh,
     run_background_group_instance_refresh, run_background_moderation_refresh,
-    run_background_print_cleanup, run_background_profile_bio_scan,
+    run_background_print_cleanup, run_background_profile_bio_scan, run_background_profile_watch,
     run_background_social_baseline_refresh, BackgroundTickContext,
 };
 pub use combined_snapshot::BackendRuntimeCombinedSnapshot;

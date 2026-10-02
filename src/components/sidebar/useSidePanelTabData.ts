@@ -131,6 +131,17 @@ export function useSidePanelTabData({
                         layoutItem: item
                     };
                 }
+                if (item.systemTab === 'tracked') {
+                    const label = t('side_panel.tracked_nonfriends.tab_label');
+                    return {
+                        value: 'tracked',
+                        label,
+                        railCountLabel: '',
+                        title: label,
+                        icon: item.icon,
+                        layoutItem: item
+                    };
+                }
                 if (item.systemTab === 'groups') {
                     const label = t('side_panel.groups');
                     const countLabel = String(groupInstances.length);
@@ -167,6 +178,9 @@ export function useSidePanelTabData({
     );
     const groupsTabVisible = visibleTabLayout.some(
         (item) => item.type === 'system' && item.systemTab === 'groups'
+    );
+    const trackedTabVisible = visibleTabLayout.some(
+        (item) => item.type === 'system' && item.systemTab === 'tracked'
     );
 
     useEffect(() => {
@@ -237,6 +251,7 @@ export function useSidePanelTabData({
         resolvedSidebarFavoriteGroups,
         selectedFavoriteGroupLabel,
         tabItems,
+        trackedTabVisible,
         tabLayout,
         visibleTabLayout
     };

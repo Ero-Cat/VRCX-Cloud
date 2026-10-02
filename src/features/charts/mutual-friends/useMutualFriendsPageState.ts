@@ -21,6 +21,7 @@ import { useMutualFriendsExclusionStore } from '@/lib/mutual-friends/useMutualFr
 import { useMutualFriendsLayoutSettings } from '@/lib/mutual-friends/useMutualFriendsLayoutSettings';
 import { useMutualFriendsSigmaLifecycle } from '@/lib/mutual-friends/useMutualFriendsSigmaLifecycle';
 import { commands } from '@/platform/native/bindings';
+import mutualGraphPersistenceRepository from '@/repositories/mutualGraphPersistenceRepository';
 import { openUserDialog } from '@/services/dialogService';
 import { toast } from '@/services/toastService';
 import { useModalStore } from '@/state/modalStore';
@@ -86,14 +87,31 @@ export function useMutualFriendsPageState() {
                 snapshot.snapshotData.snapshot,
                 snapshot.snapshotData.meta,
                 friendLabelsById,
-                excludedFriendIds
+                excludedFriendIds,
+                {
+                    manualLinks: snapshot.snapshotData.manualLinks,
+                    externalUsers: snapshot.snapshotData.externalUsers
+                }
             ),
         [
             excludedFriendIds,
             friendLabelsById,
+            snapshot.snapshotData.externalUsers,
+            snapshot.snapshotData.manualLinks,
             snapshot.snapshotData.meta,
             snapshot.snapshotData.snapshot
         ]
+    );
+
+    const manualLinkIds = useMemo(
+        () =>
+            new Set(
+                (snapshot.snapshotData.manualLinks ?? []).flatMap((link) => [
+                    link.left,
+                    link.right
+                ])
+            ),
+        [snapshot.snapshotData.manualLinks]
     );
 
     const communityPalette = useMemo(
@@ -279,14 +297,123 @@ export function useMutualFriendsPageState() {
         clearFilters();
     }
 
+    async function reloadGraphExtras() {
+        if (!currentUserId) {
+            return;
+        }
+        await snapshot.reloadSnapshot('', currentUserId);
+    }
+
+    async function handleAddManualLink(friendId: string, mutualId: string) {
+        if (!currentUserId || !friendId || !mutualId || friendId === mutualId) {
+            return;
+        }
+        try {
+            await mutualGraphPersistenceRepository.addManualLink(
+                currentUserId,
+                friendId,
+                mutualId
+            );
+            await reloadGraphExtras();
+        } catch (error) {
+            toast.add({
+                type: 'error',
+                title:
+                    error instanceof Error
+                        ? error.message
+                        : t(
+                              'view.charts.toast.failed_to_refresh_selected_mutuals'
+                          )
+            });
+        }
+    }
+
+    async function handleRemoveManualLink(friendId: string, mutualId: string) {
+        if (!currentUserId || !friendId || !mutualId) {
+            return;
+        }
+        try {
+            await mutualGraphPersistenceRepository.removeManualLink(
+                currentUserId,
+                friendId,
+                mutualId
+            );
+            await reloadGraphExtras();
+        } catch (error) {
+            toast.add({
+                type: 'error',
+                title:
+                    error instanceof Error
+                        ? error.message
+                        : t(
+                              'view.charts.toast.failed_to_refresh_selected_mutuals'
+                          )
+            });
+        }
+    }
+
+    async function handleAddExternalUser(
+        targetUserId: string,
+        displayName: string
+    ) {
+        if (!currentUserId || !targetUserId.trim()) {
+            return;
+        }
+        try {
+            await mutualGraphPersistenceRepository.addExternalUser(
+                currentUserId,
+                targetUserId.trim(),
+                displayName.trim()
+            );
+            await reloadGraphExtras();
+        } catch (error) {
+            toast.add({
+                type: 'error',
+                title:
+                    error instanceof Error
+                        ? error.message
+                        : t(
+                              'view.charts.toast.failed_to_refresh_selected_mutuals'
+                          )
+            });
+        }
+    }
+
+    async function handleRemoveExternalUser(targetUserId: string) {
+        if (!currentUserId || !targetUserId) {
+            return;
+        }
+        try {
+            await mutualGraphPersistenceRepository.removeExternalUser(
+                currentUserId,
+                targetUserId
+            );
+            await reloadGraphExtras();
+        } catch (error) {
+            toast.add({
+                type: 'error',
+                title:
+                    error instanceof Error
+                        ? error.message
+                        : t(
+                              'view.charts.toast.failed_to_refresh_selected_mutuals'
+                          )
+            });
+        }
+    }
+
     return {
         actions: {
+            addExternalUser: handleAddExternalUser,
+            addManualLink: handleAddManualLink,
             cancelFetch: handleCancelFetch,
             clearFilters,
             fetchGraph: handleFetchGraph,
             openNode,
             refreshPage: () => setReloadToken((value) => value + 1),
             refreshSelectedNode: handleRefreshSelectedNode,
+            removeExternalUser: handleRemoveExternalUser,
+            removeManualLink: handleRemoveManualLink,
             resetLayoutAndHidden: handleResetLayoutAndHidden,
             clearSelection: () => handleSelectNode(''),
             setMinDegree,
@@ -299,6 +426,18 @@ export function useMutualFriendsPageState() {
             excludePickerOptions,
             excludedFriendIds,
             setExcludedFriendIds
+        },
+        extras: {
+            manualLinks: snapshot.snapshotData.manualLinks ?? [],
+            externalUsers: snapshot.snapshotData.externalUsers ?? [],
+            linkableNodeOptions: baseGraph.nodes
+                .filter((node) => node.id !== selectedNodeId)
+                .slice(0, 400)
+                .map((node) => ({
+                    value: node.id,
+                    label: node.label
+                })),
+            manualLinkIds
         },
         fetch: {
             fetchProgress

@@ -498,6 +498,139 @@ pub fn register(registry: &mut CommandRegistry) {
         },
     );
     registry.register(
+        "app__watched_users_list",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let owner_user_id: String = arg(&args, "ownerUserId")?;
+            let local_data = state.local_data().clone();
+            run_blocking("watched users list", move || {
+                local_data
+                    .watched_users_list(vrcx_0_core::OwnerId::new(owner_user_id))
+                    .map_err(vrcx_0_composition::Error::from)
+            })
+            .await
+            .and_then(ok)
+        },
+    );
+    registry.register(
+        "app__watched_user_add",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let owner_user_id: String = arg(&args, "ownerUserId")?;
+            let target_user_id: String = arg(&args, "targetUserId")?;
+            let display_name: Option<String> = args
+                .get("displayName")
+                .and_then(Value::as_str)
+                .map(String::from);
+            let local_data = state.local_data().clone();
+            run_blocking("watched user add", move || {
+                local_data
+                    .watched_user_add(
+                        vrcx_0_core::OwnerId::new(owner_user_id),
+                        target_user_id,
+                        display_name.unwrap_or_default(),
+                    )
+                    .map_err(vrcx_0_composition::Error::from)
+            })
+            .await
+            .and_then(ok)
+        },
+    );
+    registry.register(
+        "app__watched_user_remove",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let owner_user_id: String = arg(&args, "ownerUserId")?;
+            let target_user_id: String = arg(&args, "targetUserId")?;
+            let local_data = state.local_data().clone();
+            run_blocking("watched user remove", move || {
+                local_data
+                    .watched_user_remove(vrcx_0_core::OwnerId::new(owner_user_id), target_user_id)
+                    .map_err(vrcx_0_composition::Error::from)
+            })
+            .await
+            .and_then(ok)
+        },
+    );
+    registry.register(
+        "app__mutual_graph_manual_link_add",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let user_id: String = arg(&args, "userId")?;
+            let friend_id: String = arg(&args, "friendId")?;
+            let mutual_id: String = arg(&args, "mutualId")?;
+            let note: Option<String> = args.get("note").and_then(Value::as_str).map(String::from);
+            let local_data = state.local_data().clone();
+            run_blocking("mutual graph manual link add", move || {
+                local_data
+                    .mutual_graph_manual_link_add(
+                        user_id,
+                        friend_id,
+                        mutual_id,
+                        note.unwrap_or_default(),
+                    )
+                    .map_err(vrcx_0_composition::Error::from)
+            })
+            .await
+            .and_then(ok)
+        },
+    );
+    registry.register(
+        "app__mutual_graph_manual_link_remove",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let user_id: String = arg(&args, "userId")?;
+            let friend_id: String = arg(&args, "friendId")?;
+            let mutual_id: String = arg(&args, "mutualId")?;
+            let local_data = state.local_data().clone();
+            run_blocking("mutual graph manual link remove", move || {
+                local_data
+                    .mutual_graph_manual_link_remove(user_id, friend_id, mutual_id)
+                    .map_err(vrcx_0_composition::Error::from)
+            })
+            .await
+            .and_then(ok)
+        },
+    );
+    registry.register(
+        "app__mutual_graph_external_user_add",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let user_id: String = arg(&args, "userId")?;
+            let target_user_id: String = arg(&args, "targetUserId")?;
+            let display_name: Option<String> = args
+                .get("displayName")
+                .and_then(Value::as_str)
+                .map(String::from);
+            let avatar_url: Option<String> = args
+                .get("avatarUrl")
+                .and_then(Value::as_str)
+                .map(String::from);
+            let local_data = state.local_data().clone();
+            run_blocking("mutual graph external user add", move || {
+                local_data
+                    .mutual_graph_external_user_add(
+                        user_id,
+                        target_user_id,
+                        display_name.unwrap_or_default(),
+                        avatar_url.unwrap_or_default(),
+                    )
+                    .map_err(vrcx_0_composition::Error::from)
+            })
+            .await
+            .and_then(ok)
+        },
+    );
+    registry.register(
+        "app__mutual_graph_external_user_remove",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let user_id: String = arg(&args, "userId")?;
+            let target_user_id: String = arg(&args, "targetUserId")?;
+            let local_data = state.local_data().clone();
+            run_blocking("mutual graph external user remove", move || {
+                local_data
+                    .mutual_graph_external_user_remove(user_id, target_user_id)
+                    .map_err(vrcx_0_composition::Error::from)
+            })
+            .await
+            .and_then(ok)
+        },
+    );
+    registry.register(
         "app__mutual_graph_fetch_cancel",
         |state: Arc<ServerRuntimeHostState>, args| async move {
             let input: MutualGraphFetchCancelInput = arg(&args, "input")?;

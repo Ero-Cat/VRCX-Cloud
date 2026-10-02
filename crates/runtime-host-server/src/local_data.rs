@@ -70,6 +70,12 @@ pub use vrcx_0_persistence::notifications::{
 };
 pub use vrcx_0_persistence::player_list::InstanceActivityRowOutput;
 pub use vrcx_0_persistence::social_aggregates::{WorldFriendVisitRow, WorldFriendVisitsOutput};
+pub use vrcx_0_persistence::social_analytics::{
+    FeedBioHistoryOutput, FeedBioHistoryQueryInput, RelationshipTimelineRowsInput,
+    RelationshipTimelineRowsOutput, StatusStatsViewInput, StatusStatsViewOutput,
+    TwoPersonRelationshipOutput, TwoPersonRelationshipQueryInput,
+};
+pub use vrcx_0_persistence::watched_users::WatchedUserOutput;
 pub use vrcx_0_persistence::worlds::WorldSummaryOutput;
 
 #[derive(Debug, serde::Deserialize, specta::Type)]
@@ -652,6 +658,46 @@ impl LocalDataRuntime {
         )?)
     }
 
+    pub fn feed_bio_history_query(
+        &self,
+        query: FeedBioHistoryQueryInput,
+    ) -> Result<FeedBioHistoryOutput> {
+        Ok(vrcx_0_persistence::social_analytics::feed_bio_history_query(self.db.as_ref(), query)?)
+    }
+
+    pub fn status_stats_view(&self, input: StatusStatsViewInput) -> Result<StatusStatsViewOutput> {
+        Ok(vrcx_0_persistence::social_analytics::status_stats_view(
+            self.db.as_ref(),
+            input,
+        )?)
+    }
+
+    pub fn two_person_relationship_query(
+        &self,
+        input: TwoPersonRelationshipQueryInput,
+    ) -> Result<TwoPersonRelationshipOutput> {
+        Ok(
+            vrcx_0_persistence::social_analytics::two_person_relationship_query(
+                self.db.as_ref(),
+                &input.owner_user_id,
+                &input.user_id_a,
+                &input.user_id_b,
+            )?,
+        )
+    }
+
+    pub fn relationship_timeline_rows(
+        &self,
+        input: RelationshipTimelineRowsInput,
+    ) -> Result<RelationshipTimelineRowsOutput> {
+        Ok(
+            vrcx_0_persistence::social_analytics::relationship_timeline_rows(
+                self.db.as_ref(),
+                input,
+            )?,
+        )
+    }
+
     pub fn friend_log_current_list(&self, user_id: String) -> Result<Vec<FriendLogCurrentOutput>> {
         Ok(vrcx_0_persistence::friends::friend_log_current_list(
             self.db.as_ref(),
@@ -796,11 +842,110 @@ impl LocalDataRuntime {
         )?)
     }
 
+    pub fn watched_users_list(&self, owner_user_id: OwnerId) -> Result<Vec<WatchedUserOutput>> {
+        Ok(vrcx_0_persistence::watched_users::watched_user_list(
+            self.db.as_ref(),
+            owner_user_id.as_str(),
+        )?)
+    }
+
+    pub fn watched_user_add(
+        &self,
+        owner_user_id: OwnerId,
+        target_user_id: String,
+        display_name: String,
+    ) -> Result<()> {
+        Ok(vrcx_0_persistence::watched_users::watched_user_add(
+            self.db.as_ref(),
+            owner_user_id.as_str(),
+            &target_user_id,
+            &display_name,
+        )?)
+    }
+
+    pub fn watched_user_remove(
+        &self,
+        owner_user_id: OwnerId,
+        target_user_id: String,
+    ) -> Result<i64> {
+        Ok(vrcx_0_persistence::watched_users::watched_user_remove(
+            self.db.as_ref(),
+            owner_user_id.as_str(),
+            &target_user_id,
+        )?)
+    }
+
     pub fn mutual_graph_snapshot_get(&self, user_id: String) -> Result<MutualGraphSnapshotOutput> {
         Ok(vrcx_0_persistence::mutual_graph::mutual_graph_snapshot_get(
             self.db.as_ref(),
             user_id,
         )?)
+    }
+
+    pub fn mutual_graph_manual_link_add(
+        &self,
+        user_id: String,
+        friend_id: String,
+        mutual_id: String,
+        note: String,
+    ) -> Result<()> {
+        Ok(
+            vrcx_0_persistence::mutual_graph::mutual_graph_manual_link_add(
+                self.db.as_ref(),
+                user_id,
+                friend_id,
+                mutual_id,
+                note,
+            )?,
+        )
+    }
+
+    pub fn mutual_graph_manual_link_remove(
+        &self,
+        user_id: String,
+        friend_id: String,
+        mutual_id: String,
+    ) -> Result<i64> {
+        Ok(
+            vrcx_0_persistence::mutual_graph::mutual_graph_manual_link_remove(
+                self.db.as_ref(),
+                user_id,
+                friend_id,
+                mutual_id,
+            )?,
+        )
+    }
+
+    pub fn mutual_graph_external_user_add(
+        &self,
+        user_id: String,
+        target_user_id: String,
+        display_name: String,
+        avatar_url: String,
+    ) -> Result<()> {
+        Ok(
+            vrcx_0_persistence::mutual_graph::mutual_graph_external_user_add(
+                self.db.as_ref(),
+                user_id,
+                target_user_id,
+                display_name,
+                avatar_url,
+            )?,
+        )
+    }
+
+    pub fn mutual_graph_external_user_remove(
+        &self,
+        user_id: String,
+        target_user_id: String,
+    ) -> Result<i64> {
+        Ok(
+            vrcx_0_persistence::mutual_graph::mutual_graph_external_user_remove(
+                self.db.as_ref(),
+                user_id,
+                target_user_id,
+            )?,
+        )
     }
 
     pub fn local_moderation_list(

@@ -6,8 +6,12 @@ import { isRecord } from '@/shared/utils/record';
 
 const SYSTEM_TAB_FRIENDS = 'friends';
 const SYSTEM_TAB_GROUPS = 'groups';
+const SYSTEM_TAB_TRACKED = 'tracked';
 
-type SidebarSystemTabId = typeof SYSTEM_TAB_FRIENDS | typeof SYSTEM_TAB_GROUPS;
+type SidebarSystemTabId =
+    | typeof SYSTEM_TAB_FRIENDS
+    | typeof SYSTEM_TAB_GROUPS
+    | typeof SYSTEM_TAB_TRACKED;
 
 interface SidebarSystemTabLayoutItem {
     id: SidebarSystemTabId;
@@ -66,6 +70,13 @@ export const DEFAULT_SIDEBAR_TAB_LAYOUT: SidebarTabLayout = [
         type: 'system',
         systemTab: SYSTEM_TAB_GROUPS,
         icon: 'lucide:UsersRound',
+        visible: true
+    },
+    {
+        id: SYSTEM_TAB_TRACKED,
+        type: 'system',
+        systemTab: SYSTEM_TAB_TRACKED,
+        icon: 'lucide:Eye',
         visible: true
     }
 ];
@@ -181,7 +192,8 @@ export function normalizeSidebarTabLayout(value: unknown): SidebarTabLayout {
             const systemTab = normalizeText(item.systemTab || item.id);
             if (
                 (systemTab === SYSTEM_TAB_FRIENDS ||
-                    systemTab === SYSTEM_TAB_GROUPS) &&
+                    systemTab === SYSTEM_TAB_GROUPS ||
+                    systemTab === SYSTEM_TAB_TRACKED) &&
                 !seenSystemTabs.has(systemTab)
             ) {
                 nextLayout.push(normalizeSystemTab(systemTab, item));
@@ -218,6 +230,9 @@ export function normalizeSidebarTabLayout(value: unknown): SidebarTabLayout {
     }
     if (!seenSystemTabs.has(SYSTEM_TAB_GROUPS)) {
         nextLayout.push(normalizeSystemTab(SYSTEM_TAB_GROUPS));
+    }
+    if (!seenSystemTabs.has(SYSTEM_TAB_TRACKED)) {
+        nextLayout.push(normalizeSystemTab(SYSTEM_TAB_TRACKED));
     }
 
     return nextLayout;
@@ -325,6 +340,9 @@ export function sidebarTabFallbackIcon(
     }
     if (item.systemTab === SYSTEM_TAB_FRIENDS) {
         return 'lucide:UserRound';
+    }
+    if (item.systemTab === SYSTEM_TAB_TRACKED) {
+        return 'lucide:Eye';
     }
     return DEFAULT_NAV_ICON_KEY;
 }

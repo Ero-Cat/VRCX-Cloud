@@ -1,6 +1,12 @@
+import { LinkIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import { PageScaffold } from '@/components/layout/PageScaffold';
 import { useRoomMutualScanStore } from '@/state/roomMutualScanStore';
+import { Button } from '@/ui/shadcn/button';
 
+import { ManualRelationsDialog } from './components/mutual-friends/ManualRelationsDialog';
 import { MutualFriendsAutoFetch } from './components/mutual-friends/MutualFriendsAutoFetch';
 import { MutualFriendsHud } from './components/mutual-friends/MutualFriendsHud';
 import { MutualFriendsLegend } from './components/mutual-friends/MutualFriendsLegend';
@@ -13,8 +19,18 @@ import {
 import { useMutualFriendsPageState } from './mutual-friends/useMutualFriendsPageState';
 
 export function MutualFriendsPage() {
-    const { actions, exclusions, fetch, graph, layout, selection, view } =
-        useMutualFriendsPageState();
+    const { t } = useTranslation();
+    const [manualRelationsOpen, setManualRelationsOpen] = useState(false);
+    const {
+        actions,
+        exclusions,
+        extras,
+        fetch,
+        graph,
+        layout,
+        selection,
+        view
+    } = useMutualFriendsPageState();
     const roomScanRunning = useRoomMutualScanStore((state) => state.running);
 
     const hasActiveFilters = Boolean(
@@ -54,6 +70,19 @@ export function MutualFriendsPage() {
                     onRefreshPage={actions.refreshPage}
                     onSearchQueryChange={actions.setSearchQuery}
                     searchQuery={view.filters.searchQuery}
+                    actionsSlot={
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={t(
+                                'view.charts.mutual_friend.manual_relations.button_tooltip'
+                            )}
+                            onClick={() => setManualRelationsOpen(true)}
+                        >
+                            <LinkIcon />
+                        </Button>
+                    }
                     settingsSlot={
                         <MutualFriendsSettingsSheet
                             edgeCount={graph.edgeCount}
@@ -61,11 +90,14 @@ export function MutualFriendsPage() {
                                 exclusions.excludePickerOptions
                             }
                             excludedFriendIds={exclusions.excludedFriendIds}
+                            externalUsers={extras?.externalUsers ?? []}
                             layoutSettings={layout.layoutSettings}
                             nodeCount={graph.nodeCount}
+                            onAddExternalUser={actions.addExternalUser}
                             onExcludedFriendIdsChange={
                                 exclusions.setExcludedFriendIds
                             }
+                            onRemoveExternalUser={actions.removeExternalUser}
                             onResetLayoutAndHidden={
                                 actions.resetLayoutAndHidden
                             }
@@ -101,7 +133,11 @@ export function MutualFriendsPage() {
                     <MutualFriendsNodeCard
                         community={selectedCommunity}
                         isRefreshing={selection.isRefreshing}
+                        linkableNodeOptions={extras?.linkableNodeOptions ?? []}
                         node={selectedNode}
+                        onAddManualLink={(targetId) =>
+                            actions.addManualLink(selectedNode.id, targetId)
+                        }
                         onClose={actions.clearSelection}
                         onFocusCommunity={() => {
                             if (selection.communityIndex !== null) {
@@ -118,6 +154,13 @@ export function MutualFriendsPage() {
                         user={selection.user}
                     />
                 ) : null}
+
+                <ManualRelationsDialog
+                    open={manualRelationsOpen}
+                    onOpenChange={setManualRelationsOpen}
+                    manualLinks={extras?.manualLinks ?? []}
+                    onChanged={actions.refreshPage}
+                />
 
                 <MutualFriendsStageOverlay
                     baseNodeCount={graph.baseNodeCount}

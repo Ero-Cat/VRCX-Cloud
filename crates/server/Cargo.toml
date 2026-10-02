@@ -32,6 +32,8 @@ tokio = { workspace = true, features = [
     "time",
 ] }
 toml = "0.9"
+rusqlite = { workspace = true }
+tokio-postgres = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 chrono = { workspace = true }

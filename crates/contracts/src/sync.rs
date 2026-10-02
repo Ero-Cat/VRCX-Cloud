@@ -510,6 +510,27 @@ pub const SYNC_TABLE_CATALOG: &[SyncTableDescriptor] = &[
         field_semantics: &[],
     },
     SyncTableDescriptor {
+        template: "_mutual_graph_manual_links",
+        per_user: true,
+        key_columns: &["friend_id", "mutual_id"],
+        row_semantic: SyncRowSemantic::GSet,
+        field_semantics: &[],
+    },
+    SyncTableDescriptor {
+        template: "_mutual_graph_external_users",
+        per_user: true,
+        key_columns: &["user_id"],
+        row_semantic: SyncRowSemantic::Lww,
+        field_semantics: &[],
+    },
+    SyncTableDescriptor {
+        template: "_watched_users",
+        per_user: true,
+        key_columns: &["user_id"],
+        row_semantic: SyncRowSemantic::Lww,
+        field_semantics: &[],
+    },
+    SyncTableDescriptor {
         template: "_profile_bio",
         per_user: true,
         key_columns: &["user_id"],

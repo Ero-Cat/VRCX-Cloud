@@ -416,7 +416,8 @@
             "search": "Search",
             "select": "Select",
             "cancel": "Cancel",
-            "view_options": "View options"
+            "view_options": "View options",
+            "add": "Add"
         },
         "sort_by": "Sort by:",
         "time_units": {
@@ -1000,6 +1001,20 @@
         },
         "empty": {
             "no_authenticated_user_snapshot_is_available": "Sign in before refreshing friends"
+        },
+        "tracked_nonfriends": {
+            "tab_label": "Tracked Non-Friends",
+            "empty": "No tracked non-friends yet. Click “+” to add one by user ID.",
+            "remove_tooltip": "Stop tracking",
+            "add_button": "Add user",
+            "add_dialog_title": "Track player",
+            "add_dialog_hint": "Enter a user ID manually (usr_xxx…).",
+            "add_input_placeholder": "User ID (usr_…)",
+            "add_input_invalid": "Enter a valid user ID (starting with usr_).",
+            "add_confirm_question": "Track {name}?",
+            "add_back": "Back",
+            "poll_toggle": "Poll profile changes",
+            "failed": "Watched-user operation failed."
         }
     },
     "support_vrcx": {
@@ -1821,7 +1836,8 @@
                     "find_friend": "Find a friend",
                     "open_profile": "Open profile",
                     "hide_from_graph": "Hide from graph",
-                    "clear_filters": "Clear filters"
+                    "clear_filters": "Clear filters",
+                    "link_to_node": "Link to another node"
                 },
                 "prompt": {
                     "message": "Fetching has started in the background. Progress is shown in the status bar."
@@ -1843,7 +1859,11 @@
                     "layout_section": "Layout",
                     "stat_nodes": "Nodes",
                     "stat_links": "Links",
-                    "stat_hidden": "Hidden"
+                    "stat_hidden": "Hidden",
+                    "external_users": "External users",
+                    "external_users_help": "Pin non-friends into the graph by user id (usr_…). External nodes render hollow.",
+                    "external_users_id_placeholder": "User ID (usr_…)",
+                    "external_users_name_placeholder": "Display name (optional)"
                 },
                 "context_menu": {
                     "last_fetched": "Last fetched"
@@ -1870,6 +1890,17 @@
                     "min_degree": "Min. connections",
                     "isolated_nodes": "{count} with no mutual friends",
                     "unavailable_nodes": "{count} not shared or not fetched"
+                },
+                "manual_relations": {
+                    "button_tooltip": "Manually mark a relationship",
+                    "dialog_title": "Manual Relations",
+                    "list_empty": "No manually added relations yet.",
+                    "user_a": "User A",
+                    "user_b": "User B",
+                    "user_placeholder": "Pick a user…",
+                    "user_search": "Search friends…",
+                    "add_button": "Add relation",
+                    "already_exists": "This relation already exists."
                 }
             },
             "loading": {
@@ -1912,6 +1943,45 @@
             "dynamic": {
                 "refreshed_mutuals_for_value": "Refreshed mutuals for {value}",
                 "could_not_load_mutuals_for_value": "Could not load mutual friends for {value}"
+            },
+            "two_person_relationship": {
+                "header": "Two-Person Relationship",
+                "tips": {
+                    "description": "Analyzes your recorded database to find instances two friends shared — even when you were not there, their own play sessions are stitched back together."
+                },
+                "select_friend_a": "Select friend A",
+                "select_friend_b": "Select friend B",
+                "search_friend": "Search friends…",
+                "swap_friends": "Swap friends",
+                "total_coexistence_time": "total coexistence",
+                "no_data": "No shared-instance records",
+                "no_friend_selected": "Select two friends to see their shared-instance history",
+                "instance_count": "shared instances",
+                "meet_count": "{count} visits",
+                "show_self_presence": "Show whether I was present",
+                "self_present": "Present",
+                "self_not_present": "Absent",
+                "instance_creator": "Instance creator",
+                "max_player_count": "Peak occupancy",
+                "initiator_leftPlayer": "Left followed",
+                "initiator_rightPlayer": "Right followed",
+                "initiator_mutual": "Mutual start",
+                "initiator_unknown": "Unknown"
+            },
+            "relationship_timeline": {
+                "header": "Relationship Timeline",
+                "refresh": "Refresh",
+                "others": "Others",
+                "no_data": "No data yet",
+                "days_per_unit": "days/unit",
+                "tips": {
+                    "description": "A stacked percentage area chart of how your relationships change over time. Each band is one friend's share of your overall social activity. Use the scale slider to adjust granularity and the bottom slider to pan."
+                },
+                "settings": {
+                    "top_friends": "Top friends",
+                    "show_others": "Show others",
+                    "show_friends_only": "Friends only"
+                }
             }
         },
         "tools": {
@@ -3889,7 +3959,8 @@
                 "instance_age_restricted": "Restricted",
                 "instance_age_restricted_tooltip": "In an age-restricted instance",
                 "show_mutual_friends": "Show Mutual Friends",
-                "show_discord_connections": "Show Discord Connections"
+                "show_discord_connections": "Show Discord Connections",
+                "bio_diff_toggle": "Toggle bio diff"
             },
             "groups": {
                 "header": "Groups",
@@ -4151,6 +4222,19 @@
                 "left_value_groups": "Left {value} groups",
                 "enable_value": "Enable {value}",
                 "disable_value": "Disable {value}"
+            },
+            "status_distribution": {
+                "header": "Status Distribution",
+                "refresh_hint": "Refresh status distribution data",
+                "loading": "Loading status data…",
+                "no_data": "No data yet",
+                "days_per_unit": "days/cell",
+                "status": {
+                    "active": "Active",
+                    "join_me": "Join Me",
+                    "ask_me": "Ask Me",
+                    "busy": "Do Not Disturb"
+                }
             }
         },
         "world": {

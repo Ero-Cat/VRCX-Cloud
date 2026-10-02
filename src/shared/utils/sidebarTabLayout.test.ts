@@ -37,6 +37,13 @@ describe('saved sidebar layout with world tabs', () => {
                 systemTab: 'groups',
                 icon: 'lucide:UsersRound',
                 visible: true
+            },
+            {
+                id: 'tracked',
+                type: 'system',
+                systemTab: 'tracked',
+                icon: 'lucide:Eye',
+                visible: true
             }
         ];
 

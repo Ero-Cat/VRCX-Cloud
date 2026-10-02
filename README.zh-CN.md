@@ -4,51 +4,26 @@
 
 ### 你的 VRChat 社交生活，由你自己的服务器提供。
 
-**自托管、单账号的 VRChat 网页伴侣** —— 在浏览器中获得完整的 VRCX-0
-体验；由一个 Rust 二进制驱动，它与桌面版 VRCX-0 并行运行，并通过
-PostgreSQL 同步网格保持数据一致。
+自托管、单账号的 VRChat 网页伴侣 —— 在浏览器中获得完整的 VRCX-0
+体验；由一个 Rust 二进制驱动，与桌面版 VRCX-0 通过 PostgreSQL 同步
+网格保持一致。
 
-> 🛠️ 本项目由 **[VRCX-0](https://github.com/Map1en/VRCX-0)**（作者
-> [Map1en](https://github.com/Map1en)）魔改而来 —— 底层运行时与同步
-> 引擎的功劳全部归于上游。
->
-> 🔗 与本项目联动的桌面客户端（客户端数据库同步到远程线上数据库）为
-> **[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)**。
+_魔改自 [VRCX-0](https://github.com/Map1en/VRCX-0)（作者
+[Map1en](https://github.com/Map1en)）· 联动桌面客户端
+[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)_
 
 [![Release](https://img.shields.io/github/v/release/Ero-Cat/VRCX-Cloud?style=flat-square&color=blue&label=version)](https://github.com/Ero-Cat/VRCX-Cloud/releases)
+[![Docker](https://img.shields.io/ghcr/v/ero-cat/vrcx-cloud?style=flat-square&label=docker&color=2496ed&logo=docker)](https://github.com/Ero-Cat/VRCX-Cloud/pkgs/container/vrcx-cloud)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
 [![Rust](https://img.shields.io/badge/backend-Rust%201-dea584?style=flat-square&logo=rust)](Cargo.toml)
 [![Frontend](https://img.shields.io/badge/frontend-React%2019-61dafb?style=flat-square&logo=react)](package.json)
 [![PostgreSQL](https://img.shields.io/badge/sync-PostgreSQL-336791?style=flat-square&logo=postgresql)](.env.example)
 
-**[快速开始](#-快速开始) · [功能](#-功能) · [安装](#-安装) · [使用手册](#-使用手册) · [设计理念](#-为什么再造一个-vrcx) · [常见问题](#-常见问题)**
+[快速开始](#-快速开始) · [功能](#-功能) · [安装](#-安装) · [使用](#-使用) · [架构](#-架构) · [常见问题](#-常见问题) · [致谢](#-致谢)
 
 [English](README.md) · **简体中文**
 
 </div>
-
----
-
-## 📑 目录
-
-- [这是什么？](#-这是什么)
-- [✨ 功能](#-功能)
-- [🚀 快速开始](#-快速开始)
-- [📦 安装](#-安装)
-    - [Docker Compose（推荐）](#docker-compose推荐)
-    - [裸机](#裸机)
-    - [配置参考](#%EF%B8%8F-配置参考)
-- [📖 使用手册](#-使用手册)
-    - [首次登录](#首次登录)
-    - [配对你的桌面版 VRCX-0](#配对你的桌面版-vrcx-0)
-    - [桌面感知实时切换](#桌面感知实时切换)
-    - [日常使用](#日常使用)
-- [🎥 演示](#-演示)
-- [🏗 架构](#%EF%B8%8F-架构)
-- [🤔 为什么再造一个 VRCX？](#-为什么再造一个-vrcx)
-- [❓ 常见问题](#-常见问题)
-- [🔒 安全说明](#-安全说明)
-- [🤝 致谢](#-致谢)
 
 ---
 
@@ -66,27 +41,33 @@ PostgreSQL 同步网格保持数据一致。
                                         └─────────────────────────┘
 ```
 
-VRCX-Cloud 将**完整的 VRCX 运行时作为服务器**运行：它维持自己的
-VRChat 实时会话，提供整个 VRCX-0 Web UI，并通过内置的
-SQLite↔PostgreSQL 协议与桌面版 VRCX-0 同步每一行数据。PC 上记录的
-游戏日志会出现在网页上；你在网页上写的备忘录也会落到桌面端 —— 一个
-同步周期内完成。
+VRCX-Cloud 将**完整的 VRCX 运行时作为服务器**运行：
+
+- 它维持自己的 VRChat 实时会话，桌面端关机时网页依然在线；
+- 它提供整个 VRCX-0 Web UI —— 动态、好友、历史、收藏、统计；
+- 它通过内置的 SQLite↔PostgreSQL 协议与桌面版 VRCX-0 同步每一行
+  数据：PC 上记录的游戏日志会出现在网页上，网页上写的备忘录会落到
+  桌面端 —— 一个同步周期内完成。
+
+与本项目的桌面版本为
+**[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)** —— 内置相同
+同步引擎的 VRCX-0 分支。
 
 ## ✨ 功能
 
-|     | 功能                         | 说明                                                                                                     |
-| --- | ---------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 🖥   | **浏览器中的完整 VRCX-0 UI** | 动态（feed）、好友、游戏日志历史、收藏、通知、统计图表、AI 助手 —— 同一个 React 应用，由服务器提供       |
-| ⚡  | **服务端 VRChat 会话**       | 在浏览器登录一次（含 2FA）；服务器维持实时 websocket，桌面端关机时网页依然在线                           |
-| 🔁  | **双向同步网格**             | op-log 协议 + HLC 冲突仲裁、幂等推送、重启后续传 —— 与桌面版 VRCX-0 共享                                 |
-| 🤝  | **桌面感知切换**             | 桌面版 VRCX-0 活跃同步时，服务器暂停自己的 VRChat 会话让桌面端采集 —— 不会产生双倍 API 流量、双倍动态行  |
-| 🧠  | **344 条命令 API**           | 与桌面端完全一致的命令面，经 `POST /api/invoke` + WebSocket 事件提供                                     |
-| 🔐  | **单密码网页认证**           | cookie 会话、登录限流、显式局域网开放模式                                                                |
-| 🐳  | **单个容器**                 | docker compose 启动 server + PostgreSQL；裸机部署为单个二进制                                            |
-| 🧩  | **优雅降级**                 | 桌面专属功能（启动游戏、VR overlay、托盘）自动报告为不支持并隐藏                                         |
-| 🔍  | **社交分析**                 | 简介 Diff 历史、灯色时长分布、共同实例查询（含"双向奔赴"标记）、交流密度时间轴 —— 全部派生自 feed 事件流 |
-| 🕸   | **关系网增强**               | 手动连线与非好友节点进入共同好友图，独立存储、随同步网格跨设备同步                                       |
-| 👁   | **关注用户（默认关闭）**     | 轮询非好友的公开简介/灯色变更并入 feed；数据仅来自你的账号本就可见的公开信息                             |
+|     | 功能                     | 说明                                                                                                                    |
+| --- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| 🖥   | 浏览器中的完整 VRCX-0 UI | 动态、好友、游戏日志历史、收藏、通知、统计图表、AI 助手 —— 同一个 React 应用                                            |
+| ⚡  | 服务端 VRChat 会话       | 浏览器登录一次（支持 2FA）；服务器维持实时 websocket，桌面端关机时网页依然在线                                          |
+| 🔁  | 双向同步网格             | op-log 协议 + HLC 冲突仲裁、幂等推送、重启后续传                                                                        |
+| 🤝  | 桌面感知切换             | 桌面端活跃同步时，服务器暂停自己的会话让桌面端采集 —— 不会产生双倍 API 流量、双倍动态行                                 |
+| 🧠  | 344 条命令 API           | 与桌面端完全一致的命令面，经 `POST /api/invoke` + WebSocket 事件提供                                                    |
+| 🔐  | 可信局域网定位           | 默认无内置登录门；需要时置于反向代理之后                                                                                |
+| 🐳  | 单个容器                 | 单个 `app` 容器（自备 PostgreSQL）；裸机部署为单个二进制                                                                |
+| 🧩  | 优雅降级                 | 桌面专属功能（启动游戏、VR overlay、托盘）自动报告为不支持并隐藏                                                        |
+| 🔍  | 社交分析（jirai 复刻）   | 简介内联 Diff、灯色分布（百分比堆叠）、双人关系（共处实例 + 发起方向）、关系时间轴 —— 双人关系/时间轴基于桌面端游戏日志 |
+| 🕸   | 关系网增强               | 手动好友关系管理与非好友节点进入关系网，独立存储、随同步网格跨设备同步                                                  |
+| 👁   | 追踪非好友（默认关闭）   | 侧栏追踪面板 + 轮询公开简介/灯色变更并入 feed；数据仅来自你的账号本就可见的公开信息                                     |
 
 ## 🚀 快速开始
 
@@ -94,14 +75,15 @@ SQLite↔PostgreSQL 协议与桌面版 VRCX-0 同步每一行数据。PC 上记�
 git clone https://github.com/Ero-Cat/VRCX-Cloud.git
 cd VRCX-Cloud
 
-cp .env.example .env      # 只需填 VRCX_CLOUD_SYNC_HOST + PASSWORD 两行
+cp .env.example .env         # 只需填 VRCX_CLOUD_SYNC_HOST + PASSWORD 两行
 docker compose up -d --build
 
-open http://localhost:8800   # 免登录（可信局域网）
+curl -s localhost:8800/healthz   # {"ok":true,"phase":"Running",...}
+open http://localhost:8800       # 免登录（可信局域网）
 ```
 
-你会直接进入 VRChat 登录页。输入你的 VRChat 凭据（支持
-2FA），服务器接管会话。就这么简单 —— 随时可以去
+你会直接进入 VRChat 登录页。输入 VRChat 凭据（支持 2FA），服务器接管
+会话。就这么简单 —— 随时可以去
 [配对桌面端](#配对你的桌面版-vrcx-0)。
 
 ## 📦 安装
@@ -109,11 +91,9 @@ open http://localhost:8800   # 免登录（可信局域网）
 ### Docker Compose（推荐）
 
 ```bash
-cp .env.example .env      # 只需填 VRCX_CLOUD_SYNC_HOST + PASSWORD 两行
+cp .env.example .env         # 只需填 VRCX_CLOUD_SYNC_HOST + PASSWORD 两行
 docker compose up -d --build
 ```
-
-启动的服务：
 
 | 服务  | 地址                 | 用途                                     |
 | ----- | -------------------- | ---------------------------------------- |
@@ -122,8 +102,9 @@ docker compose up -d --build
 ### 自动更新（可选）
 
 每次 push 到 `master`，GitHub Actions 会构建镜像并发布到
-`ghcr.io/ero-cat/vrcx-cloud:latest`；服务器上的 systemd timer 每分钟轮询，
-digest 变了就自动重部署 —— 纯出站连接，NAT 后可用，仓库零 secret：
+`ghcr.io/ero-cat/vrcx-cloud:latest`；服务器上的 systemd timer 每分钟
+轮询，digest 变了就自动重部署 —— 纯出站连接，NAT 后可用，仓库零
+secret：
 
 ```bash
 # 部署机上一次性操作（克隆与 .env 已就位）
@@ -147,28 +128,28 @@ VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_PASSWORD=... \
 ./target/release/vrcx-0-server
 ```
 
-### ⚙️ 配置参考
+### 配置参考
 
 环境变量（或 `server.toml`，路径由 `VRCX_CLOUD_CONFIG` 指定）。
 同步只需 `VRCX_CLOUD_SYNC_HOST` + `VRCX_CLOUD_SYNC_PASSWORD`，
 其余连接字段按下表默认值生效。
 
-| 环境变量                          | TOML                      | 默认值                   | 含义                                                   |
-| --------------------------------- | ------------------------- | ------------------------ | ------------------------------------------------------ |
-| `VRCX_CLOUD_DATA_DIR`             | `[server] data_dir`       | `<config>/VRCX-0-Server` | SQLite 配置与图片缓存                                  |
-| `VRCX_CLOUD_LISTEN`               | `[server] listen_addr`    | `0.0.0.0:8800`           | HTTP 监听地址                                          |
-| `VRCX_CLOUD_DIST_DIR`             | `[web] dist_dir`          | `./dist`                 | 前端静态文件目录                                       |
-| `VRCX_CLOUD_SYNC_HOST`            | `[sync] host`             | —（必填）                | 远程同步 PostgreSQL 主机                               |
-| `VRCX_CLOUD_SYNC_PASSWORD`        | `[sync] password`         | —（必填）                | 远程同步 PostgreSQL 密码                               |
-| `VRCX_CLOUD_SYNC_PORT`            | `[sync] port`             | `5432`                   | 远程同步 PostgreSQL 端口                               |
-| `VRCX_CLOUD_SYNC_USER`            | `[sync] user`             | `vrcx`                   | 远程同步 PostgreSQL 用户                               |
-| `VRCX_CLOUD_SYNC_DATABASE`        | `[sync] database`         | `vrcx`                   | 远程同步 PostgreSQL 数据库                             |
-| `VRCX_CLOUD_SYNC_INTERVAL_SEC`    | `[sync] interval_sec`     | `15`                     | 同步周期（5–3600 秒）                                  |
-| `VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT` | `[sync] allow_plaintext`  | `true`                   | PostgreSQL 要求 TLS 时设为 `false`                     |
-| `VRCX_CLOUD_REALTIME_MODE`        | `[realtime] mode`         | `auto`                   | `auto`：桌面端活跃时暂停服务端会话；`always`：始终开启 |
-| `VRCX_CLOUD_FEED_LOGGING`         | `[realtime] feed_logging` | `true`                   | `false`：服务端永不记录动态（由桌面端记录）            |
+| 环境变量                          | TOML                      | 默认值                   | 含义                                                    |
+| --------------------------------- | ------------------------- | ------------------------ | ------------------------------------------------------- |
+| `VRCX_CLOUD_DATA_DIR`             | `[server] data_dir`       | `<config>/VRCX-0-Server` | SQLite 配置与图片缓存                                   |
+| `VRCX_CLOUD_LISTEN`               | `[server] listen_addr`    | `0.0.0.0:8800`           | HTTP 监听地址                                           |
+| `VRCX_CLOUD_DIST_DIR`             | `[web] dist_dir`          | `./dist`                 | 前端静态文件目录                                        |
+| `VRCX_CLOUD_SYNC_HOST`            | `[sync] host`             | —（必填）                | 远程同步 PostgreSQL 主机                                |
+| `VRCX_CLOUD_SYNC_PASSWORD`        | `[sync] password`         | —（必填）                | 远程同步 PostgreSQL 密码                                |
+| `VRCX_CLOUD_SYNC_PORT`            | `[sync] port`             | `5432`                   | 远程同步 PostgreSQL 端口                                |
+| `VRCX_CLOUD_SYNC_USER`            | `[sync] user`             | `vrcx`                   | 远程同步 PostgreSQL 用户                                |
+| `VRCX_CLOUD_SYNC_DATABASE`        | `[sync] database`         | `vrcx`                   | 远程同步 PostgreSQL 数据库                              |
+| `VRCX_CLOUD_SYNC_INTERVAL_SEC`    | `[sync] interval_sec`     | `15`                     | 同步周期（5–3600 秒）                                   |
+| `VRCX_CLOUD_SYNC_ALLOW_PLAINTEXT` | `[sync] allow_plaintext`  | `true`                   | PostgreSQL 要求 TLS 时设为 `false`                      |
+| `VRCX_CLOUD_REALTIME_MODE`        | `[realtime] mode`         | `auto`                   | `auto`：桌面端活跃时暂停服务端会话 · `always`：始终开启 |
+| `VRCX_CLOUD_FEED_LOGGING`         | `[realtime] feed_logging` | `true`                   | `false`：服务端永不记录动态（由桌面端记录）             |
 
-## 📖 使用手册
+## 📖 使用
 
 ### 首次登录
 
@@ -180,9 +161,10 @@ VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_PASSWORD=... \
 
 ### 配对你的桌面版 VRCX-0
 
-与本项目的桌面版本为 **[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)**
-—— 一个内置相同同步引擎的 VRCX-0 分支，其本地数据库会与本服务端共用
-的远程 PostgreSQL 收敛：
+与本项目的桌面版本为
+**[Ero-Cat/vrcx-0](https://github.com/Ero-Cat/vrcx-0)** —— 一个内置
+相同同步引擎的 VRCX-0 分支，其本地数据库会与本服务端共用的远程
+PostgreSQL 收敛。
 
 1. 桌面版 VRCX-0 → **设置 → 数据同步（Data Sync）**。
 2. 输入你的服务器所用的 PostgreSQL 连接：主机 `<server>`、端口
@@ -198,9 +180,9 @@ VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_PASSWORD=... \
 在 `[realtime] mode = auto`（默认）下，服务器会监视同步设备活动：
 
 - **桌面端活跃**（约 90 秒内有推/拉）→ 服务器关闭自己的 VRChat
-  websocket 并闲置。零重复会话、零重复动态；网页靠同步数据继续工作。
-- **桌面端安静** → 服务器重连自己的会话，网页恢复完全实时（比如桌面机
-  夜间关机）。
+  websocket 并闲置，网页靠同步数据继续工作。零重复会话、零重复动态。
+- **桌面端安静** → 服务器重连自己的会话，网页恢复完全实时（比如
+  桌面机夜间关机）。
 
 若希望服务端会话始终开启，可设 `mode = "always"`；若桌面端应永远是
 记录者，可设 `feed_logging = false`。
@@ -215,26 +197,6 @@ VRCX_CLOUD_SYNC_HOST=127.0.0.1 VRCX_CLOUD_SYNC_PASSWORD=... \
 - **数据同步面板**（设置 → 同步）显示每台设备、其最近推送/拉取时间，
   以及 _立即同步_ 按钮 —— 网页与桌面端都有。
 
-## 🎥 演示
-
-首次启动全流程（VRChat 登录 → 动态页）：
-
-```
-$ docker compose up -d --build
- ✔ Container vrcx-cloud-postgres-1  Healthy
- ✔ Container vrcx-cloud-app-1        Started
-
-$ curl -s localhost:8800/healthz
-{"ok":true,"phase":"Running","authStatus":"Authenticated",...}
-
-浏览器 → http://localhost:8800
- ├─ VRChat 登录（2FA）… 完成 —— 重启后会话自动恢复
- ├─ 设置 → 数据同步 → 桌面设备 "PC-Win11" 最近拉取：12 秒前
- └─ 桌面端进图 → 15 秒后网页动态显示
-```
-
-> 真实录屏将随首个 tag 版本发布。
-
 ## 🏗 架构
 
 | 组成部分                                          | 是什么                                                                                                                            |
@@ -245,23 +207,8 @@ $ curl -s localhost:8800/healthz
 | `crates/*`（application、realtime、persistence…） | VRCX 领域核心，与 VRCX-0 保持一致                                                                                                 |
 | `src/`                                            | VRCX-0 React 应用；`webTransport.ts` 将 invoke/事件切换为浏览器内的 HTTP/WS                                                       |
 
-桌面专属子系统（游戏日志监视、VR overlay、托盘、更新器、注册表备份、
-TTS）是被移除而非禁用 —— 服务器代码树中不含桌面死代码。
-
-## 🧹 磁盘清理
-
-Rust 的 `target/` 增长很快（本工作区开发高峰期的 debug 产物达到过
-25 GB）。注意控制：
-
-```bash
-npm run rust:clean:debug        # 清掉 target/debug（收益最大，随时可做）
-scripts/cargo-target-hygiene.sh # 增量缓存 + cargo-sweep 清理 30 天以上
-npm run rust:clean              # 完整 cargo clean
-```
-
-工作区已使用 `debug = "line-tables-only"` 编译并跳过依赖的
-debuginfo；如果你在多个 Rust 仓库之间工作，可以把 `CARGO_TARGET_DIR`
-指向同一个共享目录，避免各项目重复占用磁盘。
+桌面专属子系统（游戏日志监视、VR overlay、托盘、更新器、注册表
+备份、TTS）是被移除而非禁用 —— 服务器代码树中不含桌面死代码。
 
 ## 🤔 为什么再造一个 VRCX？
 
@@ -301,8 +248,9 @@ PostgreSQL。数据不会离开你的网络；遥测已被编译移除。
 
 **如何升级？**
 装了更新 timer 的话：push 到 `master` → GitHub 构建镜像 → 服务器
-一分钟内自动跟进。手动升级：`git pull && docker compose up -d --build`。
-同步协议有版本守卫；桌面端与服务端版本可以短暂不一致。
+一分钟内自动跟进。手动升级：
+`git pull && docker compose up -d --build`。同步协议有版本守卫；桌面端
+与服务端版本可以短暂不一致。
 
 ## 🔒 安全说明
 
@@ -313,8 +261,28 @@ PostgreSQL。数据不会离开你的网络；遥测已被编译移除。
 - VRChat 会话 cookie：以机器派生密钥静态加密。
 - 保持服务器与桌面端 NTP 时间同步 —— 同步仲裁使用混合逻辑时钟。
 - **关注用户**功能默认关闭；开启后仅轮询你的账号本就可见的公开资料
-  （VRChat 对非好友隐藏橙灯/红灯用户的状态），产生的记录只落在你自己的
-  数据库里。
+  （VRChat 对非好友隐藏橙灯/红灯用户的状态），产生的记录只落在你自己
+  的数据库里。
+
+## 🧰 维护
+
+<details>
+<summary><b>Rust 磁盘清理</b> —— 控制 <code>target/</code> 体积</summary>
+
+Rust 的 `target/` 增长很快（本工作区开发高峰期的 debug 产物达到过
+25 GB）：
+
+```bash
+npm run rust:clean:debug        # 清掉 target/debug（收益最大，随时可做）
+scripts/cargo-target-hygiene.sh # 增量缓存 + cargo-sweep 清理 30 天以上
+npm run rust:clean              # 完整 cargo clean
+```
+
+工作区已使用 `debug = "line-tables-only"` 编译并跳过依赖的
+debuginfo；如果你在多个 Rust 仓库之间工作，可以把 `CARGO_TARGET_DIR`
+指向同一个共享目录，避免各项目重复占用磁盘。
+
+</details>
 
 ## 🤝 致谢
 
@@ -332,8 +300,6 @@ PostgreSQL。数据不会离开你的网络；遥测已被编译移除。
 
 <div align="center">
 
-**[⬆ 回到顶部](#-目录)**
-
-GPL-3.0 · 魔改自 VRCX-0 ❤️
+GPL-3.0 · 魔改自 [VRCX-0](https://github.com/Map1en/VRCX-0) ❤️
 
 </div>

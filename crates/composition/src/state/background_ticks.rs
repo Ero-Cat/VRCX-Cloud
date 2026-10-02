@@ -11,6 +11,7 @@ mod group_instances;
 mod maintenance;
 mod moderation;
 mod profile_bio;
+mod profile_watch;
 mod social_baseline;
 
 pub(super) use current_user::run_background_current_user_refresh;
@@ -20,6 +21,7 @@ pub(super) use group_instances::{
 pub(super) use maintenance::run_background_print_cleanup;
 pub(super) use moderation::run_background_moderation_refresh;
 pub(super) use profile_bio::run_background_profile_bio_scan;
+pub(super) use profile_watch::run_background_profile_watch;
 pub(super) use social_baseline::run_background_social_baseline_refresh;
 
 pub(super) struct BackgroundTickContext<'a> {

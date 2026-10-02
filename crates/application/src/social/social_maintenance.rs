@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 use futures_util::future::BoxFuture;
 use vrcx_0_application_core::{RuntimeBackgroundJobs, RuntimeOperationStatus, TaskSupervisor};
 
-use super::PROFILE_BIO_SCAN_INTERVAL;
+use super::{PROFILE_BIO_SCAN_INTERVAL, PROFILE_WATCH_INTERVAL};
 
 pub const BACKGROUND_CURRENT_USER_REFRESH_JOB: &str = "backgroundCurrentUserRefresh";
 pub const BACKGROUND_GROUP_INSTANCE_REFRESH_JOB: &str = "backgroundGroupInstanceRefresh";
@@ -18,6 +18,7 @@ pub const BACKGROUND_SOCIAL_BASELINE_REFRESH_JOB: &str = "backgroundSocialBaseli
 pub const BACKGROUND_MODERATION_REFRESH_JOB: &str = "backgroundModerationRefresh";
 pub const BACKGROUND_PRINT_CLEANUP_JOB: &str = "printAutoCleanup";
 pub const BACKGROUND_PROFILE_BIO_SCAN_JOB: &str = "backgroundProfileBioScan";
+pub const BACKGROUND_PROFILE_WATCH_JOB: &str = "backgroundProfileWatch";
 pub const BACKGROUND_GROUP_INSTANCE_CADENCE_SECONDS: u64 = 300;
 pub const BACKGROUND_GROUP_INSTANCE_NOTIFICATION_CADENCE_SECONDS: u64 = 120;
 pub const BACKGROUND_CURRENT_USER_CADENCE_SECONDS: u64 = 300;
@@ -53,6 +54,8 @@ pub trait SocialMaintenanceActions: Send + Sync {
     fn schedule_print_cleanup(&self);
 
     fn scan_profile_bio(&self) -> BoxFuture<'_, ()>;
+
+    fn scan_profile_watch(&self) -> BoxFuture<'_, ()>;
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -66,6 +69,7 @@ struct SocialMaintenanceTickPlan {
     refresh_moderation: bool,
     schedule_print_cleanup: bool,
     scan_profile_bio: bool,
+    scan_profile_watch: bool,
 }
 
 struct SocialMaintenanceSchedule {
@@ -79,6 +83,7 @@ struct SocialMaintenanceSchedule {
     next_moderation: Instant,
     next_print_cleanup: Instant,
     next_profile_bio: Instant,
+    next_profile_watch: Instant,
 }
 
 impl SocialMaintenanceSchedule {
@@ -98,6 +103,7 @@ impl SocialMaintenanceSchedule {
             next_moderation: now,
             next_print_cleanup: now,
             next_profile_bio: now,
+            next_profile_watch: now,
         }
     }
 
@@ -119,6 +125,7 @@ impl SocialMaintenanceSchedule {
             self.next_moderation = now;
             self.next_print_cleanup = now;
             self.next_profile_bio = now;
+            self.next_profile_watch = now;
         }
 
         if self.group_instance_notification_group_ids != group_instance_notification_group_ids {
@@ -161,6 +168,10 @@ impl SocialMaintenanceSchedule {
         if scan_profile_bio {
             self.next_profile_bio = now + PROFILE_BIO_SCAN_INTERVAL;
         }
+        let scan_profile_watch = now >= self.next_profile_watch;
+        if scan_profile_watch {
+            self.next_profile_watch = now + PROFILE_WATCH_INTERVAL;
+        }
 
         SocialMaintenanceTickPlan {
             reset_scope_state,
@@ -172,6 +183,7 @@ impl SocialMaintenanceSchedule {
             refresh_moderation,
             schedule_print_cleanup,
             scan_profile_bio,
+            scan_profile_watch,
         }
     }
 
@@ -263,6 +275,9 @@ impl SocialMaintenanceRuntime {
                 if plan.scan_profile_bio {
                     actions.scan_profile_bio().await;
                 }
+                if plan.scan_profile_watch {
+                    actions.scan_profile_watch().await;
+                }
 
                 tokio::time::sleep(SOCIAL_MAINTENANCE_SLEEP_CHUNK).await;
             }
@@ -310,6 +325,11 @@ fn register_social_maintenance_jobs(background_jobs: &RuntimeBackgroundJobs) {
             PROFILE_BIO_SCAN_INTERVAL.as_secs(),
             "Background profile bio scan is scheduled.",
         ),
+        (
+            BACKGROUND_PROFILE_WATCH_JOB,
+            PROFILE_WATCH_INTERVAL.as_secs(),
+            "Background watched-profile poll is scheduled.",
+        ),
     ] {
         background_jobs.register_job(
             name,
@@ -351,6 +371,10 @@ fn mark_social_maintenance_jobs_stopped(background_jobs: &RuntimeBackgroundJobs)
             BACKGROUND_PROFILE_BIO_SCAN_JOB,
             "Background profile bio scan stopped.",
         ),
+        (
+            BACKGROUND_PROFILE_WATCH_JOB,
+            "Background watched-profile poll stopped.",
+        ),
     ] {
         background_jobs.mark_completed(name, detail);
     }
@@ -376,6 +400,7 @@ mod tests {
                 refresh_moderation: true,
                 schedule_print_cleanup: true,
                 scan_profile_bio: true,
+                scan_profile_watch: true,
                 ..Default::default()
             }
         );

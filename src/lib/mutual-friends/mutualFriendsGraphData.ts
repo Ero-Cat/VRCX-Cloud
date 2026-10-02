@@ -10,7 +10,8 @@ import type {
     MutualFriendMeta,
     MutualFriendNode,
     MutualFriendsCoverage,
-    MutualFriendSnapshot
+    MutualFriendSnapshot,
+    MutualFriendsGraphExtras
 } from './mutualFriendsTypes';
 
 export function mutualFriendUsername(friend: FriendRecord | null | undefined) {
@@ -62,7 +63,8 @@ export function buildMutualFriendsBaseGraph(
     snapshot: MutualFriendSnapshot | null | undefined,
     meta: MutualFriendMeta | null | undefined,
     friendLabelsById: Readonly<Record<string, string>> | null | undefined,
-    excludedFriendIds: readonly string[] = []
+    excludedFriendIds: readonly string[] = [],
+    extras: MutualFriendsGraphExtras | null | undefined = null
 ): MutualFriendGraph {
     const nodeMap = new Map<string, MutualFriendNode>();
     const totalCountById = new Map<string, number>();
@@ -72,7 +74,14 @@ export function buildMutualFriendsBaseGraph(
         excludedFriendIds.map(normalizeMutualFriendId).filter(Boolean)
     );
 
-    function ensureNode(id: string): MutualFriendNode | null {
+    const externalLabels = new Map(
+        (extras?.externalUsers ?? []).map((user) => [
+            normalizeMutualFriendId(user.id),
+            user.displayName
+        ])
+    );
+
+    function ensureNode(id: string, external = false): MutualFriendNode | null {
         const normalizedId = normalizeMutualFriendId(id);
         if (
             !isValidMutualFriendId(normalizedId) ||
@@ -85,13 +94,18 @@ export function buildMutualFriendsBaseGraph(
             return existing;
         }
         const metadata = metaMap.get(normalizedId);
+        const isExternal = external || externalLabels.has(normalizedId);
         const node: MutualFriendNode = {
             id: normalizedId,
-            label: friendLabelsById?.[normalizedId] || normalizedId,
+            label:
+                friendLabelsById?.[normalizedId] ||
+                externalLabels.get(normalizedId) ||
+                normalizedId,
             lastFetchedAt: metadata?.lastFetchedAt ?? null,
             optedOut: Boolean(metadata?.optedOut),
             degree: 0,
-            mutualCount: 0
+            mutualCount: 0,
+            external: isExternal || undefined
         };
         if (Number.isFinite(metadata?.totalCount)) {
             totalCountById.set(normalizedId, Number(metadata?.totalCount));
@@ -117,6 +131,32 @@ export function buildMutualFriendsBaseGraph(
                 });
             }
         });
+    }
+
+    // User-drawn links and pinned non-friend nodes survive snapshot
+    // refreshes; an existing API edge stays as-is (no duplicate manual
+    // edge), and manual edges connect anything, including external nodes.
+    if (Array.isArray(extras?.manualLinks)) {
+        for (const link of extras.manualLinks) {
+            const source = ensureNode(link.left, true);
+            const target = ensureNode(link.right, true);
+            if (!source || !target || source.id === target.id) {
+                continue;
+            }
+            const key = [source.id, target.id].sort().join('__');
+            if (!edgeMap.has(key)) {
+                edgeMap.set(key, {
+                    source: source.id,
+                    target: target.id,
+                    manual: true
+                });
+            }
+        }
+    }
+    if (Array.isArray(extras?.externalUsers)) {
+        for (const user of extras.externalUsers) {
+            ensureNode(user.id, true);
+        }
     }
 
     for (const edge of edgeMap.values()) {

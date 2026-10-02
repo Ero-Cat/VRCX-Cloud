@@ -7,6 +7,15 @@ type MutualFriendsSnapshotData = Awaited<
     ReturnType<typeof mutualGraphPersistenceRepository.getSnapshot>
 >;
 
+function emptySnapshot(): MutualFriendsSnapshotData {
+    return {
+        snapshot: new Map(),
+        meta: new Map(),
+        manualLinks: [],
+        externalUsers: []
+    };
+}
+
 interface SnapshotOptions {
     currentUserId: string;
     currentUserIdRef: { current: string };
@@ -20,19 +29,15 @@ export function useMutualFriendsSnapshot({
 }: SnapshotOptions) {
     const [status, setStatus] = useState<MutualFriendsSnapshotStatus>('idle');
     const [detail, setDetail] = useState('');
-    const [snapshotData, setSnapshotData] = useState<MutualFriendsSnapshotData>(
-        {
-            snapshot: new Map(),
-            meta: new Map()
-        }
-    );
+    const [snapshotData, setSnapshotData] =
+        useState<MutualFriendsSnapshotData>(emptySnapshot());
 
     useEffect(() => {
         let active = true;
 
         if (!currentUserId) {
             setStatus('idle');
-            setSnapshotData({ snapshot: new Map(), meta: new Map() });
+            setSnapshotData(emptySnapshot());
             return () => {
                 active = false;
             };
@@ -58,7 +63,7 @@ export function useMutualFriendsSnapshot({
                 }
 
                 setStatus('error');
-                setSnapshotData({ snapshot: new Map(), meta: new Map() });
+                setSnapshotData(emptySnapshot());
                 setDetail(error instanceof Error ? error.message : '');
             });
 
@@ -88,7 +93,7 @@ export function useMutualFriendsSnapshot({
             setStatus('ready');
             setDetail(nextDetail);
         } catch (error) {
-            setSnapshotData({ snapshot: new Map(), meta: new Map() });
+            setSnapshotData(emptySnapshot());
             setStatus('error');
             setDetail(error instanceof Error ? error.message : '');
         }

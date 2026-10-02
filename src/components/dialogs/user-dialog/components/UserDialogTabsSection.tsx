@@ -24,6 +24,7 @@ import {
     type UserDialogPresenceSectionProps,
     type UserDialogProfileLinksSectionProps
 } from './UserDialogInfoTab';
+import { UserDialogStatusTab } from './UserDialogStatusTab';
 
 type MutualTabProps = ComponentProps<typeof UserDialogMutualTab>;
 type GroupsTabProps = ComponentProps<typeof UserDialogGroupsTab>;
@@ -392,6 +393,10 @@ export function UserDialogTabsSection({
             <UserDialogActivityTab
                 profile={profile}
                 active={activeTab === 'activity'}
+            />
+            <UserDialogStatusTab
+                profile={profile}
+                active={activeTab === 'status'}
             />
             <UserDialogJsonTab profile={profile} />
         </EntityDialogTabs>

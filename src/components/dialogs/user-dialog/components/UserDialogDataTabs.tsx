@@ -1,4 +1,4 @@
-import { ListIcon, WaypointsIcon } from 'lucide-react';
+import { GitCompareArrowsIcon, ListIcon, WaypointsIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -8,6 +8,8 @@ import { DialogErrorState } from '@/components/dialogs/previous-instances-table/
 import { UserActivityPanel } from '@/components/dialogs/UserActivityPanel';
 import type { UserProfileEntity } from '@/domain/entities/user';
 import { useDialogStore } from '@/state/dialogStore';
+import { useRuntimeStore } from '@/state/runtimeStore';
+import { Button } from '@/ui/shadcn/button';
 import {
     Select,
     SelectContent,
@@ -555,12 +557,34 @@ export function UserDialogActivityTab({
     profile: UserDialogProfileRecord;
     active: boolean;
 }) {
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+    const currentUserId = useRuntimeStore((state) => state.auth.currentUserId);
+    const isSelf = !profile?.id || profile.id === currentUserId;
     return (
         <EntityDialogTabContent
             value="activity"
             className="flex flex-col gap-4"
         >
             <UserActivityPanel profile={profile} active={active} />
+            {!isSelf ? (
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="self-start"
+                    onClick={() =>
+                        navigate(
+                            profile.id
+                                ? `/charts/two-person?a=${encodeURIComponent(profile.id)}`
+                                : '/charts/two-person'
+                        )
+                    }
+                >
+                    <GitCompareArrowsIcon className="size-4" />
+                    {t('view.charts.two_person_relationship.header')}
+                </Button>
+            ) : null}
         </EntityDialogTabContent>
     );
 }

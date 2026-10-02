@@ -36,6 +36,8 @@ const NODE_DIM_STRENGTH = 0.9;
 const EDGE_DIM_STRENGTH = 0.85;
 const INTRA_COMMUNITY_EDGE_SIZE = 0.4;
 const CROSS_COMMUNITY_EDGE_SIZE = 0.75;
+const MANUAL_EDGE_SIZE = 1.1;
+const MANUAL_EDGE_ACTIVE_MIX = 0.7;
 const INTRA_EDGE_MUTE_STRENGTH = 0.82;
 const HOVER_ENTER_DURATION = 140;
 const HOVER_LEAVE_DURATION = 110;
@@ -58,6 +60,7 @@ type MutualFriendsNodeAttributes = Record<string, unknown> & {
     lastFetchedAt: string | null;
     mutualCount: number;
     optedOut: boolean;
+    external: boolean;
     size: number;
     type: string;
     x?: number;
@@ -69,6 +72,7 @@ type MutualFriendsEdgeAttributes = Record<string, unknown> & {
     color?: string;
     crossCommunity: boolean;
     curvature?: number;
+    manual: boolean;
     size: number;
     type?: string;
     zIndex?: number;
@@ -355,12 +359,16 @@ export async function buildSigmaGraph({
             degree: node.degree,
             mutualCount: node.mutualCount,
             optedOut: node.optedOut,
+            external: Boolean(node.external),
             lastFetchedAt: node.lastFetchedAt,
             community,
             communityNamed: namedCommunityIndexes.has(community),
             ringColor: NODE_RING_COLOR,
             forceLabel: forceLabels,
-            type: isMutualFriendNodeUnavailable(node) ? 'hollow' : 'border',
+            type:
+                node.external || isMutualFriendNodeUnavailable(node)
+                    ? 'hollow'
+                    : 'border',
             zIndex: 1
         });
     }
@@ -385,9 +393,12 @@ export async function buildSigmaGraph({
                 targetCommunity !== UNASSIGNED_COMMUNITY;
             graph.addEdgeWithKey(key, link.source, link.target, {
                 crossCommunity,
-                size: crossCommunity
-                    ? CROSS_COMMUNITY_EDGE_SIZE
-                    : INTRA_COMMUNITY_EDGE_SIZE
+                manual: Boolean(link.manual),
+                size: link.manual
+                    ? MANUAL_EDGE_SIZE
+                    : crossCommunity
+                      ? CROSS_COMMUNITY_EDGE_SIZE
+                      : INTRA_COMMUNITY_EDGE_SIZE
             });
         }
     }
@@ -593,7 +604,16 @@ export function renderSigmaGraph({
         const theme = themeRef.current;
         const dim = hoverTransition.value;
         const isCross = data.crossCommunity === true;
-        const baseColor = isCross ? theme.edgeCrossColor : theme.edgeColor;
+        const isManual = data.manual === true;
+        const baseColor = isManual
+            ? mixGraphColors(
+                  theme.edgeCrossColor,
+                  theme.edgeActiveColor,
+                  MANUAL_EDGE_ACTIVE_MIX
+              )
+            : isCross
+              ? theme.edgeCrossColor
+              : theme.edgeColor;
         const restingColor =
             crossCommunityOnlyRef.current && !isCross
                 ? mixGraphColors(

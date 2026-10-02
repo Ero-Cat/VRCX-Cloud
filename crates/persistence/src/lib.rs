@@ -32,8 +32,10 @@ pub mod saved_group_favorites;
 pub mod screenshot_cache;
 pub mod secrets;
 pub mod social_aggregates;
+pub mod social_analytics;
 pub mod storage;
 pub mod sync;
+pub mod watched_users;
 pub mod worlds;
 
 pub mod maintenance {

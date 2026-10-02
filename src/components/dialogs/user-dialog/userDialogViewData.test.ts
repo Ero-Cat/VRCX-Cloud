@@ -38,6 +38,7 @@ describe('userDialogViewData', () => {
             'worlds',
             'favorite-worlds',
             'avatars',
+            'status',
             'activity',
             'json'
         ]);

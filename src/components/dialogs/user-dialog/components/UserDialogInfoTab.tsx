@@ -1,7 +1,13 @@
 import { ChevronRightIcon, ExternalLinkIcon } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { HistoryIcon } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import {
+    computeBioDiff,
+    hasBioDiffChanges,
+    type BioDiffSegment
+} from '@/components/dialogs/user-dialog/bioInlineDiff';
 import { AvatarInfoLine } from '@/components/feed/FeedAvatarInfoLine';
 import { useAvatarImageInfo } from '@/components/feed/useAvatarImageInfo';
 import { InstanceActionBar } from '@/components/instances/InstanceActionBar';
@@ -27,9 +33,11 @@ import {
     convertFileUrlToImageUrl,
     openExternalLink
 } from '@/services/entityMediaService';
+import { socialAnalyticsService } from '@/services/socialAnalyticsService';
 import type { UserDialogPreviousInstance } from '@/services/userDialogSessionCacheService';
 import type { UserDialogRelationshipEvent } from '@/services/userDialogSessionCacheService';
 import { parseLocation } from '@/shared/utils/location';
+import { useRuntimeStore } from '@/state/runtimeStore';
 import { Button } from '@/ui/shadcn/button';
 import {
     Card,
@@ -615,6 +623,65 @@ function UserDialogProfileLinksPanel({
 
 function UserDialogBioPanel({ profile, bioLinks }: UserDialogBioSectionProps) {
     const { t } = useTranslation();
+    const currentUserId = useRuntimeStore((state) => state.auth.currentUserId);
+    const [diffEnabled, setDiffEnabled] = useState(true);
+    const [diffSegments, setDiffSegments] = useState<BioDiffSegment[] | null>(
+        null
+    );
+    const isSelf = !profile?.id || profile.id === currentUserId;
+
+    useEffect(() => {
+        let cancelled = false;
+        setDiffSegments(null);
+        if (isSelf || !currentUserId || !profile?.id) {
+            return () => {
+                cancelled = true;
+            };
+        }
+        socialAnalyticsService
+            .loadBioHistory({
+                ownerUserId: currentUserId,
+                targetUserId: profile.id
+            })
+            .then((output) => {
+                if (cancelled) {
+                    return;
+                }
+                const records = output.rows ?? [];
+                if (records.length === 0) {
+                    setDiffSegments(null);
+                    return;
+                }
+                const latest = records[0];
+                let baseBio = latest.previousBio || '';
+                const dayMs = 24 * 60 * 60 * 1000;
+                for (let index = 1; index < records.length - 1; index += 1) {
+                    const change = records[index];
+                    const older = records[index + 1];
+                    if (
+                        Date.parse(change.createdAt) -
+                            Date.parse(older.createdAt) <=
+                        dayMs
+                    ) {
+                        baseBio = older.previousBio || '';
+                    } else {
+                        break;
+                    }
+                }
+                const segments = computeBioDiff(baseBio, latest.bio || '');
+                setDiffSegments(hasBioDiffChanges(segments) ? segments : null);
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setDiffSegments(null);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [currentUserId, isSelf, profile?.id]);
+
+    const showDiff = diffEnabled && diffSegments !== null;
 
     return (
         <TranslatableText
@@ -623,10 +690,57 @@ function UserDialogBioPanel({ profile, bioLinks }: UserDialogBioSectionProps) {
             density="button"
         >
             {({ action, meta, error, text }) => (
-                <InfoPanel title={t('dialog.user.info.bio')} action={action}>
+                <InfoPanel
+                    title={t('dialog.user.info.bio')}
+                    action={
+                        <div className="flex items-center gap-0.5">
+                            {!isSelf ? (
+                                <Button
+                                    type="button"
+                                    size="icon-xs"
+                                    variant={showDiff ? 'secondary' : 'ghost'}
+                                    aria-label={t(
+                                        'dialog.user.info.bio_diff_toggle'
+                                    )}
+                                    disabled={diffSegments === null}
+                                    onClick={() =>
+                                        setDiffEnabled((enabled) => !enabled)
+                                    }
+                                >
+                                    <HistoryIcon className="size-3" />
+                                </Button>
+                            ) : null}
+                            {action}
+                        </div>
+                    }
+                >
                     {meta}
                     <div className="min-w-0">
-                        <TextScroll className="h-52 min-w-0">{text}</TextScroll>
+                        {showDiff ? (
+                            <TextScroll className="h-52 min-w-0">
+                                <span className="text-xs leading-5 whitespace-pre-wrap">
+                                    {diffSegments?.map((segment, index) => (
+                                        <span
+                                            key={index}
+                                            className={
+                                                segment.kind === 'added'
+                                                    ? 'bg-green-500/15 text-green-600 dark:text-green-400'
+                                                    : segment.kind === 'removed'
+                                                      ? 'bg-red-500/15 text-red-600 line-through dark:text-red-400'
+                                                      : undefined
+                                            }
+                                        >
+                                            {segment.text}
+                                            {segment.kind === 'same' ? ' ' : ''}
+                                        </span>
+                                    ))}
+                                </span>
+                            </TextScroll>
+                        ) : (
+                            <TextScroll className="h-52 min-w-0">
+                                {text}
+                            </TextScroll>
+                        )}
                         {error}
                     </div>
                     {bioLinks.length ? (

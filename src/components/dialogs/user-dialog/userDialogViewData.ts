@@ -186,6 +186,14 @@ export function buildUserDialogTabs({
         ...(!isCurrentUser
             ? [
                   {
+                      value: 'status',
+                      label: translate('dialog.user.status_distribution.header')
+                  }
+              ]
+            : []),
+        ...(!isCurrentUser
+            ? [
+                  {
                       value: 'activity',
                       label: translate('dialog.user.activity.header')
                   }

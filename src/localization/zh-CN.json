@@ -998,6 +998,20 @@
         },
         "empty": {
             "no_authenticated_user_snapshot_is_available": "登录后才能刷新好友"
+        },
+        "tracked_nonfriends": {
+            "tab_label": "追踪非好友",
+            "empty": "还没有追踪任何非好友。点击「+」可通过用户ID添加。",
+            "remove_tooltip": "取消追踪",
+            "add_button": "添加用户",
+            "add_dialog_title": "追踪玩家",
+            "add_dialog_hint": "手动输入用户ID（usr_xxx...）。",
+            "add_input_placeholder": "用户 ID（usr_…）",
+            "add_input_invalid": "请输入有效的用户 ID（usr_ 开头）。",
+            "add_confirm_question": "确认追踪 {name}？",
+            "add_back": "返回",
+            "poll_toggle": "轮询资料变更",
+            "failed": "追踪用户操作失败。"
         }
     },
     "support_vrcx": {
@@ -1864,6 +1878,17 @@
                     "min_degree": "最少连接数",
                     "isolated_nodes": "{count} 人没有共同好友",
                     "unavailable_nodes": "{count} 人未公开或未获取"
+                },
+                "manual_relations": {
+                    "button_tooltip": "手动判定好友关系",
+                    "dialog_title": "手动好友关系管理",
+                    "list_empty": "还没有手动添加任何好友关系。",
+                    "user_a": "用户 A",
+                    "user_b": "用户 B",
+                    "user_placeholder": "选择一个用户...",
+                    "user_search": "搜索好友...",
+                    "add_button": "添加联系",
+                    "already_exists": "该关系已存在。"
                 }
             },
             "loading": {
@@ -1906,6 +1931,45 @@
             "dynamic": {
                 "refreshed_mutuals_for_value": "已刷新 {value} 的共同好友",
                 "could_not_load_mutuals_for_value": "无法获取 {value} 的共同好友"
+            },
+            "two_person_relationship": {
+                "header": "双人关系",
+                "tips": {
+                    "description": "通过分析你的记录数据库，找出两位好友曾经共处一室的记录。即使你当时并不在场，它也会基于他们各自的游戏记录片段拼凑出完整的相遇时刻。"
+                },
+                "select_friend_a": "选择好友 A",
+                "select_friend_b": "选择好友 B",
+                "search_friend": "搜索好友...",
+                "swap_friends": "交换好友",
+                "total_coexistence_time": "共存总时长",
+                "no_data": "没有共同在场的记录",
+                "no_friend_selected": "请选择两位好友以查看共同在场记录",
+                "instance_count": "共同在场次数",
+                "meet_count": "{count} 次进出",
+                "show_self_presence": "显示自己是否在场",
+                "self_present": "在场",
+                "self_not_present": "缺席",
+                "instance_creator": "房间创建者",
+                "max_player_count": "最高同时在场人数",
+                "initiator_leftPlayer": "左侧跟随",
+                "initiator_rightPlayer": "右侧跟随",
+                "initiator_mutual": "双向奔赴",
+                "initiator_unknown": "未知"
+            },
+            "relationship_timeline": {
+                "header": "关系时间轴",
+                "refresh": "刷新",
+                "others": "其他",
+                "no_data": "暂无数据",
+                "days_per_unit": "天/单位",
+                "tips": {
+                    "description": "以百分比堆叠面积图的形式展示你与好友的关系随时间的变化。每个色带代表一位好友在你整体社交活动中的占比。使用右下角的尺度滑块调整时间颗粒度，拖动底部滑条可在时间轴上左右滚动。"
+                },
+                "settings": {
+                    "top_friends": "显示好友数",
+                    "show_others": "显示其他",
+                    "show_friends_only": "仅显示好友"
+                }
             }
         },
         "tools": {
@@ -3883,7 +3947,8 @@
                 "instance_age_restricted": "年龄限制",
                 "instance_age_restricted_tooltip": "位于年龄限制房间",
                 "show_mutual_friends": "是否允许查看共同好友",
-                "show_discord_connections": "是否允许查看绑定的 Discord 账号信息"
+                "show_discord_connections": "是否允许查看绑定的 Discord 账号信息",
+                "bio_diff_toggle": "切换简介对比"
             },
             "groups": {
                 "header": "群组",
@@ -4145,6 +4210,19 @@
                 "left_value_groups": "已成功退出 {value} 个群组",
                 "enable_value": "启用 {value}",
                 "disable_value": "禁用 {value}"
+            },
+            "status_distribution": {
+                "header": "灯色分布",
+                "refresh_hint": "刷新灯色分布数据",
+                "loading": "正在加载状态数据…",
+                "no_data": "暂无数据",
+                "days_per_unit": "天/格",
+                "status": {
+                    "active": "在线",
+                    "join_me": "加入我",
+                    "ask_me": "询问我",
+                    "busy": "请勿打扰"
+                }
             }
         },
         "world": {
