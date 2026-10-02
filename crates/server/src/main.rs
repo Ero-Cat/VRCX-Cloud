@@ -103,21 +103,15 @@ async fn async_main() -> ExitCode {
         tracing::warn!(error = %error, "failed to seed remote sync settings");
     }
 
-    // Web transport context: auth, realtime broadcast and the command
-    // registry installed as the runtime event sink.
+    // Web transport context: realtime broadcast and the command registry
+    // installed as the runtime event sink.
     let (event_tx, _) = tokio::sync::broadcast::channel::<(String, Value)>(1024);
     state.set_runtime_event_sink(transport::events::WebEventSink::new(event_tx.clone()));
-    let ctx = Arc::new(transport::auth::AuthContext {
-        auth: transport::auth::WebAuth::new(config.web.password.clone()),
+    let ctx = Arc::new(transport::WebContext {
         state: Arc::clone(&state),
         events: event_tx,
         registry: commands::build_registry(),
     });
-    if !config.web.auth_enabled {
-        tracing::warn!(
-            "web authentication is DISABLED (no password configured) - trusted LAN use only"
-        );
-    }
 
     if let Err(error) = state.start_headless_backend_runtime().await {
         let reason = error.to_string();
@@ -178,22 +172,6 @@ async fn async_main() -> ExitCode {
         .route(
             "/api/public/mutual-friends",
             axum::routing::get(transport::public::mutual_friends),
-        )
-        .route(
-            "/api/auth/status",
-            axum::routing::get(transport::auth::auth_status),
-        )
-        .route(
-            "/api/auth/session",
-            axum::routing::get(transport::auth::auth_session),
-        )
-        .route(
-            "/api/auth/login",
-            axum::routing::post(transport::auth::auth_login),
-        )
-        .route(
-            "/api/auth/logout",
-            axum::routing::post(transport::auth::auth_logout),
         )
         .route(
             "/api/invoke",

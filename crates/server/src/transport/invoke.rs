@@ -11,7 +11,6 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use axum::extract::State;
-use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::Deserialize;
@@ -67,13 +66,9 @@ pub struct InvokeRequest {
 }
 
 pub async fn invoke_endpoint(
-    State(ctx): State<Arc<super::auth::AuthContext>>,
-    headers: HeaderMap,
+    State(ctx): State<Arc<super::WebContext>>,
     Json(request): Json<InvokeRequest>,
 ) -> Response {
-    if !ctx.auth.session_from_headers(&headers) {
-        return ApiError::Unauthorized.into_response();
-    }
     let Some(future) = ctx
         .registry
         .dispatch(Arc::clone(&ctx.state), &request.cmd, request.args)

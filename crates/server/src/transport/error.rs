@@ -17,8 +17,6 @@ pub enum ApiError {
     Unsupported(String),
     #[error("{0}")]
     Message(String),
-    #[error("authentication required")]
-    Unauthorized,
     #[error("invalid request: {0}")]
     BadRequest(String),
 }
@@ -28,7 +26,6 @@ impl ApiError {
         match self {
             Self::Unsupported(_) => "unsupportedOnWeb",
             Self::Message(_) => "commandFailed",
-            Self::Unauthorized => "unauthorized",
             Self::BadRequest(_) => "badRequest",
         }
     }
@@ -36,7 +33,6 @@ impl ApiError {
     pub fn status(&self) -> StatusCode {
         match self {
             Self::Unsupported(_) | Self::Message(_) => StatusCode::OK,
-            Self::Unauthorized => StatusCode::UNAUTHORIZED,
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
         }
     }

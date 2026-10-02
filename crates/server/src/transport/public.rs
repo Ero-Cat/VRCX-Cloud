@@ -1,9 +1,8 @@
 //! Public API: credential-free, read-only endpoints for external
 //! consumers (home-page embeds, bots, status widgets).
 //!
-//! Mounted at `/api/public/*` OUTSIDE the web-password gate. Responses
-//! are minimal projections — never cookies, credentials, or private
-//! notes. Rate-limited per process.
+//! Responses are minimal projections — never cookies, credentials, or
+//! private notes. Rate-limited per process.
 
 use std::sync::Arc;
 
@@ -13,7 +12,7 @@ use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde_json::{json, Value};
 
-use super::auth::AuthContext;
+use super::WebContext;
 
 /// Simple token-bucket-ish limiter shared by all public endpoints.
 fn rate_limited() -> bool {
@@ -48,7 +47,7 @@ fn json_response(body: Value) -> Response {
 }
 
 /// `GET /api/public/profile` — the server account's public profile card.
-pub async fn profile(State(ctx): State<Arc<AuthContext>>) -> Response {
+pub async fn profile(State(ctx): State<Arc<WebContext>>) -> Response {
     if rate_limited() {
         return (StatusCode::TOO_MANY_REQUESTS, "rate limited").into_response();
     }
@@ -117,7 +116,7 @@ pub async fn profile(State(ctx): State<Arc<AuthContext>>) -> Response {
 /// `GET /api/public/mutual-friends?userId=usr_...&limit=100` — friends
 /// the given user shares with the server account (the "circle" view).
 pub async fn mutual_friends(
-    State(ctx): State<Arc<AuthContext>>,
+    State(ctx): State<Arc<WebContext>>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> Response {
     if rate_limited() {

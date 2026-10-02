@@ -12,11 +12,7 @@ export function isWebPlatform(): boolean {
     return true;
 }
 
-export type WebErrorCode =
-    | 'unauthorized'
-    | 'badRequest'
-    | 'unsupportedOnWeb'
-    | 'commandFailed';
+export type WebErrorCode = 'badRequest' | 'unsupportedOnWeb' | 'commandFailed';
 
 export class WebCommandError extends Error {
     readonly code: WebErrorCode;
@@ -64,9 +60,6 @@ export async function webInvoke<TReturn = unknown>(
         );
     }
 
-    if (response.status === 401) {
-        throw new WebCommandError('unauthorized', 'Web session expired');
-    }
     if (!envelope.ok) {
         const code = (envelope.code ?? 'commandFailed') as WebErrorCode;
         throw new WebCommandError(code, envelope.message ?? command);
@@ -134,39 +127,4 @@ export function ensureWebEventConnection(dispatch: WebEventDispatcher): void {
     };
     socket.addEventListener('close', scheduleReconnect);
     socket.addEventListener('error', scheduleReconnect);
-}
-
-export interface WebAuthStatus {
-    authEnabled: boolean;
-    sessionValid: boolean;
-}
-
-export async function webAuthStatus(): Promise<WebAuthStatus> {
-    const [statusResponse, sessionResponse] = await Promise.all([
-        fetch('/api/auth/status', { credentials: 'same-origin' }),
-        fetch('/api/auth/session', { credentials: 'same-origin' })
-    ]);
-    const status = (await statusResponse.json()) as { authEnabled?: boolean };
-    const session = (await sessionResponse.json()) as { valid?: boolean };
-    return {
-        authEnabled: status.authEnabled === true,
-        sessionValid: session.valid !== false
-    };
-}
-
-export async function webLogin(password: string): Promise<boolean> {
-    const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ password })
-    });
-    return response.ok;
-}
-
-export async function webLogout(): Promise<void> {
-    await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'same-origin'
-    });
 }

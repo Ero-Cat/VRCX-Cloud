@@ -11,10 +11,10 @@ use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 use std::sync::Arc;
 
-use super::auth::AuthContext;
+use super::WebContext;
 
 pub async fn img_endpoint(
-    State(ctx): State<Arc<AuthContext>>,
+    State(ctx): State<Arc<WebContext>>,
     AxumPath((file_id, version)): AxumPath<(String, String)>,
 ) -> Response {
     let cache_dir = ctx.state.app_data_path().join("ImageCache");

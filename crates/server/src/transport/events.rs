@@ -8,13 +8,10 @@ use std::sync::Arc;
 
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::State;
-use axum::http::HeaderMap;
-use axum::response::{IntoResponse, Response};
+use axum::response::Response;
 use futures_util::{SinkExt, StreamExt};
 use serde_json::{json, Value};
 use vrcx_0_application_core::RuntimeEventSink;
-
-use super::error::ApiError;
 
 /// Bridge from the runtime event bus into the web broadcast channel.
 #[derive(Clone)]
@@ -37,13 +34,9 @@ impl RuntimeEventSink for WebEventSink {
 }
 
 pub async fn events_endpoint(
-    State(ctx): State<Arc<super::auth::AuthContext>>,
-    headers: HeaderMap,
+    State(ctx): State<Arc<super::WebContext>>,
     ws: WebSocketUpgrade,
 ) -> Response {
-    if !ctx.auth.session_from_headers(&headers) {
-        return ApiError::Unauthorized.into_response();
-    }
     ws.on_upgrade(move |socket| event_loop(socket, ctx.events.subscribe()))
 }
 
