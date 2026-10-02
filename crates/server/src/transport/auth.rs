@@ -1,10 +1,14 @@
-//! Web session auth: one password, in-memory sessions, cookie based.
+//! Web auth: one password, stateless signed cookie, remembered by the
+//! browser.
 //!
 //! The password comes from `VRCX_CLOUD_WEB_PASSWORD` / `[web] password`.
-//! With no password configured (or `auth_disabled`) the UI is open — a
-//! trusted-LAN posture only; remote access should sit behind a VPN.
+//! Login issues a persistent cookie carrying a deterministic token
+//! derived from the password (SHA-256 over a domain-separated label).
+//! Validation recomputes the token, so sessions survive server restarts
+//! and the browser never needs to re-enter the password until it clears
+//! cookies or the password changes. With no password configured (or
+//! `auth_disabled`) the UI is open — trusted-LAN posture only.
 
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -13,19 +17,22 @@ use axum::http::{header, HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use tokio::sync::broadcast::Sender;
 
 use super::error::ApiError;
 
 const SESSION_COOKIE: &str = "vrcx_session";
-const SESSION_TTL: Duration = Duration::from_secs(30 * 24 * 60 * 60);
+/// Persistent cookie: the browser keeps the login for a year.
+const SESSION_TTL: Duration = Duration::from_secs(365 * 24 * 60 * 60);
 const LOGIN_RATE_LIMIT_WINDOW: Duration = Duration::from_secs(60);
 const LOGIN_RATE_LIMIT_MAX: u32 = 10;
+const TOKEN_LABEL: &[u8] = b"vrcx-cloud-web-session-v1";
 
 #[derive(Clone)]
 pub struct WebAuth {
-    password: Option<Arc<String>>,
-    sessions: Arc<Mutex<HashMap<String, Instant>>>,
+    /// Deterministic token the valid cookie must carry; None = auth off.
+    expected_token: Option<Arc<String>>,
     login_attempts: Arc<Mutex<Vec<Instant>>>,
 }
 
@@ -36,24 +43,38 @@ pub struct AuthContext {
     pub registry: super::invoke::CommandRegistry,
 }
 
+fn session_token(password: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(TOKEN_LABEL);
+    hasher.update(password.as_bytes());
+    hasher
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
 impl WebAuth {
     pub fn new(password: Option<String>) -> Self {
         Self {
-            password: password.map(Arc::new),
-            sessions: Arc::default(),
+            expected_token: password
+                .as_deref()
+                .filter(|value| !value.is_empty())
+                .map(session_token)
+                .map(Arc::new),
             login_attempts: Arc::default(),
         }
     }
 
     pub fn is_enabled(&self) -> bool {
-        self.password.is_some()
+        self.expected_token.is_some()
     }
 
-    /// Constant-time-ish comparison to avoid trivial timing oracles.
-    fn password_matches(&self, candidate: &str) -> bool {
-        let Some(expected) = self.password.as_deref() else {
+    fn token_matches(&self, candidate: &str) -> bool {
+        let Some(expected) = self.expected_token.as_deref() else {
             return false;
         };
+        // Both sides are fixed-length hex digests; compare all bytes.
         let a = expected.as_bytes();
         let b = candidate.as_bytes();
         let mut diff = (a.len() ^ b.len()) as u8;
@@ -81,35 +102,15 @@ impl WebAuth {
 
     pub fn login(&self, password: &str) -> Result<String, ApiError> {
         self.throttle()?;
-        if !self.password_matches(password) {
+        let token = session_token(password);
+        if !self.token_matches(&token) {
             return Err(ApiError::BadRequest("incorrect password".into()));
         }
-        let token = format!("{}", uuid::Uuid::new_v4().simple());
-        self.sessions
-            .lock()
-            .map_err(|_| ApiError::Message("session store lock poisoned".into()))?
-            .insert(token.clone(), Instant::now() + SESSION_TTL);
         Ok(token)
     }
 
-    pub fn logout(&self, token: &str) {
-        if let Ok(mut sessions) = self.sessions.lock() {
-            sessions.remove(token);
-        }
-    }
-
     pub fn validate(&self, token: &str) -> bool {
-        let Ok(mut sessions) = self.sessions.lock() else {
-            return false;
-        };
-        match sessions.get(token) {
-            Some(expiry) if *expiry > Instant::now() => true,
-            Some(_) => {
-                sessions.remove(token);
-                false
-            }
-            None => false,
-        }
+        self.token_matches(token)
     }
 
     pub fn session_from_headers(&self, headers: &HeaderMap) -> bool {
@@ -162,15 +163,9 @@ pub async fn auth_login(State(ctx): State<Arc<AuthContext>>, Json(body): Json<Va
     }
 }
 
-pub async fn auth_logout(State(ctx): State<Arc<AuthContext>>, headers: HeaderMap) -> Response {
-    if let Some(cookie) = headers.get(header::COOKIE).and_then(|v| v.to_str().ok()) {
-        if let Some(token) = cookie.split(';').find_map(|part| {
-            let (name, value) = part.trim().split_once('=')?;
-            (name == SESSION_COOKIE).then_some(value.to_string())
-        }) {
-            ctx.auth.logout(&token);
-        }
-    }
+pub async fn auth_logout(State(_ctx): State<Arc<AuthContext>>, _headers: HeaderMap) -> Response {
+    // Stateless tokens can't be revoked server-side; clearing the cookie
+    // is the logout. Rotating the password invalidates every issued token.
     let clear = format!("{SESSION_COOKIE}=; Path=/; HttpOnly; Max-Age=0");
     (
         StatusCode::OK,
