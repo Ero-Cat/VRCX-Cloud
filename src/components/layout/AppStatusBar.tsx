@@ -312,11 +312,20 @@ export function AppStatusBar({
         0,
         Math.max(0, Math.min(3, Number(clockCount) || 0))
     );
+    const handoffDesktopActive = useRuntimeStore(
+        (state) =>
+            (
+                state.runtimeEvents.realtimeHandoff.lastPayload as {
+                    desktopActive?: boolean;
+                } | null
+            )?.desktopActive === true
+    );
     const runtimeTransport = useMemo(
         () => ({
-            websocketConnected
+            websocketConnected,
+            handoffDesktopActive
         }),
-        [websocketConnected]
+        [websocketConnected, handoffDesktopActive]
     );
     const runtimeGameState = useMemo(
         () => ({

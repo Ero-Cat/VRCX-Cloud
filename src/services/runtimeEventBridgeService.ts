@@ -207,6 +207,13 @@ function handleRuntimeEvent(event: RuntimeEvent): void {
         return;
     }
 
+    if (event.name === 'realtimeHandoffState') {
+        useRuntimeStore
+            .getState()
+            .recordRuntimeEvent('realtimeHandoff', event.payload);
+        return;
+    }
+
     if (event.name === 'realtimeProjectionSync') {
         const snapshot = event.payload.snapshot;
         handleBackendRuntimeSyncSnapshot(
@@ -445,6 +452,7 @@ export async function bindRuntimeEvents(): Promise<() => void> {
         'realtimeEntryCorrection',
         'realtimeNotificationProjection',
         'realtimeWsStatus',
+        'realtimeHandoffState',
         'realtimeCurrentUserProjection',
         'realtimeInstanceClosedProjection',
         'realtimeInstanceQueueProjection',

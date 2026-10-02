@@ -83,6 +83,7 @@ type StatusBarRuntimeGameState = {
 
 type StatusBarRuntimeTransport = {
     websocketConnected?: boolean | null;
+    handoffDesktopActive?: boolean | null;
 };
 
 type StatusBarProxyEditorState = {

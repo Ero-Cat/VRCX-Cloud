@@ -6,10 +6,26 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use serde::Serialize;
+use vrcx_0_application_core::RuntimeEventPayload;
 use vrcx_0_contracts::SyncDeviceRecord;
 use vrcx_0_runtime_host_server::ServerRuntimeHostState;
 
 use crate::realtime_gate::PauseGate;
+
+/// Broadcast on the runtime event bus whenever the handoff flips, so the
+/// web UI can show whether the server or the desktop device is currently
+/// collecting from VRChat.
+#[derive(Clone, Debug, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RealtimeHandoffState {
+    pub desktop_active: bool,
+    pub active_devices: Vec<String>,
+}
+
+impl RuntimeEventPayload for RealtimeHandoffState {
+    const EVENT_NAME: &'static str = "realtimeHandoffState";
+}
 
 const POLL_INTERVAL: Duration = Duration::from_secs(30);
 /// How recently a device must have synced to count as active. Generous
@@ -27,16 +43,32 @@ pub fn spawn(state: Arc<ServerRuntimeHostState>, gate: PauseGate) {
                 .iter()
                 .any(|device| device_is_active_desktop(device, &my_device));
 
+            let active_devices = status
+                .remote_devices
+                .iter()
+                .filter(|device| device_is_active_desktop(device, &my_device))
+                .map(|device| device.device_id.clone())
+                .collect::<Vec<_>>();
             if gate.set_paused(desktop_active) {
                 if desktop_active {
                     tracing::info!(
-                        devices = ?status.remote_devices.iter().map(|d| d.device_id.as_str()).collect::<Vec<_>>(),
+                        devices = ?active_devices,
                         "desktop device active - server realtime session will pause"
                     );
                 } else {
                     tracing::info!("desktop devices quiet - server realtime session resumed");
                 }
             }
+            // Broadcast every cycle so browsers connecting between
+            // transitions still learn the current handoff state.
+            state
+                .runtime()
+                .desktop_assembly()
+                .event_bus()
+                .emit(RealtimeHandoffState {
+                    desktop_active,
+                    active_devices,
+                });
         }
     });
 }

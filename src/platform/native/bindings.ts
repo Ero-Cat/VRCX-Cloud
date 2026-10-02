@@ -3271,6 +3271,7 @@ export type BackendRuntimeCombinedSnapshot = {
 };
 export type BackendRuntimeEventPayloadMap = {
     addGameLogEvent: RuntimeGameLogEventPayload;
+    realtimeHandoffState: RealtimeHandoffState;
     authenticatedSessionProjection: AuthenticatedSessionProjection;
     authenticatedRuntimePhase: AuthenticatedRuntimePhaseSnapshot;
     appUpdateStatus: AppUpdateStatusSnapshot;
@@ -7043,3 +7044,8 @@ export type WorldUpdateRequest = {
 /** tauri-specta globals **/
 
 import { type CommandPromise, invoke as TAURI_INVOKE } from './generatedInvoke';
+
+export type RealtimeHandoffState = {
+    desktopActive: boolean;
+    activeDevices: string[];
+};

@@ -282,7 +282,16 @@ export const StatusBarFooter = forwardRef<HTMLElement, StatusBarFooterProps>(
                                         )}
                                     />
                                     <span className="text-content-tertiary text-xs">
-                                        {t('status_bar.realtime_connection')}
+                                        {runtimeTransport.handoffDesktopActive
+                                            ? t(
+                                                  'status_bar.desktop_collecting',
+                                                  {
+                                                      defaultValue: '桌面端接管'
+                                                  }
+                                              )
+                                            : t(
+                                                  'status_bar.realtime_connection'
+                                              )}
                                     </span>
                                 </div>
                             }
@@ -293,6 +302,23 @@ export const StatusBarFooter = forwardRef<HTMLElement, StatusBarFooterProps>(
                                 {runtimeTransport.websocketConnected
                                     ? t('status_bar.ws_connected')
                                     : t('status_bar.ws_disconnected')}
+                            </span>
+                            <span>
+                                {runtimeTransport.handoffDesktopActive
+                                    ? t(
+                                          'status_bar.desktop_collecting_tooltip',
+                                          {
+                                              defaultValue:
+                                                  '桌面端 VRCX-0 正在采集数据，服务器实时会话已暂停（数据经同步到达）'
+                                          }
+                                      )
+                                    : t(
+                                          'status_bar.server_collecting_tooltip',
+                                          {
+                                              defaultValue:
+                                                  '服务器实时会话采集中'
+                                          }
+                                      )}
                             </span>
                         </TooltipContent>
                     </Tooltip>
