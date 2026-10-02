@@ -1,7 +1,7 @@
 import {
     commands,
     type LocalModerationOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 interface LocalModerationQueryInput {
     ownerUserId?: string;

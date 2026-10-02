@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { useFavoriteRevisionStore } from '@/state/favoriteRevisionStore';
 import { useFavoriteStore } from '@/state/favoriteStore';
 
@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
     getWorldFavorites: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appFavoriteCacheSnapshot: vi.fn()
     }

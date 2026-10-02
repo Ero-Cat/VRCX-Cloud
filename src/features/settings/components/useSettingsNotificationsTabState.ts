@@ -6,7 +6,7 @@ import {
     commands,
     type NotificationWebhookFormat,
     type WebhookDeliverySnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { usePreferencesStore } from '@/state/preferencesStore';
 

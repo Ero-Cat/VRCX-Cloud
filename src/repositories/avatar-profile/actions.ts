@@ -2,7 +2,7 @@ import { invalidateEntityQueries, queryKeys } from '@/lib/entityQueryCache';
 import {
     commands,
     type VrchatAvatarSaveInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
 
 import {

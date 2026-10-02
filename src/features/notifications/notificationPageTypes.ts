@@ -1,4 +1,4 @@
-import type { InviteMessageType } from '@/platform/tauri/bindings';
+import type { InviteMessageType } from '@/platform/native/bindings';
 import type { NotificationRow } from '@/repositories/notificationPersistenceRepository';
 import type { LoadStatus } from '@/state/vrcNotificationStore';
 

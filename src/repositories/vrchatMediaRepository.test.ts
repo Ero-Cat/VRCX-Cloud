@@ -21,7 +21,7 @@ const cacheMocks = vi.hoisted(() => ({
     )
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({ commands: commandMocks }));
+vi.mock('@/platform/native/bindings', () => ({ commands: commandMocks }));
 vi.mock('@/lib/entityQueryCache', async (importOriginal) => {
     const actual =
         await importOriginal<typeof import('@/lib/entityQueryCache')>();

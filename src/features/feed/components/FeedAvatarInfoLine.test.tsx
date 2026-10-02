@@ -18,7 +18,7 @@ vi.mock('@/components/media/FadeInImage', () => ({
     FadeInImage: ({ alt }: { alt: string }) => <span>{alt}</span>
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: { appFileMetadataGet: mocks.appFileMetadataGet }
 }));
 

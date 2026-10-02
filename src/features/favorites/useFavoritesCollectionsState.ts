@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useLocalWorldFavorites } from '@/components/favorites/useLocalWorldFavorites';
 import type { FavoriteKind } from '@/domain/favorites/types';
 import { useKnownUserFacts } from '@/lib/useKnownUser';
-import type { AvatarCacheOutput } from '@/platform/tauri/bindings';
+import type { AvatarCacheOutput } from '@/platform/native/bindings';
 import avatarLocalRepository from '@/repositories/avatarLocalRepository';
 import { useFavoriteStore } from '@/state/favoriteStore';
 import { useFriendRosterStore } from '@/state/friendRosterStore';

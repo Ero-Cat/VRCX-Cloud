@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ScreenshotExportProgress } from '@/platform/tauri/bindings';
+import type { ScreenshotExportProgress } from '@/platform/native/bindings';
 
 import {
     resolveScreenshotExportToastView,

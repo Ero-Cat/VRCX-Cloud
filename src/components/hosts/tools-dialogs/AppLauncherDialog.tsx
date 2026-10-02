@@ -23,7 +23,7 @@ import {
     type AppLauncherPickedTarget,
     type AppLauncherRun,
     type AppLauncherSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import {
     getCurrentAppLauncherSnapshot,
     subscribeAppLauncherSnapshot

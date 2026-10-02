@@ -38,7 +38,7 @@ vi.mock('@/services/toastService', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appSocialFriendRequestCancel: mocks.appSocialFriendRequestCancel,
         appSocialFriendRequestSend: mocks.appSocialFriendRequestSend

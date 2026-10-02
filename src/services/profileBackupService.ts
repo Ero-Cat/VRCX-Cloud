@@ -7,7 +7,7 @@ import {
     type ProfileRestoreRollbackCleanupOutcome,
     type ProfileRestoreRollbackState,
     type ProfileRestoreValidationOutcome
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export type {
     ProfileBackupActionOutcome,
@@ -22,7 +22,7 @@ export type {
     ProfileRestoreRollbackState,
     ProfileRestoreValidation,
     ProfileRestoreValidationOutcome
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export function getProfileBackupSettings(): Promise<ProfileBackupSettings> {
     return commands.appProfileBackupGetSettings();

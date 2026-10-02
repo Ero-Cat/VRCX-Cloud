@@ -23,7 +23,7 @@ vi.mock('@/services/i18nService', () => ({
     default: { t: mocks.t }
 }));
 
-import type { RealtimeInstanceQueueProjection } from '@/platform/tauri/bindings';
+import type { RealtimeInstanceQueueProjection } from '@/platform/native/bindings';
 import { useLocationHintStore } from '@/state/locationHintStore';
 import { useRuntimeStore } from '@/state/runtimeStore';
 

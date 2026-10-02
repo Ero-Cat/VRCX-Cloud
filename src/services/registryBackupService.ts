@@ -1,5 +1,5 @@
-import { commands } from '@/platform/tauri/bindings';
-import type { RegistryBackupSnapshot } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
+import type { RegistryBackupSnapshot } from '@/platform/native/bindings';
 
 import { requireHostCapability } from './hostCapabilityService';
 

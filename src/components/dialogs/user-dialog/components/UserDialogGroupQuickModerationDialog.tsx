@@ -11,7 +11,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
-import type { GroupQuickModerationGroup } from '@/platform/tauri/bindings';
+import type { GroupQuickModerationGroup } from '@/platform/native/bindings';
 import { convertFileUrlToImageUrl } from '@/services/entityMediaService';
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/shadcn/avatar';
 import { Button } from '@/ui/shadcn/button';

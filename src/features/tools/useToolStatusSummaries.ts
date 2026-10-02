@@ -14,7 +14,7 @@ import { formatDateTime } from '@/lib/dateTime';
 import {
     commands,
     type PresenceAutomationRuleKind
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import {
     getCurrentAppLauncherSnapshot,

@@ -1,4 +1,4 @@
-import type { RuntimeVrchatAuthFailurePayload } from '@/platform/tauri/bindings';
+import type { RuntimeVrchatAuthFailurePayload } from '@/platform/native/bindings';
 import authRepository from '@/repositories/authRepository';
 import { toast } from '@/services/toastService';
 import { useRuntimeStore } from '@/state/runtimeStore';

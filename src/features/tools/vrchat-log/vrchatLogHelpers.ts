@@ -1,7 +1,7 @@
 import type {
     VrchatLogEntryOutput,
     VrchatLogFileOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import storageRepository from '@/repositories/storageRepository';
 
 export type VrchatLogLevel = 'Debug' | 'Warning' | 'Error';

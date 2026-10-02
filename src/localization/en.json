@@ -3584,7 +3584,7 @@
             }
         },
         "about": {
-            "tagline": "The fast, lightweight VRCX built with Tauri and Rust.",
+            "tagline": "Self-hosted VRCX companion served from your own server.",
             "contributors": "Contributors",
             "contributors_error": "Couldn't load the contributor list.",
             "thanks": "Every translation, test, bug report, and idea comes from the community. Thank you.",

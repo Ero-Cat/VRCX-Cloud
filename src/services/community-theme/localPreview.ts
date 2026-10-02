@@ -1,5 +1,5 @@
 import type { CommunityThemeLocalPreview } from '@/domain/themes/types';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { disableBackgroundImageForCommunityTheme } from '@/services/appearanceConflictCoordinator';
 import { isDevToolsBuild } from '@/shared/buildLabel';
 import { useCommunityThemeStore } from '@/state/communityThemeStore';

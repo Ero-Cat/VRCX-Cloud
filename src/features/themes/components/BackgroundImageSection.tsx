@@ -16,7 +16,7 @@ import type {
     BackgroundImageCustomSource,
     BackgroundImageProviderId,
     BackgroundImageSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import {
     backgroundImageRemoteProviders,
     type BackgroundImageSelectionMode,

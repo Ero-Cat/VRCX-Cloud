@@ -1,4 +1,4 @@
-import type { UserStatus } from '@/platform/tauri/bindings';
+import type { UserStatus } from '@/platform/native/bindings';
 import type { ProfileMediaField } from '@/shared/utils/currentUserMedia';
 import { normalizeUserStatus } from '@/shared/utils/friendStatus';
 

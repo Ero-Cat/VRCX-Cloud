@@ -1,4 +1,4 @@
-import type { UserGroupsOverviewGroup } from '@/platform/tauri/bindings';
+import type { UserGroupsOverviewGroup } from '@/platform/native/bindings';
 
 const MANAGE_GROUP_INVITES_PERMISSION = 'group-invites-manage';
 

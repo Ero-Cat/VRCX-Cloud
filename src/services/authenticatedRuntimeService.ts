@@ -2,7 +2,7 @@ import type {
     AuthenticatedRuntimePhaseSnapshot,
     RealtimeWsStatusPayload,
     RuntimeVrchatAuthFailurePayload
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { normalizeVrchatEndpointKey } from '@/shared/vrchatEndpoint';
 import { useFavoriteStore } from '@/state/favoriteStore';
 import { useFriendRosterStore } from '@/state/friendRosterStore';

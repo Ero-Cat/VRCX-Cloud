@@ -4,7 +4,7 @@ import type {
     AvatarListSort,
     QueryOrder,
     ReleaseStatusFilter
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export type AvatarRecord = Record<string, unknown>;
 

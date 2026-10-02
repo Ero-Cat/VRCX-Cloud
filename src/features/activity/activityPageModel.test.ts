@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ActivityPageAccessSlice } from '@/platform/tauri/bindings';
+import type { ActivityPageAccessSlice } from '@/platform/native/bindings';
 
 import {
     accessShare,

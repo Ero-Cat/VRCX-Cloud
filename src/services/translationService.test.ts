@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
     appTranslationTranslate: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appTranslationTranslate: mocks.appTranslationTranslate
     }

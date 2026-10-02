@@ -3,7 +3,7 @@ import type {
     EmojiUploadParams,
     InventoryItemsCollectInput,
     MediaFileTag
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import type { MediaFileRecord } from '@/repositories/vrchatMediaRepository';
 import { toast } from '@/services/toastService';
 import {

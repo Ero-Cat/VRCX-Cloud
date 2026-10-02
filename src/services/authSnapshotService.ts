@@ -1,4 +1,4 @@
-import type { RuntimeOperationStatus } from '@/platform/tauri/bindings';
+import type { RuntimeOperationStatus } from '@/platform/native/bindings';
 import authRepository, {
     type SavedAuthSnapshot
 } from '@/repositories/authRepository';

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { echarts } from '@/lib/echarts';
-import type { ActivityPageSeries } from '@/platform/tauri/bindings';
+import type { ActivityPageSeries } from '@/platform/native/bindings';
 
 import {
     useActivityPalette,

@@ -6,7 +6,7 @@ import type {
     FavoriteTransferItemStatus,
     FavoriteTransferLocation,
     FavoriteTransferMode
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import { favoriteGroupType, normalizeFavoriteEntityId } from './favoritesItems';
 import type {

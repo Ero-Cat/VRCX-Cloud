@@ -31,7 +31,7 @@ const notificationActionMocks = vi.hoisted(() => ({
     sendNotificationButtonResponse: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appNotificationMarkSeenBatch: commandMocks.markSeenBatch,
         appNotificationSync: commandMocks.sync

@@ -7,7 +7,7 @@ import type { AppColumnDef } from '@/components/data-table/appTable';
 import {
     commands,
     type ResolvedFriendLogName
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import friendLogHistoryRepository from '@/repositories/friendLogHistoryRepository';
 import { useFriendRosterStore } from '@/state/friendRosterStore';
@@ -19,7 +19,7 @@ import { useFriendLogColumns } from './components/FriendLogColumns';
 import type { FriendLogRow } from './friendLogRows';
 import { useFriendLogPageController } from './useFriendLogPageController';
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appFriendLogNamesResolve: vi.fn(),
         appFriendLogNamesCancel: vi.fn()

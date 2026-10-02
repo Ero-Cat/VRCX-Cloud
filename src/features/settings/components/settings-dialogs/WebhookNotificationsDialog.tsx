@@ -3,7 +3,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { buildFeedFavoriteGroupOptions } from '@/domain/feed/feedFavoriteGroups';
-import { commands, type SavedGroupCollection } from '@/platform/tauri/bindings';
+import {
+    commands,
+    type SavedGroupCollection
+} from '@/platform/native/bindings';
 import {
     DEFAULT_OVERLAY_ACTIVITY_FILTER_PROFILE,
     DEFAULT_WEBHOOK_ACTIVITY_FILTERS,

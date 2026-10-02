@@ -1,8 +1,8 @@
 import { useCallback, useSyncExternalStore } from 'react';
 
 import { normalizeLanguageCode } from '@/localization/locales';
-import { tauriClient } from '@/platform/tauri/client';
-import { setWindowTheme, type WindowTheme } from '@/platform/tauri/webview';
+import { tauriClient } from '@/platform/native/client';
+import { setWindowTheme, type WindowTheme } from '@/platform/native/webview';
 import {
     APP_FONT_DEFAULT_KEY,
     APP_CJK_FONT_PACK_DEFAULT_KEY,

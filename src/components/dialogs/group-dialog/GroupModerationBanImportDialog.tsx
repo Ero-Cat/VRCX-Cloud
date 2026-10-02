@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { GroupBanImportStatus } from '@/platform/tauri/bindings';
+import type { GroupBanImportStatus } from '@/platform/native/bindings';
 import {
     cancelGroupBanImport,
     getGroupBanImportStatus,

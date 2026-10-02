@@ -1,4 +1,4 @@
-import type { AuthenticatedSessionProjection } from '@/platform/tauri/bindings';
+import type { AuthenticatedSessionProjection } from '@/platform/native/bindings';
 import { useRuntimeStore } from '@/state/runtimeStore';
 
 import { applyAuthenticatedSessionProjection } from '../backendRuntimeSessionResumeService';

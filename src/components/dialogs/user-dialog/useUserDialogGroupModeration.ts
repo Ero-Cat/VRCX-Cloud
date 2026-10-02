@@ -8,7 +8,7 @@ import {
     type GroupQuickModerationAction,
     type GroupQuickModerationGroup,
     type GroupQuickModerationOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 
 import {

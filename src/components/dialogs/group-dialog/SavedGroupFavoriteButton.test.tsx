@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
     prompt: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appSavedGroupCollectionCreate: mocks.createCollection,
         appSavedGroupFavoriteAdd: mocks.addFavorite,

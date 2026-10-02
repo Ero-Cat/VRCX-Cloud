@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { getKnownUserFact } from '@/services/userFactAccessService';
 import { useFriendRosterStore } from '@/state/friendRosterStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

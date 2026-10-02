@@ -1,9 +1,9 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     AvatarTagInput,
     AvatarTagsPatchInput,
     JsonValue
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 interface AvatarTag {
     tag?: string;

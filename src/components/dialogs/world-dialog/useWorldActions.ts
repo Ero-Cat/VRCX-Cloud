@@ -5,7 +5,7 @@ import {
     readWorldCacheInfo,
     resolveWorldAssetBundleArgs
 } from '@/lib/worldAssetBundle';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import memoPersistenceRepository from '@/repositories/memoPersistenceRepository';
 import worldProfileRepository from '@/repositories/worldProfileRepository';
 import { copyTextToClipboard } from '@/services/clipboardService';

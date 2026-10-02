@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useAppTable } from '@/components/data-table/appTable';
 import type { GroupProfileRecord } from '@/domain/entities/group';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { useRuntimeStore } from '@/state/runtimeStore';
 
@@ -15,7 +15,7 @@ import { playerGroupRoles, playerGroupRoster } from './playerListGroupRoles';
 import type { PlayerListRow } from './playerListTypes';
 import { usePlayerListGroupRoles } from './usePlayerListGroupRoles';
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: { appVrchatGroupMemberRoleIdsGet: vi.fn() }
 }));
 vi.mock('@/repositories/groupProfileRepository', () => ({

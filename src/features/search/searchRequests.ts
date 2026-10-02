@@ -2,7 +2,7 @@ import type {
     GroupSearchParams,
     UserSearchParams,
     WorldSearchParams
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { replaceBioSymbols } from '@/shared/utils/string';
 
 export const SEARCH_PAGE_SIZE = 10;

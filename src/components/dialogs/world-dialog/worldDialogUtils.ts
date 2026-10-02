@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 
 import type { WorldProfileRecord } from '@/domain/entities/world';
-import type { WorldFriendVisitsOutput } from '@/platform/tauri/bindings';
+import type { WorldFriendVisitsOutput } from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 
 type WorldDialogTab = { value: string };

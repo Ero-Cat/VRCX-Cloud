@@ -1,7 +1,7 @@
 import {
     commands,
     type RuntimeOperationStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 type RuntimeJobTelemetryRecord = {
     name: string;

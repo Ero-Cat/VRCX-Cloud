@@ -10,7 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import type { WorldProfileRecord } from '@/domain/entities/world';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import vrchatMediaRepository from '@/repositories/vrchatMediaRepository';
 import worldProfileRepository from '@/repositories/worldProfileRepository';
 import { toast } from '@/services/toastService';

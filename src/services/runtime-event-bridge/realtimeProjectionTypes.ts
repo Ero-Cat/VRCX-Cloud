@@ -10,7 +10,7 @@ import type {
     RealtimeNotificationProjection,
     RealtimeNotificationUpsert,
     RealtimeUserProjection
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import type { NotificationRow } from '@/repositories/notificationPersistenceRepository';
 import type { FeedLivePatch } from '@/state/feedLiveTypes';
 

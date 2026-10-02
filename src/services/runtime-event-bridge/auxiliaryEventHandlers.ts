@@ -2,11 +2,11 @@ import type {
     FavoriteKind,
     StoredLocalFavoriteKind
 } from '@/domain/favorites/types';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     FavoriteChange,
     PrintAutoCleanupEvent
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import mediaRepository from '@/repositories/vrchatMediaRepository';
 import { toast } from '@/services/toastService';
 import { printCleanupWarningMessageKey } from '@/shared/utils/printFavoriteMessages';

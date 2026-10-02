@@ -7,7 +7,7 @@ import {
     type FavoriteDetailsHydrateInput,
     type FavoriteDetailsHydrateKind,
     type FavoriteDetailsHydrateOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 import { useFavoriteRevisionStore } from '@/state/favoriteRevisionStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

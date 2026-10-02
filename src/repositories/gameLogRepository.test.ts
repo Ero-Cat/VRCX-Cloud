@@ -11,7 +11,7 @@ const configMocks = vi.hoisted(() => ({
     getInt: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appGameLogSessionsQuery: commandMocks.sessionsQuery
     }

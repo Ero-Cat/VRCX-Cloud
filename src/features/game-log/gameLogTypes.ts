@@ -7,7 +7,7 @@ import type {
     GameLogSessionDto as GeneratedGameLogSession,
     GameLogSessionEventDto as GeneratedGameLogSessionEvent,
     GameLogSessionMemberDto as GeneratedGameLogSessionMember
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import type {
     GameLogDatabaseRow,
     GameLogFilterType as RepositoryGameLogFilterType,

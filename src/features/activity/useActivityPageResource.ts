@@ -4,7 +4,7 @@ import {
     commands,
     type ActivityCompanionOrder,
     type ActivityPageView
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import {
     rangeDaysFor,

@@ -6,7 +6,7 @@ import type {
     CommunityThemeManifest,
     CommunityThemeStatsById
 } from '@/domain/themes/types';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import {
     type BackgroundImageSelectionMode,
     disableBackgroundImage,

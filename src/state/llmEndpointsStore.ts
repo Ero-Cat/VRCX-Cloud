@@ -6,7 +6,7 @@ import {
     type LlmEndpointDetectModelsResult,
     type LlmEndpointDto,
     type LlmEndpointUpsertInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { publishToolsStatusUpdated } from '@/shared/constants/tools';
 import { useRuntimeStore } from '@/state/runtimeStore';
 

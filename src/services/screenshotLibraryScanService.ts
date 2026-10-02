@@ -1,7 +1,7 @@
 import {
     commands,
     type ScreenshotLibraryScanStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 type ScreenshotLibraryScanStatusListener = (
     status: ScreenshotLibraryScanStatus

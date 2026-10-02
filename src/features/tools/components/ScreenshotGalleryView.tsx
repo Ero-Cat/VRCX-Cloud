@@ -30,7 +30,7 @@ import type {
     ScreenshotFolderTree,
     ScreenshotLibraryImage,
     ScreenshotLibraryScanStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { Button } from '@/ui/shadcn/button';
 import {
     Collapsible,

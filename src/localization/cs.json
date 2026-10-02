@@ -3525,7 +3525,7 @@
             }
         },
         "about": {
-            "tagline": "Rychlý a lehký VRCX postavený na Tauri a Rustu.",
+            "tagline": "Rychlý a lehký VRCX postavený na Rust a Rustu.",
             "contributors": "Přispěvatelé",
             "contributors_error": "Seznam přispěvatelů se nepodařilo načíst.",
             "thanks": "Každý překlad, test, hlášení chyby i nápad pochází od komunity. Děkujeme.",

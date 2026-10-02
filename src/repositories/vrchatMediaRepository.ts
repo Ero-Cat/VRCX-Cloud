@@ -3,7 +3,7 @@ import {
     fetchCachedData,
     queryKeys
 } from '@/lib/entityQueryCache';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     EmojiUploadParams,
     HttpApiExecuteResponse,
@@ -16,10 +16,10 @@ import type {
     PrintFavoriteBulkResult,
     PrintFavoriteState,
     ProfileDecorationEquipSlot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
 
-import { normalizePlatformError } from '../platform/tauri/errors';
+import { normalizePlatformError } from '../platform/native/errors';
 import {
     isVrchatRequestError,
     type QueryParams,

@@ -10,7 +10,7 @@ const friendLogMocks = vi.hoisted(() => ({
     signalChanged: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appSocialUnfriend: commandMocks.unfriend,
         appSocialUnfriendSelection: commandMocks.unfriendSelection

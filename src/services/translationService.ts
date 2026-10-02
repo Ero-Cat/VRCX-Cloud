@@ -2,7 +2,7 @@ import {
     commands,
     type TranslationOverrides,
     type TranslationResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import {
     normalizeTranslationApiType,

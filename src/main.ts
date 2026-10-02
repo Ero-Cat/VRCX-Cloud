@@ -7,7 +7,7 @@ import {
     isWebPlatform,
     webAuthStatus,
     webLogin
-} from '@/platform/tauri/webTransport';
+} from '@/platform/native/webTransport';
 import { installErrorLogging } from '@/services/errorLogService';
 
 // only use in dev to prevent OOM from React dev tools User Timing measures

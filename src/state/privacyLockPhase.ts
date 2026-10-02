@@ -1,4 +1,4 @@
-import type { PrivacyLockSnapshot } from '@/platform/tauri/bindings';
+import type { PrivacyLockSnapshot } from '@/platform/native/bindings';
 import { useRuntimeStore } from '@/state/runtimeStore';
 
 export type PrivacyLockPhase = 'inactive' | 'pending' | 'locked' | 'unlocked';

@@ -1,12 +1,12 @@
 import { expect, it, vi } from 'vitest';
 
-import type { AppLauncherSnapshot } from '@/platform/tauri/bindings';
+import type { AppLauncherSnapshot } from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     snapshot: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appAppLauncherSnapshotGet: mocks.snapshot
     }

@@ -4,7 +4,7 @@ import {
     type FriendLogHistoryCursor,
     type FriendLogHistoryEntryInput,
     type FriendLogHistoryOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export interface FriendLogHistoryRow {
     rowId: number;

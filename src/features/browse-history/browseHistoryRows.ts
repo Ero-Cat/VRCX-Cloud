@@ -1,5 +1,5 @@
 import { positionKnownSizeRows } from '@/lib/knownSizeVirtualRows';
-import type { BrowseHistoryItemOutput } from '@/platform/tauri/bindings';
+import type { BrowseHistoryItemOutput } from '@/platform/native/bindings';
 
 export const BROWSE_HISTORY_CARD_HEIGHT = 64;
 export const BROWSE_HISTORY_GRID_GAP = 8;

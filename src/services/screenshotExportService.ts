@@ -1,4 +1,4 @@
-import type { ScreenshotExportProgress } from '@/platform/tauri/bindings';
+import type { ScreenshotExportProgress } from '@/platform/native/bindings';
 
 type ScreenshotExportProgressListener = (
     progress: ScreenshotExportProgress

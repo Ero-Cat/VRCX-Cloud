@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
     invokeTauri: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/invoke', () => ({
+vi.mock('@/platform/native/invoke', () => ({
     invokeTauri: mocks.invokeTauri
 }));
 

@@ -32,7 +32,7 @@ vi.mock('@/services/toastService', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appDatabaseUpgradePreflight: mocks.appDatabaseUpgradePreflight,
         appDatabaseUpgradeProgress: mocks.appDatabaseUpgradeProgress,

@@ -1,4 +1,4 @@
-import { invokeTauri } from '@/platform/tauri/invoke';
+import { invokeTauri } from '@/platform/native/invoke';
 import { isRecord } from '@/shared/utils/record';
 
 const HTTP_ERROR_STATUS_MIN = 400;

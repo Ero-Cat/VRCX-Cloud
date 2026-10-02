@@ -3501,7 +3501,7 @@
             }
         },
         "about": {
-            "tagline": "Le VRCX rapide et léger, conçu avec Tauri et Rust.",
+            "tagline": "Le VRCX rapide et léger, conçu avec Rust et Rust.",
             "contributors": "Contributeurs",
             "contributors_error": "Impossible de charger la liste des contributeurs.",
             "thanks": "Les traductions, les tests, les signalements de bugs et les idées viennent de la communauté. Merci.",

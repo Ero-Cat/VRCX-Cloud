@@ -1,4 +1,4 @@
-import type { HttpApiExecuteResponse } from '@/platform/tauri/bindings';
+import type { HttpApiExecuteResponse } from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 
 type QueryValue = string | number | boolean | Date | null | undefined;

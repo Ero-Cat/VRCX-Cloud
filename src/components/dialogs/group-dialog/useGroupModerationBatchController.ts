@@ -6,7 +6,7 @@ import { userFacingErrorMessage } from '@/lib/errorDisplay';
 import {
     commands,
     type GroupModerationBatchAction
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { useModalStore } from '@/state/modalStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

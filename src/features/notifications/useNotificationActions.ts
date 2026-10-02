@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { BoopEmojiChoice } from '@/domain/entities/boopEmoji';
-import type { InviteMessageType } from '@/platform/tauri/bindings';
+import type { InviteMessageType } from '@/platform/native/bindings';
 import notificationPersistenceRepository, {
     type NotificationResponse
 } from '@/repositories/notificationPersistenceRepository';

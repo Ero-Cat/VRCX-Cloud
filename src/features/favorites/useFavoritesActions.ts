@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 
 import type { FavoriteKind } from '@/domain/favorites/types';
 import type { FriendRecord, FriendRosterById } from '@/domain/friends/types';
-import type { AvatarCacheOutput } from '@/platform/tauri/bindings';
+import type { AvatarCacheOutput } from '@/platform/native/bindings';
 import { useFavoriteStore } from '@/state/favoriteStore';
 import type { CurrentUserSnapshotState } from '@/state/runtimeStore';
 

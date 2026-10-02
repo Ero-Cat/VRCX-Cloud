@@ -9,7 +9,7 @@ import type {
     ActivityCompanionOrder,
     ActivityPageCompanionRow,
     ActivityPagePeople
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { openUserDialog } from '@/services/dialogService';
 import { Skeleton } from '@/ui/shadcn/skeleton';
 

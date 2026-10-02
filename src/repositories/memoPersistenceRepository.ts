@@ -4,7 +4,7 @@ import {
     type UserMemoOutput,
     type UserNoteOutput,
     type WorldMemoOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 interface SaveUserMemoInput {
     userId?: string;

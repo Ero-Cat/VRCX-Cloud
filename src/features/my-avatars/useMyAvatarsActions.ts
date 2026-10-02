@@ -2,7 +2,7 @@ import type { ChangeEvent, Dispatch, RefObject, SetStateAction } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { commands, type AvatarUpdateRequest } from '@/platform/tauri/bindings';
+import { commands, type AvatarUpdateRequest } from '@/platform/native/bindings';
 import myAvatarRepository from '@/repositories/myAvatarRepository';
 import vrchatMediaRepository from '@/repositories/vrchatMediaRepository';
 import { selectAvatar as selectCurrentAvatar } from '@/services/avatarSelectionService';

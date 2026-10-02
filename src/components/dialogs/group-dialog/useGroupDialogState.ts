@@ -5,11 +5,11 @@ import type { GroupInstanceRecord } from '@/domain/entities/group';
 import type { EntityRecord } from '@/domain/entities/shared';
 import type { LoadStatus } from '@/domain/shared/types';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     GroupMemberPatch,
     GroupProfileUpdate
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import gameLogRepository from '@/repositories/gameLogRepository';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { unwrapVrchatResponse } from '@/repositories/vrchatRequest';

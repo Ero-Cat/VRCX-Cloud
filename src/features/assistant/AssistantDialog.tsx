@@ -15,7 +15,7 @@ import {
     type AssistantRuntimeSelection,
     type PlaybookMode,
     type Session
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { useAssistantChatStore } from '@/state/assistantChatStore';
 import { useLlmEndpointsStore } from '@/state/llmEndpointsStore';

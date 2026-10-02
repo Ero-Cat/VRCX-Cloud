@@ -1,4 +1,4 @@
-import { convertFileSrc } from '@/platform/tauri/assets';
+import { convertFileSrc } from '@/platform/native/assets';
 
 import { setVrcxCssLayers } from '../vrcx0CssLayerService';
 

@@ -1,4 +1,4 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 import { useFavoriteStore } from '@/state/favoriteStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

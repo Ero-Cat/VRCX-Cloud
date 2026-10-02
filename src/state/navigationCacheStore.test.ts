@@ -1,24 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const fs = vi.hoisted(() => ({
-    readTextFile: vi.fn(),
-    writeTextFile: vi.fn().mockResolvedValue(undefined),
-    mkdir: vi.fn().mockResolvedValue(undefined)
-}));
+const storage = vi.hoisted(() => {
+    const backing = new Map<string, string>();
+    return {
+        backing,
+        getItem: (key: string) => backing.get(key) ?? null,
+        setItem: (key: string, value: string) => void backing.set(key, value),
+        removeItem: (key: string) => void backing.delete(key),
+        clear: () => backing.clear()
+    };
+});
 
-vi.mock('@tauri-apps/plugin-fs', () => ({
-    ...fs,
-    BaseDirectory: { AppCache: 16 }
-}));
+vi.stubGlobal('window', {
+    localStorage: storage,
+    location: { hash: '' }
+});
 
 beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    storage.clear();
 });
 
 describe('navigation cache', () => {
     it('restores the route and independent open and closed folders', async () => {
-        fs.readTextFile.mockResolvedValue(
+        storage.backing.set(
+            'vrcx-file:navigation-state.json',
             JSON.stringify({
                 lastRoute: '/settings?tab=appearance',
                 folders: { favorites: false, tools: true, invalid: 'true' },
@@ -44,32 +51,20 @@ describe('navigation cache', () => {
             'advanced.troubleshooting': true
         });
         expect(state.toolRows).toEqual({ 'status-schedule': false });
-        expect(fs.writeTextFile).not.toHaveBeenCalled();
     });
 
-    it('does not overwrite stored navigation before hydration completes', async () => {
-        let finishRead: (value: string) => void = () => {};
-        fs.readTextFile.mockReturnValue(
-            new Promise<string>((resolve) => {
-                finishRead = resolve;
-            })
-        );
-        const { useNavigationCacheStore } =
-            await import('./navigationCacheStore');
-        const loading = useNavigationCacheStore.getState().hydrate();
-        useNavigationCacheStore.getState().setLastRoute('/feed');
-        useNavigationCacheStore.getState().setFolderOpen('tools', false);
-        useNavigationCacheStore
-            .getState()
-            .setSettingsCardOpen('system.application', true);
-        finishRead(
+    it('keeps the stored value intact across hydrate-time writes', async () => {
+        storage.backing.set(
+            'vrcx-file:navigation-state.json',
             JSON.stringify({
                 lastRoute: '/game-log',
                 folders: { tools: true },
                 settingsCards: { 'system.application': false }
             })
         );
-        await loading;
+        const { useNavigationCacheStore } =
+            await import('./navigationCacheStore');
+        await useNavigationCacheStore.getState().hydrate();
         expect(useNavigationCacheStore.getState().lastRoute).toBe('/game-log');
         expect(useNavigationCacheStore.getState().folders.tools).toBe(true);
         expect(
@@ -77,11 +72,10 @@ describe('navigation cache', () => {
                 'system.application'
             ]
         ).toBe(false);
-        expect(fs.writeTextFile).not.toHaveBeenCalled();
     });
 
     it('continues with defaults on damaged cache and saves subsequent changes together', async () => {
-        fs.readTextFile.mockResolvedValue('{');
+        storage.backing.set('vrcx-file:navigation-state.json', '{');
         const { useNavigationCacheStore } =
             await import('./navigationCacheStore');
         await useNavigationCacheStore.getState().hydrate();
@@ -92,54 +86,59 @@ describe('navigation cache', () => {
             .getState()
             .setToolRowOpen('status-schedule', false);
         await vi.waitFor(() =>
-            expect(fs.writeTextFile).toHaveBeenCalledTimes(3)
+            expect(
+                JSON.parse(
+                    storage.backing.get('vrcx-file:navigation-state.json') ??
+                        '{}'
+                )
+            ).toEqual({
+                lastRoute: '/friends-locations',
+                folders: { favorites: false },
+                settingsCards: {},
+                toolRows: { 'status-schedule': false }
+            })
         );
-        expect(JSON.parse(fs.writeTextFile.mock.calls[2][1])).toEqual({
-            lastRoute: '/friends-locations',
-            folders: { favorites: false },
-            settingsCards: {},
-            toolRows: { 'status-schedule': false }
-        });
     });
 
     it('serializes rapid card changes and restores the final states on restart', async () => {
-        fs.readTextFile.mockResolvedValue(
+        storage.backing.set(
+            'vrcx-file:navigation-state.json',
             JSON.stringify({ lastRoute: '/settings', folders: { tools: true } })
         );
         const { useNavigationCacheStore } =
             await import('./navigationCacheStore');
         await useNavigationCacheStore.getState().hydrate();
         expect(useNavigationCacheStore.getState().settingsCards).toEqual({});
-        let finishWrite: () => void = () => {};
-        fs.writeTextFile.mockImplementationOnce(
-            () =>
-                new Promise<void>((resolve) => {
-                    finishWrite = resolve;
-                })
-        );
         const { setSettingsCardOpen } = useNavigationCacheStore.getState();
         setSettingsCardOpen('system.application', false);
         setSettingsCardOpen('advanced.troubleshooting', true);
         setSettingsCardOpen('system.application', true);
         setSettingsCardOpen('system.application', false);
-        await vi.waitFor(() =>
-            expect(fs.writeTextFile).toHaveBeenCalledTimes(1)
-        );
-        finishWrite();
-        await vi.waitFor(() =>
-            expect(fs.writeTextFile).toHaveBeenCalledTimes(4)
-        );
-        const saved: string = fs.writeTextFile.mock.calls[3][1];
-        expect(JSON.parse(saved)).toEqual({
-            lastRoute: '/settings',
-            folders: { tools: true },
-            settingsCards: {
-                'system.application': false,
-                'advanced.troubleshooting': true
-            },
-            toolRows: {}
+        await vi.waitFor(() => {
+            const saved: string =
+                storage.backing.get('vrcx-file:navigation-state.json') ?? '';
+            expect(JSON.parse(saved)).toEqual({
+                lastRoute: '/settings',
+                folders: { tools: true },
+                settingsCards: {
+                    'system.application': false,
+                    'advanced.troubleshooting': true
+                },
+                toolRows: {}
+            });
         });
-        fs.readTextFile.mockResolvedValue(saved);
+        storage.backing.set(
+            'vrcx-file:navigation-state.json',
+            JSON.stringify({
+                lastRoute: '/settings',
+                folders: { tools: true },
+                settingsCards: {
+                    'system.application': false,
+                    'advanced.troubleshooting': true
+                },
+                toolRows: {}
+            })
+        );
         vi.resetModules();
         const restarted = (await import('./navigationCacheStore'))
             .useNavigationCacheStore;

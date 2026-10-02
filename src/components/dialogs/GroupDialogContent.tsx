@@ -1,4 +1,4 @@
-import type { GroupMemberVisibility } from '@/platform/tauri/bindings';
+import type { GroupMemberVisibility } from '@/platform/native/bindings';
 
 import { GroupDialogEmptyState } from './group-dialog/GroupDialogEmptyState';
 import { GroupDialogTabbedView } from './group-dialog/GroupDialogTabbedView';

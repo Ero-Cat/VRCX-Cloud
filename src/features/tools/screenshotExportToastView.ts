@@ -1,4 +1,4 @@
-import type { ScreenshotExportProgress } from '@/platform/tauri/bindings';
+import type { ScreenshotExportProgress } from '@/platform/native/bindings';
 
 export const SCREENSHOT_EXPORT_SPINNER_DELAY_MS = 600;
 

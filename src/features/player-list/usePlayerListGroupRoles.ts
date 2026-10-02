@@ -1,7 +1,7 @@
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { parseLocation } from '@/shared/utils/location';
 import { useRuntimeStore } from '@/state/runtimeStore';

@@ -23,7 +23,7 @@ import type { GroupProfileRecord } from '@/domain/entities/group';
 import {
     commands,
     type SavedGroupFavoritesSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { openGroupDialog } from '@/services/dialogService';
 import { toast } from '@/services/toastService';

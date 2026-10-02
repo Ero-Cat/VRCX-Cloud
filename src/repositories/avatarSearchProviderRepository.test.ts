@@ -15,7 +15,7 @@ vi.mock('./configRepository', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appExternalApiAvatarSearchGet: vi.fn()
     }
@@ -27,7 +27,7 @@ vi.mock('./avatarProfileRepository', () => ({
     }
 }));
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { publishPreferenceChanged } from '@/shared/events/preferenceEvents';
 
 import avatarProfileRepository from './avatarProfileRepository';

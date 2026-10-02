@@ -4,7 +4,7 @@ import {
     commands,
     type NotificationMarkSeenBatchItem,
     type NotificationMarkSeenItemResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import notificationPersistenceRepository from '@/repositories/notificationPersistenceRepository';
 import type {
     NotificationResponse,

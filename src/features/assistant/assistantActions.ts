@@ -1,4 +1,4 @@
-import { commands, type Session } from '@/platform/tauri/bindings';
+import { commands, type Session } from '@/platform/native/bindings';
 import i18n from '@/services/i18nService';
 import { useAssistantChatStore } from '@/state/assistantChatStore';
 

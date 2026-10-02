@@ -9,14 +9,14 @@ import {
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PrivacyLockOutcome } from '@/platform/tauri/bindings';
+import type { PrivacyLockOutcome } from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     unlock: vi.fn<(password: string) => Promise<PrivacyLockOutcome>>(),
     clear: vi.fn<(password: string) => Promise<PrivacyLockOutcome>>(),
     logout: vi.fn<() => Promise<boolean>>()
 }));
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appPrivacyLockUnlock: mocks.unlock,
         appPrivacyLockPasswordClear: mocks.clear

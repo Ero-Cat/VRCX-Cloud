@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { GroupProfileRecord } from '@/domain/entities/group';
 import type { EntityRecord } from '@/domain/entities/shared';
-import type { GroupPostVisibility } from '@/platform/tauri/bindings';
+import type { GroupPostVisibility } from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { toast } from '@/services/toastService';
 

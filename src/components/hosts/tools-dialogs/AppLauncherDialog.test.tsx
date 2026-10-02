@@ -14,7 +14,7 @@ import type {
     AppLauncherEntry,
     AppLauncherRun,
     AppLauncherSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     platform: 'windows',
@@ -31,7 +31,7 @@ vi.mock('react-i18next', () => ({
     })
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appAppLauncherSnapshotGet: mocks.snapshot,
         appAppLauncherEnabledSet: mocks.setEnabled,

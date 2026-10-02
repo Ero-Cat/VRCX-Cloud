@@ -4,13 +4,13 @@ const mocks = vi.hoisted(() => ({
     checkVRChatCache: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         assetBundleCheckVrchatCache: mocks.checkVRChatCache
     }
 }));
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 
 import { defaultAvatarSideData } from './avatarAssets';
 import { readAvatarCacheInfo } from './avatarCacheAdapter';

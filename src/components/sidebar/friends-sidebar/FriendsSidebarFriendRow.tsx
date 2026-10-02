@@ -9,7 +9,7 @@ import type { LocationMetadata } from '@/components/location/useLocationMetadata
 import { UserHoverCard } from '@/components/user-hover-card/UserHoverCard';
 import { UserDetailContent } from '@/components/UserDetailTile';
 import type { InstanceRosterTimestamp } from '@/domain/instances/instanceRoster';
-import type { UserStatus } from '@/platform/tauri/bindings';
+import type { UserStatus } from '@/platform/native/bindings';
 import { getNameColour, userImage } from '@/services/entityMediaService';
 import { TRUST_COLOR_DEFAULTS } from '@/shared/constants/trustColors';
 import { type TrustColorMap } from '@/shared/utils/trustColors';

@@ -5,7 +5,7 @@ const commandMocks = vi.hoisted(() => ({
     appVrchatToolsUserNoteSave: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({ commands: commandMocks }));
+vi.mock('@/platform/native/bindings', () => ({ commands: commandMocks }));
 
 import { getUsers } from './vrchatSearchRepository';
 import { saveUserNote } from './vrchatToolsRepository';

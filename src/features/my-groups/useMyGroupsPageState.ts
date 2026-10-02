@@ -9,7 +9,7 @@ import type { UserDialogGroupSort } from '@/components/dialogs/user-dialog/userD
 import type { GroupProfileRecord } from '@/domain/entities/group';
 import type { LoadStatus } from '@/domain/shared/types';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { toast } from '@/services/toastService';
 import { useMyGroupsRevisionStore } from '@/state/myGroupsRevisionStore';

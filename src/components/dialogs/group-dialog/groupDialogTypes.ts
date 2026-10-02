@@ -11,7 +11,7 @@ import type { LoadStatus, RemoteTabStatus } from '@/domain/shared/types';
 import type {
     GroupMemberVisibility,
     GroupProfileUpdate
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import type { GroupCalendarEventRecord } from '@/repositories/vrchatToolsRepository';
 
 import type { GroupDialogMembersModel } from './useGroupDialogMembers';

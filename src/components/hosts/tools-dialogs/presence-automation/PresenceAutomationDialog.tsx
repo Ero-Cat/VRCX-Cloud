@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import { toast } from '@/services/toastService';
 import { publishToolsStatusUpdated } from '@/shared/constants/tools';

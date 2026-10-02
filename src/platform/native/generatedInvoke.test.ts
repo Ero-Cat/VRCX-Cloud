@@ -50,7 +50,7 @@ describe('generatedInvoke', () => {
     it('notifies SQLite listeners and rethrows the normalized IPC error', async () => {
         const rawError = new Error('database is locked');
         const normalizedError = new Error(
-            'Tauri command failed: app__example: database is locked'
+            'Web command failed: app__example: database is locked'
         );
         mocks.invokeTauri.mockRejectedValue(rawError);
         mocks.normalizePlatformError.mockReturnValue(normalizedError);
@@ -58,7 +58,7 @@ describe('generatedInvoke', () => {
         await expect(invoke('app__example')).rejects.toBe(normalizedError);
         expect(mocks.normalizePlatformError).toHaveBeenCalledWith(
             rawError,
-            'Tauri command failed: app__example'
+            'Web command failed: app__example'
         );
         expect(mocks.recordErrorLog).toHaveBeenCalledWith('rust:command', [
             'command: app__example',

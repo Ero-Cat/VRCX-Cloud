@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { SocialStatusPreset } from '@/components/dialogs/user-dialog/userProfileFields';
 import { LaunchModeContextMenuGroup } from '@/components/launch/LaunchModeContextMenuGroup';
-import type { UserStatus } from '@/platform/tauri/bindings';
+import type { UserStatus } from '@/platform/native/bindings';
 import { isActionRecent } from '@/services/recentActionService';
 import { userStatusIndicatorClassName } from '@/shared/utils/userStatus';
 

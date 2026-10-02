@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
     appFileMetadataGet: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: { appFileMetadataGet: mocks.appFileMetadataGet }
 }));
 

@@ -5,8 +5,8 @@ import { useSearchParams } from 'react-router';
 
 import { PageScaffold } from '@/components/layout/PageScaffold';
 import { ToolPageHeader } from '@/components/layout/ToolPageHeader';
-import { convertFileSrc } from '@/platform/tauri/assets';
-import { commands } from '@/platform/tauri/bindings';
+import { convertFileSrc } from '@/platform/native/assets';
+import { commands } from '@/platform/native/bindings';
 import mediaFileRepository from '@/repositories/mediaFileRepository';
 import vrchatMediaRepository from '@/repositories/vrchatMediaRepository';
 import { openFolderAndSelectItem } from '@/services/shellIntegrationService';

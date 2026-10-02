@@ -2,7 +2,7 @@ import type { GroupInstanceRecord } from '@/domain/entities/group';
 import type {
     BackendRuntimeEventPayloadMap,
     BackendRuntimeSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import type {
     RealtimeCurrentUserProjectionPayload,

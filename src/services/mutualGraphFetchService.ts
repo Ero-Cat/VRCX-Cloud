@@ -1,8 +1,8 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     MutualGraphFetchState,
     MutualGraphFetchStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useRuntimeStore } from '@/state/runtimeStore';
 
 type StartMutualGraphFetchInput = {

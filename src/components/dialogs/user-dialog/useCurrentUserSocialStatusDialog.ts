@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { UserStatus } from '@/platform/tauri/bindings';
+import type { UserStatus } from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 
 import {

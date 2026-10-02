@@ -43,7 +43,7 @@ vi.mock('@/services/toastService', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appShareCollectionCreate: mocks.createShareCollection
     }

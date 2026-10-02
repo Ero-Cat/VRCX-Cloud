@@ -3,7 +3,7 @@ import type {
     ActivityPageAccessSlice,
     ActivityPageSummary,
     ActivityPageView
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { ACTIVITY_PAGE_CONFIG_KEYS } from '@/repositories/configKeys';
 
 export const ACTIVITY_PAGE_RANGE_KEY = ACTIVITY_PAGE_CONFIG_KEYS.range;

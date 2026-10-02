@@ -1,5 +1,5 @@
 import { normalizeLanguageCode } from '@/localization/locales';
-import type { RuntimeNotificationLevel } from '@/platform/tauri/bindings';
+import type { RuntimeNotificationLevel } from '@/platform/native/bindings';
 import { useNotificationStore } from '@/state/notificationStore';
 import { useRuntimeStore } from '@/state/runtimeStore';
 import { DEFAULT_TIME_UNIT_LABELS, useShellStore } from '@/state/shellStore';

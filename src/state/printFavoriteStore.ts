@@ -4,7 +4,7 @@ import type {
     CleanupWarning,
     PrintAutoCleanupEvent,
     PrintFavoriteState
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import {
     DEFAULT_PRINT_AUTO_DELETE_LIMIT,
     PRINT_FAVORITE_LIMIT_BUFFER

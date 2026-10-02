@@ -1,4 +1,4 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import favoritePersistenceRepository from '@/repositories/favoritePersistenceRepository';
 import { useFavoriteRevisionStore } from '@/state/favoriteRevisionStore';
 import { useFavoriteStore } from '@/state/favoriteStore';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { commands, type LogLocationSnapshot } from '@/platform/tauri/bindings';
+import { commands, type LogLocationSnapshot } from '@/platform/native/bindings';
 
 import { isLiveLocation } from './playerListRows';
 

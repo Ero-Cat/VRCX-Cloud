@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import type {
     NotificationWebhookFormat,
     TranslationProvider
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import {
     DEFAULT_OVERLAY_ACTIVITY_FILTERS,
     DEFAULT_HMD_NOTIFICATION_ACTIVITY_FILTERS,

@@ -5,7 +5,7 @@ import {
     positionKnownSizeRows
 } from '@/lib/knownSizeVirtualRows';
 import { useScrollViewportMetrics } from '@/lib/useScrollViewportMetrics';
-import type { ScreenshotLibraryImage } from '@/platform/tauri/bindings';
+import type { ScreenshotLibraryImage } from '@/platform/native/bindings';
 
 import {
     DEFAULT_SCREENSHOT_GRID_DENSITY,

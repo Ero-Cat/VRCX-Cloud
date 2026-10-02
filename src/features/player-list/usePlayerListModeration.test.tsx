@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
     getAllLocalModerations: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appModerationSyncRefresh: mocks.appModerationSyncRefresh,
         appModerationSyncUpdate: mocks.appModerationSyncUpdate

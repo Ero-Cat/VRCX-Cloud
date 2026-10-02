@@ -15,7 +15,7 @@ import { groupIdForRow } from '@/components/dialogs/user-dialog/userDialogGroupR
 import { FadeInImage } from '@/components/media/FadeInImage';
 import { TileShell } from '@/components/tile/TileShell';
 import { cn } from '@/lib/utils';
-import type { GroupMemberVisibility } from '@/platform/tauri/bindings';
+import type { GroupMemberVisibility } from '@/platform/native/bindings';
 import { openGroupDialog } from '@/services/dialogService';
 import { convertFileUrlToImageUrl } from '@/services/entityMediaService';
 import { TILE_SELECT_BOX } from '@/shared/constants/selectableTile';

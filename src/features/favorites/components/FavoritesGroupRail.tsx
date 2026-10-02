@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/layout/PageScaffold';
 import { cn } from '@/lib/utils';
-import type { FavoriteGroupVisibility } from '@/platform/tauri/bindings';
+import type { FavoriteGroupVisibility } from '@/platform/native/bindings';
 import { Badge } from '@/ui/shadcn/badge';
 import { Button } from '@/ui/shadcn/button';
 import {

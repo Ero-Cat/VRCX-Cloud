@@ -39,7 +39,7 @@ import {
 } from '@/components/layout/ToolbarControls';
 import { ToolPageHeader } from '@/components/layout/ToolPageHeader';
 import { cn } from '@/lib/utils';
-import type { GroupMemberVisibility } from '@/platform/tauri/bindings';
+import type { GroupMemberVisibility } from '@/platform/native/bindings';
 import { Button } from '@/ui/shadcn/button';
 import { ScrollArea } from '@/ui/shadcn/scroll-area';
 import {

@@ -7,7 +7,7 @@ import {
     commands,
     type AppLauncherEntry,
     type AppLauncherSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     applyServerEntry: vi.fn(),
@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
     getProfileBackupSettings: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', async () =>
+vi.mock('@/platform/native/bindings', async () =>
     (await import('@/test/mockCommands')).mockBindingsModule()
 );
 

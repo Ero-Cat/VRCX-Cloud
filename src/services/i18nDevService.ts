@@ -1,5 +1,5 @@
 import { languageCodes } from '@/localization/locales';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 
 import i18n from './i18nService';

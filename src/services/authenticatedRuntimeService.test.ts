@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { AuthenticatedRuntimePhaseSnapshot } from '@/platform/tauri/bindings';
+import type { AuthenticatedRuntimePhaseSnapshot } from '@/platform/native/bindings';
 import { useFavoriteStore } from '@/state/favoriteStore';
 import { useFriendRosterStore } from '@/state/friendRosterStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

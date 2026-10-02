@@ -2,7 +2,7 @@ import type {
     QueryOrder,
     ReleaseStatusFilter,
     WorldSearchSort
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 type UserDialogSelectOption<TValue extends string> = {
     name: string;

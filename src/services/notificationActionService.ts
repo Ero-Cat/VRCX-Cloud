@@ -7,7 +7,7 @@ import {
     type NotificationActionOutcome,
     type NotificationTarget,
     type SocialFriendMutationOutcome
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import notificationPersistenceRepository, {
     type NotificationResponse,
     type NotificationRow

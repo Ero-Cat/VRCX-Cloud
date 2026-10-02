@@ -1,4 +1,4 @@
-import type { ParsedLocation as ParsedLocationDto } from '@/platform/tauri/bindings';
+import type { ParsedLocation as ParsedLocationDto } from '@/platform/native/bindings';
 import { parseLocation, normalizeLocationValue } from '@/shared/utils/location';
 
 type LocationTextValue = string | null;

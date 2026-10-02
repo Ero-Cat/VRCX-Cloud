@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { StatusDot } from '@/components/layout/status-bar/StatusBarParts';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import type { PrivacyLockOutcome } from '@/platform/tauri/bindings';
+import type { PrivacyLockOutcome } from '@/platform/native/bindings';
 import { logoutWithoutConfirmation } from '@/services/authExecutionService';
 import { userImage } from '@/services/entityMediaService';
 import {

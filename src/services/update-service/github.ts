@@ -1,4 +1,4 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { isPreviewBuildLabel } from '@/shared/buildLabel';
 import { GITHUB_RELEASES_URL } from '@/shared/constants/settings';
 import type { ReleaseChannel } from '@/shared/utils/releaseVersion';

@@ -1,7 +1,7 @@
 import type {
     AuthenticatedSessionProjection,
     AuthenticatedSessionSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 import { normalizeString } from '@/shared/utils/string';
 import { useRuntimeStore } from '@/state/runtimeStore';

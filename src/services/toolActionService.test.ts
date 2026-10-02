@@ -9,7 +9,7 @@ const { navigate, recordRecentToolOpen, recordToolOpen } = vi.hoisted(() => ({
 vi.mock('@/services/toastService', () => ({
     toast: { add: vi.fn() }
 }));
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {}
 }));
 vi.mock('@/services/hostCapabilityService', () => ({

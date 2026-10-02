@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { hasAnyGroupModerationPermission } from '@/components/dialogs/group-dialog/groupDialogUtils';
 import type { LoadStatus } from '@/domain/shared/types';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import type { UserGroupsOverviewGroup } from '@/platform/tauri/bindings';
+import type { UserGroupsOverviewGroup } from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 
 type ModeratableGroupsStatus = LoadStatus;

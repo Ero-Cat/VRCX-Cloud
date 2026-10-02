@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { toIsoRangeEnd, toIsoRangeStart } from '@/lib/dateRange';
-import type { FriendLogHistoryCursor } from '@/platform/tauri/bindings';
+import type { FriendLogHistoryCursor } from '@/platform/native/bindings';
 import friendLogHistoryRepository from '@/repositories/friendLogHistoryRepository';
 import { useFriendLogStore } from '@/state/friendLogStore';
 import { usePreferencesStore } from '@/state/preferencesStore';

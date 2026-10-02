@@ -1,4 +1,4 @@
-import type { CurrentUserProfileUpdateRequest } from '@/platform/tauri/bindings';
+import type { CurrentUserProfileUpdateRequest } from '@/platform/native/bindings';
 import {
     profileBackgroundTextureLabel,
     profileBackgroundTextures

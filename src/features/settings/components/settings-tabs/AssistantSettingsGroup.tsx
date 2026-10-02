@@ -6,7 +6,7 @@ import {
     commands,
     type AssistantRuntimeSelection,
     type PlaybookMode
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import {
     openLlmEndpointsManager,

@@ -4,7 +4,7 @@ import type {
     CommunityThemeConfigureInput,
     CommunityThemeInstallMetadata,
     CommunityThemeProjection
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 const CATALOG_URL = 'https://themes.example.test/index.json';
 
@@ -30,11 +30,11 @@ const mocks = vi.hoisted(() => ({
     setVrcxCssLayers: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/assets', () => ({
+vi.mock('@/platform/native/assets', () => ({
     convertFileSrc: mocks.convertFileSrc
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appRefreshTrayMenu: mocks.appRefreshTrayMenu,
         appCommunityThemeDebugLoadLocalTheme:

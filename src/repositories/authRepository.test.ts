@@ -4,7 +4,7 @@ const commandMocks = vi.hoisted(() => ({
     appVrchatAuthSavedSnapshotGet: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: commandMocks
 }));
 

@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import type { PrivacyLockOutcome } from '@/platform/tauri/bindings';
+import type { PrivacyLockOutcome } from '@/platform/native/bindings';
 import {
     changePrivacyLockPassword,
     clearPrivacyLockPassword,

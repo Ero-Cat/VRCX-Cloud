@@ -7,7 +7,7 @@ import type {
     VrchatGroupGalleryInput,
     VrchatGroupMembersInput,
     VrchatWorldListByUserInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { MINUTE_MS, SECOND_MS } from '@/shared/constants/time';
 import { normalizeVrchatEndpointKey } from '@/shared/vrchatEndpoint';
 

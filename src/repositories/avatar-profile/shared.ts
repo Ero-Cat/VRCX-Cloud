@@ -1,7 +1,7 @@
 import type {
     HttpApiExecuteResponse,
     VrchatAvatarIdInput as IpcVrchatAvatarIdInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 
 import { unwrapVrchatResponse } from '../vrchatRequest';

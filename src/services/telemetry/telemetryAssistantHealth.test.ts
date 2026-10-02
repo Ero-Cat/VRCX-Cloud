@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { TelemetryClientEvent } from '@/platform/tauri/bindings';
+import type { TelemetryClientEvent } from '@/platform/native/bindings';
 
 afterEach(() => {
     vi.resetModules();
@@ -12,7 +12,7 @@ function mockTelemetryCommand() {
         void event;
         return Promise.resolve(null);
     });
-    vi.doMock('@/platform/tauri/bindings', () => ({
+    vi.doMock('@/platform/native/bindings', () => ({
         commands: { appTelemetryRecordEvent }
     }));
     return { appTelemetryRecordEvent };

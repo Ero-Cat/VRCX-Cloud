@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { FavoriteChangeScope } from '@/platform/tauri/bindings';
+import type { FavoriteChangeScope } from '@/platform/native/bindings';
 
 interface FavoritePendingRevision {
     revision: number;

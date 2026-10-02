@@ -28,7 +28,7 @@ import {
 } from '@/lib/entityQueryCache';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
 import { cn } from '@/lib/utils';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import vrchatToolsRepository, {
     type GroupCalendarEventRecord,

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { IndeterminateProgress } from '@/components/IndeterminateProgress';
 import { useCriticalTask } from '@/lib/useCriticalTask';
-import type { DatabaseUpgradeStage } from '@/platform/tauri/bindings';
+import type { DatabaseUpgradeStage } from '@/platform/native/bindings';
 import {
     confirmLegacyDatabaseMigration,
     createDatabaseUpgradeGitHubIssue,

@@ -1,4 +1,4 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import avatarProfileRepository from '@/repositories/avatarProfileRepository';
 import myAvatarRepository from '@/repositories/myAvatarRepository';
 import { isRecord } from '@/shared/utils/record';

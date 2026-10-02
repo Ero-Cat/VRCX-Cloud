@@ -2,7 +2,7 @@ import type {
     DebugLoggingOutcome,
     GameLogProjection,
     HostSessionProjection
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useModalStore } from '@/state/modalStore';
 import { useNotificationStore } from '@/state/notificationStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

@@ -1,7 +1,7 @@
 import {
     commands,
     type VrchatAvatarModerationInput as IpcVrchatAvatarModerationInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import { isRecord, unwrapVrchatAvatarResponse } from './shared';
 import type {

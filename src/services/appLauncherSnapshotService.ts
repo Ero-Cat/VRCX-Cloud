@@ -2,7 +2,7 @@ import {
     commands,
     type AppLauncherSnapshot,
     type AppLauncherSnapshotEvent
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 type AppLauncherSnapshotListener = (snapshot: AppLauncherSnapshot) => void;
 

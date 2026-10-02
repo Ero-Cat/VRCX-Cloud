@@ -27,7 +27,7 @@ vi.mock('@/repositories/groupProfileRepository', () => ({
 vi.mock('@/repositories/userProfileRepository', () => ({ default: {} }));
 vi.mock('@/repositories/vrchatFavoriteRepository', () => ({ default: {} }));
 vi.mock('@/repositories/worldProfileRepository', () => ({ default: {} }));
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: { appUserDialogTabCountsGet: vi.fn(async () => ({})) }
 }));
 

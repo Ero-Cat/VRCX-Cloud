@@ -10,7 +10,7 @@ import {
     ToolbarViews
 } from '@/components/layout/ToolbarControls';
 import { cn } from '@/lib/utils';
-import type { VrchatLogFileOutput } from '@/platform/tauri/bindings';
+import type { VrchatLogFileOutput } from '@/platform/native/bindings';
 import { Button } from '@/ui/shadcn/button';
 import {
     DropdownMenuCheckboxItem,

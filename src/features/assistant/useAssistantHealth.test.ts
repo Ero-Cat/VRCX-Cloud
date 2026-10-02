@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
     appLlmEndpointDetectModels: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appLlmEndpointDetectModels: mocks.appLlmEndpointDetectModels
     }

@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
 import { cn } from '@/lib/utils';
 import { getLanguageName, languageCodes } from '@/localization/index';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import {
     loadLocalCommunityThemePreview,
     startLocalCommunityThemePreviewWatch,

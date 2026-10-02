@@ -14,7 +14,7 @@ import {
 import { FadeInImage } from '@/components/media/FadeInImage';
 import { TileShell } from '@/components/tile/TileShell';
 import { cn } from '@/lib/utils';
-import type { MediaFileTag } from '@/platform/tauri/bindings';
+import type { MediaFileTag } from '@/platform/native/bindings';
 import vrchatMediaRepository from '@/repositories/vrchatMediaRepository';
 import { toast } from '@/services/toastService';
 import {

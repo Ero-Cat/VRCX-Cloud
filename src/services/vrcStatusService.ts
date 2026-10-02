@@ -1,4 +1,4 @@
-import { commands, type VrcStatusSnapshot } from '@/platform/tauri/bindings';
+import { commands, type VrcStatusSnapshot } from '@/platform/native/bindings';
 import { MINUTE_MS } from '@/shared/constants/time';
 import { useRuntimeStore } from '@/state/runtimeStore';
 

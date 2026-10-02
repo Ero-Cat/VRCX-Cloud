@@ -16,7 +16,7 @@ import type {
 } from '@/domain/entities/user';
 import { invalidateEntityQueries, queryKeys } from '@/lib/entityQueryCache';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import type { CurrentUserProfileUpdateRequest } from '@/platform/tauri/bindings';
+import type { CurrentUserProfileUpdateRequest } from '@/platform/native/bindings';
 import userProfileRepository from '@/repositories/userProfileRepository';
 import currentUserProfileService from '@/services/currentUserProfileService';
 import { toast } from '@/services/toastService';

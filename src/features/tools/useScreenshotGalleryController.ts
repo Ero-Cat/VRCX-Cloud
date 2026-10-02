@@ -7,7 +7,7 @@ import {
     type ScreenshotFolderTree,
     type ScreenshotLibraryImage,
     type ScreenshotLibraryScanStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import {
     getCurrentScreenshotLibraryScanStatus,

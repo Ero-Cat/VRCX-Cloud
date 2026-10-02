@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { InviteMessageType } from '@/platform/tauri/bindings';
+import type { InviteMessageType } from '@/platform/native/bindings';
 import {
     Dialog,
     DialogContent,

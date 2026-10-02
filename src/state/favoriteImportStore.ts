@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { FavoriteEntityKind } from '@/platform/tauri/bindings';
+import type { FavoriteEntityKind } from '@/platform/native/bindings';
 
 type FavoriteImportType = FavoriteEntityKind;
 export type FavoriteImportRow = {

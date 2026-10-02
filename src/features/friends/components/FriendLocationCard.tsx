@@ -19,7 +19,7 @@ import {
 import type { FriendRecord } from '@/domain/friends/types';
 import { useFriendLocationTimeEpoch } from '@/lib/useFriendLocationTimeEpoch';
 import { cn } from '@/lib/utils';
-import type { FriendLocationTimeSource } from '@/platform/tauri/bindings';
+import type { FriendLocationTimeSource } from '@/platform/native/bindings';
 import { userImage } from '@/services/entityMediaService';
 import { normalizeUserStatus } from '@/shared/utils/friendStatus';
 import { normalizeLocationValue, parseLocation } from '@/shared/utils/location';

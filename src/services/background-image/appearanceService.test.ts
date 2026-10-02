@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { BackgroundImageSnapshot } from '@/platform/tauri/bindings';
+import type { BackgroundImageSnapshot } from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     backgroundState: {

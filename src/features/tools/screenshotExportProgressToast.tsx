@@ -1,4 +1,4 @@
-import type { ScreenshotExportProgress } from '@/platform/tauri/bindings';
+import type { ScreenshotExportProgress } from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { Progress } from '@/ui/shadcn/progress';
 import { Spinner } from '@/ui/shadcn/spinner';

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_SCREENSHOT_GRID_DENSITY } from '@/components/media/screenshotGridPreferences';
 import { useTileSelectionState } from '@/lib/useTileSelectionState';
-import type { ScreenshotLibraryImage } from '@/platform/tauri/bindings';
+import type { ScreenshotLibraryImage } from '@/platform/native/bindings';
 
 import type {
     ScreenshotMetadataSearchType,

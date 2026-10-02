@@ -1,5 +1,5 @@
 import type { FriendPatchEntry } from '@/domain/friends/types';
-import type { FriendLocationTime } from '@/platform/tauri/bindings';
+import type { FriendLocationTime } from '@/platform/native/bindings';
 import type { RealtimeUserRecord } from '@/services/runtime-event-bridge/realtimeProjectionTypes';
 import { useFriendLocationTimeStore } from '@/state/friendLocationTimeStore';
 import { useFriendLogStore } from '@/state/friendLogStore';

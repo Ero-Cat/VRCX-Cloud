@@ -1,5 +1,5 @@
 import { normalizeLanguageCode } from '@/localization/locales';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import storageRepository from '@/repositories/storageRepository';
 import { getPrefetchedSystemCulture } from '@/services/startupBootstrapSnapshot';

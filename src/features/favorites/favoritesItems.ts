@@ -1,5 +1,5 @@
 import type { FavoriteKind } from '@/domain/favorites/types';
-import type { VrchatFavoriteType } from '@/platform/tauri/bindings';
+import type { VrchatFavoriteType } from '@/platform/native/bindings';
 import { convertFileUrlToImageUrl } from '@/services/entityMediaService';
 
 type SortableFavoriteItem = {

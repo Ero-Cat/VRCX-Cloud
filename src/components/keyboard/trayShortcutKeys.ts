@@ -1,4 +1,4 @@
-import type { TrayShortcutBinding } from '@/platform/tauri/bindings';
+import type { TrayShortcutBinding } from '@/platform/native/bindings';
 
 export function trayShortcutKeys(binding: TrayShortcutBinding): string[] {
     const keys: string[] = [];

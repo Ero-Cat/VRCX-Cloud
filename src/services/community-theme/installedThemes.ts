@@ -8,7 +8,7 @@ import {
     commands,
     type CommunityThemeConfigureInput,
     type CommunityThemeProjection
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useCommunityThemeStore } from '@/state/communityThemeStore';
 
 import {

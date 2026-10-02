@@ -2,7 +2,7 @@ import {
     commands,
     type InstanceLaunchMode,
     type InstanceLaunchOutcome
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { normalizeString } from '@/shared/utils/string';
 
 function failedReason(outcome: InstanceLaunchOutcome): string {

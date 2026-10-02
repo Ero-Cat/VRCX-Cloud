@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
     commands,
     type SavedGroupFavoritesSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { useModalStore } from '@/state/modalStore';
 import { Button } from '@/ui/shadcn/button';

@@ -3,7 +3,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ScreenshotLibraryScanStatus } from '@/platform/tauri/bindings';
+import type { ScreenshotLibraryScanStatus } from '@/platform/native/bindings';
 
 type ScanStatusListener = (status: ScreenshotLibraryScanStatus) => void;
 
@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
     unsubscribe: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appGetWorldScreenshots: mocks.getWorldScreenshots
     }

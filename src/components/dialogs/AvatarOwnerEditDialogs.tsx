@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { FadeInImage } from '@/components/media/FadeInImage';
 import { cn } from '@/lib/utils';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import avatarProfileRepository from '@/repositories/avatarProfileRepository';
 import myAvatarRepository from '@/repositories/myAvatarRepository';
 import { convertFileUrlToImageUrl } from '@/services/entityMediaService';

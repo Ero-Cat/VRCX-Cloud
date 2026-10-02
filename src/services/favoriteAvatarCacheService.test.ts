@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { useFavoriteStore } from '@/state/favoriteStore';
 
 import {
@@ -8,7 +8,7 @@ import {
     cacheFavoriteAvatarDetails
 } from './favoriteAvatarCacheService';
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appFavoriteCacheSnapshot: vi.fn()
     }

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeVrchatAuthFailurePayload } from '@/platform/tauri/bindings';
+import type { RuntimeVrchatAuthFailurePayload } from '@/platform/native/bindings';
 import type { AppToastOptions } from '@/services/toastService';
 
 const recoveryMocks = vi.hoisted(() => ({

@@ -3,7 +3,7 @@ import {
     type TrayShortcutBinding,
     type TrayShortcutError,
     type TrayShortcutUpdate
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useTrayShortcutStore } from '@/state/trayShortcutStore';
 
 let initialization: Promise<void> | null = null;

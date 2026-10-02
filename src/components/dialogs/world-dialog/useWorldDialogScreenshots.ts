@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
     commands,
     type ScreenshotLibraryImage
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import {
     getCurrentScreenshotLibraryScanStatus,
     startScreenshotLibraryScan,

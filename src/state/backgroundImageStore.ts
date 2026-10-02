@@ -5,7 +5,7 @@ import type {
     BackgroundImageMode,
     BackgroundImageProviderId,
     BackgroundImageSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 interface BackgroundImageStore {
     mode: BackgroundImageMode;

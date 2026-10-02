@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     commands,
     type ResolvedFriendLogName
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useFriendRosterStore } from '@/state/friendRosterStore';
 import { useRuntimeStore } from '@/state/runtimeStore';
 import { useUserFactsStore } from '@/state/userFactsStore';
@@ -14,7 +14,7 @@ import { useUserFactsStore } from '@/state/userFactsStore';
 import type { FriendLogRow } from './friendLogRows';
 import { useFriendLogResolvedNames } from './useFriendLogResolvedNames';
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appFriendLogNamesResolve: vi.fn(),
         appFriendLogNamesCancel: vi.fn()

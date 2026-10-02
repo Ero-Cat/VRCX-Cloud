@@ -5,7 +5,7 @@ import {
     type LocalFavoriteInput as IpcLocalFavoriteInput,
     type FavoriteEntityKind,
     type FavoriteRow
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import configRepository from './configRepository';
 

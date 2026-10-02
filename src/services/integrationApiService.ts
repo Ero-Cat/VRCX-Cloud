@@ -1,7 +1,7 @@
 import type {
     IntegrationApiStartFailedPayload,
     IntegrationApiStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 
 import i18n from './i18nService';

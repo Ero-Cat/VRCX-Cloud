@@ -8,7 +8,7 @@ import {
     tagsKey
 } from '@/components/dialogs/avatarDetailsModel';
 import type { LoadStatus } from '@/domain/shared/types';
-import type { AvatarUpdateRequest } from '@/platform/tauri/bindings';
+import type { AvatarUpdateRequest } from '@/platform/native/bindings';
 import avatarProfileRepository, {
     type AvatarProfileRecord,
     type AvatarStyleRecord

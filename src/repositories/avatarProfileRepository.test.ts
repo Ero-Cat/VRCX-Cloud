@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
     appVrchatAvatarSelectFallback: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appAvatarGet: mocks.appAvatarGet,
         appAvatarFindByImageUrl: mocks.appAvatarFindByImageUrl,

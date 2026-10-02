@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
-import { commands } from '@/platform/tauri/bindings';
-import { tauriEvents } from '@/platform/tauri/events';
+import { commands } from '@/platform/native/bindings';
+import { tauriEvents } from '@/platform/native/events';
 import {
     closePrivacyLockDialog,
     openPrivacyLockDialog,

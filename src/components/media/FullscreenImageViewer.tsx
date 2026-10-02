@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { Button } from '@/ui/shadcn/button';
 import { Dialog, DialogContent, DialogTitle } from '@/ui/shadcn/dialog';

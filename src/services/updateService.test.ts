@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
     fetchGithubReleases: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appExternalApiGithubReleasesGet: mocks.fetchGithubReleases
     }

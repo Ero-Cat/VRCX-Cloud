@@ -13,7 +13,7 @@ import {
     type LlmEndpointDetectModelsResult,
     type LlmEndpointDto,
     type LlmModelReasoning
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { mergeModels, useLlmEndpointsStore } from '@/state/llmEndpointsStore';
 import { Badge } from '@/ui/shadcn/badge';

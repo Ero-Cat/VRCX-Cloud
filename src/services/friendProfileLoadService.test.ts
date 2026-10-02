@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { FriendProfileLoadStatusPayload } from '@/platform/tauri/bindings';
+import type { FriendProfileLoadStatusPayload } from '@/platform/native/bindings';
 import { useRuntimeStore } from '@/state/runtimeStore';
 
 const mocks = vi.hoisted(() => ({
@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
     toastAdd: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appFriendProfileLoadStart: mocks.appFriendProfileLoadStart,
         appFriendProfileLoadCancel: mocks.appFriendProfileLoadCancel

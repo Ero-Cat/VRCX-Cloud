@@ -8,11 +8,8 @@
  */
 
 export function isWebPlatform(): boolean {
-    return (
-        typeof window !== 'undefined' &&
-        (window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ ===
-            undefined
-    );
+    // Browser-only build.
+    return true;
 }
 
 export type WebErrorCode =

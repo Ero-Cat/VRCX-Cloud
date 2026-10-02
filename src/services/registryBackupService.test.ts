@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
     appDeleteVrchatRegistryFolder: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appRegistryBackupList: mocks.appRegistryBackupList,
         appRegistryBackupCreate: mocks.appRegistryBackupCreate,

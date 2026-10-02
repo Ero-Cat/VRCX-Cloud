@@ -5,7 +5,7 @@ import {
     type DataDirMigrationMode,
     type DataDirMigrationPlan,
     type DataDirMigrationResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export type {
     DataDirCleanupPending,
@@ -18,7 +18,7 @@ export type {
     DataDirMigrationResult,
     DataDirMigrationStatus,
     DataDirMigrationWarning
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export function planDataDirMigration(
     path: string

@@ -17,7 +17,7 @@ import type {
     SavedAuthAutoLoginStatus,
     RuntimeGroupInstancesStatus,
     VrcStatusSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { MINUTE_MS } from '@/shared/constants/time';
 
 type TaskState = {

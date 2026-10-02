@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import type {
     SharedCollectionImportState,
     SharedCollectionImportStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 type WorldCollectionImportState = {
     active: boolean;

@@ -1,7 +1,7 @@
 import type {
     LlmEndpointDto,
     LlmModelReasoning
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 const OPENROUTER_CANONICAL_BASE_URL = 'https://openrouter.ai/api/v1';
 

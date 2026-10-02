@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { GroupProfileRecord } from '@/domain/entities/group';
-import type { GroupProfileUpdate } from '@/platform/tauri/bindings';
+import type { GroupProfileUpdate } from '@/platform/native/bindings';
 import { Button } from '@/ui/shadcn/button';
 import { Checkbox } from '@/ui/shadcn/checkbox';
 import {

@@ -1,5 +1,5 @@
-import { commands } from '@/platform/tauri/bindings';
-import type { AppDataDirState } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
+import type { AppDataDirState } from '@/platform/native/bindings';
 
 export async function openExternalLink(url: string): Promise<void> {
     await commands.appOpenLink(url);

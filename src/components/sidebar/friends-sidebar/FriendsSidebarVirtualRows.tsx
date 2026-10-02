@@ -1,7 +1,7 @@
 import { ListSectionHeader } from '@/components/layout/ListSectionHeader';
 import type { LocationMetadata } from '@/components/location/useLocationMetadata';
 import { cn } from '@/lib/utils';
-import type { UserStatus } from '@/platform/tauri/bindings';
+import type { UserStatus } from '@/platform/native/bindings';
 import type { LocalInstanceActionGates } from '@/shared/utils/invite';
 import type { TrustColorMap } from '@/shared/utils/trustColors';
 import type { FriendLocationTimeEntry } from '@/state/friendLocationTimeStore';

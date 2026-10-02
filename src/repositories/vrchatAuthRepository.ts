@@ -2,7 +2,7 @@ import {
     commands,
     type HttpApiExecuteResponse,
     type VrchatAuthFileAnalysisInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
 
 import {

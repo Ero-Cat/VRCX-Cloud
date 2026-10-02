@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type {
     LlmEndpointDto,
     LlmModelReasoning
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import {
     getEffectiveReasoningEffort,

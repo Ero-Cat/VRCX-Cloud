@@ -3,8 +3,8 @@ import {
     type SavedAuthSnapshot,
     type SavedCredentialSnapshot,
     type SavedCredentialUser
-} from '@/platform/tauri/bindings';
-import { normalizePlatformError } from '@/platform/tauri/errors';
+} from '@/platform/native/bindings';
+import { normalizePlatformError } from '@/platform/native/errors';
 
 export type SavedCredentialRecord = SavedCredentialSnapshot;
 export type { SavedAuthSnapshot, SavedCredentialUser };

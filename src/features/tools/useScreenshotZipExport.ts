@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
     commands,
     type ScreenshotExportProgress
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { subscribeScreenshotExportProgress } from '@/services/screenshotExportService';
 import { toast } from '@/services/toastService';
 

@@ -1,4 +1,4 @@
-import { commands, type PrivacyLockOutcome } from '@/platform/tauri/bindings';
+import { commands, type PrivacyLockOutcome } from '@/platform/native/bindings';
 import { openPrivacyLockDialog } from '@/state/privacyLockDialogStore';
 import { useRuntimeStore } from '@/state/runtimeStore';
 

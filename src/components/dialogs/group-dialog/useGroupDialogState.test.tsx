@@ -28,7 +28,7 @@ vi.mock('@/services/toastService', () => ({
     toast: { add: mocks.toastAdd }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appVrchatGroupDelete: mocks.appVrchatGroupDelete,
         appVrchatGroupUpdate: mocks.appVrchatGroupUpdate

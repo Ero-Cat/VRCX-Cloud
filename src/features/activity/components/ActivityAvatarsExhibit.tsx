@@ -2,7 +2,7 @@ import { ShirtIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { FadeInImage } from '@/components/media/FadeInImage';
-import type { AvatarUsageRow } from '@/platform/tauri/bindings';
+import type { AvatarUsageRow } from '@/platform/native/bindings';
 import { openAvatarDialog } from '@/services/dialogService';
 
 import { Exhibit } from './ActivityExhibit';

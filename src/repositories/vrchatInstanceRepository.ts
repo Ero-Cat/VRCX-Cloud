@@ -12,7 +12,7 @@ import {
     type InstanceCreateRegion,
     type InstanceCreateRequest,
     type InstanceCreateType
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { parseLocation } from '@/shared/utils/location';
 import { isRecord } from '@/shared/utils/record';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';

@@ -1,4 +1,4 @@
-import type { LlmModelReasoning } from '@/platform/tauri/bindings';
+import type { LlmModelReasoning } from '@/platform/native/bindings';
 
 export const CUSTOM_LLM_ENDPOINT_PROVIDER_ID = 'custom';
 export const DEFAULT_LLM_ENDPOINT_PROVIDER_ID = 'openai';

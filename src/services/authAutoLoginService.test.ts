@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
     SavedAuthSnapshot,
     SavedCredentialSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import type { AppToastOptions } from '@/services/toastService';
 
 const mocks = vi.hoisted(() => ({
@@ -39,7 +39,7 @@ vi.mock('@/services/toastService', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appAuthFailureNotificationShow: mocks.appAuthFailureNotificationShow,
         appVrchatAuthAutoLoginStart: mocks.autoLoginStart,
@@ -48,7 +48,7 @@ vi.mock('@/platform/tauri/bindings', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/webview', () => ({
+vi.mock('@/platform/native/webview', () => ({
     flashWindow: mocks.flashWindow
 }));
 

@@ -4,7 +4,7 @@ import {
     type HttpApiExecuteResponse,
     type UserSearchParams,
     type WorldSearchParams
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import {
     type VrchatRequestResponse,

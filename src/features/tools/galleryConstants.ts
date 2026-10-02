@@ -1,4 +1,4 @@
-import type { MediaFileTag } from '@/platform/tauri/bindings';
+import type { MediaFileTag } from '@/platform/native/bindings';
 import type {
     InventoryItemRecord,
     MediaFileRecord,

@@ -1,8 +1,8 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     AncillaryRuntimeSnapshot,
     BackendRuntimeCombinedSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useDataDirMigrationStore } from '@/state/dataDirMigrationStore';
 import { useProfileBackupStore } from '@/state/profileBackupStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

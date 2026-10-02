@@ -5,7 +5,7 @@ import type {
     BackendRuntimeSnapshot,
     HostSessionProjection,
     MutualGraphFetchStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     subscribe:
@@ -38,7 +38,7 @@ const mocks = vi.hoisted(() => ({
         vi.fn<(projection: unknown) => Promise<boolean>>()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appBackendRuntimeCombinedSnapshotGet:
             mocks.getBackendRuntimeCombinedSnapshot,
@@ -47,7 +47,7 @@ vi.mock('@/platform/tauri/bindings', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/client', () => ({
+vi.mock('@/platform/native/client', () => ({
     tauriClient: {
         events: {
             subscribe: mocks.subscribe
@@ -217,7 +217,7 @@ function createAuthenticatedRuntimePhaseSnapshot(
 
 function createAncillaryRuntimeSnapshot(
     patch: Partial<
-        import('@/platform/tauri/bindings').AncillaryRuntimeSnapshot
+        import('@/platform/native/bindings').AncillaryRuntimeSnapshot
     > = {}
 ) {
     return {
@@ -313,7 +313,7 @@ function createAncillaryRuntimeSnapshot(
 
 function createBackendRuntimeCombinedSnapshot(
     patch: Partial<
-        import('@/platform/tauri/bindings').BackendRuntimeCombinedSnapshot
+        import('@/platform/native/bindings').BackendRuntimeCombinedSnapshot
     > = {}
 ) {
     return {

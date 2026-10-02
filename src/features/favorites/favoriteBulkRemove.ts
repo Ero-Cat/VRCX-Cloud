@@ -2,7 +2,7 @@ import type { FavoriteKind } from '@/domain/favorites/types';
 import type {
     FavoriteBulkRemoveInput,
     FavoriteBulkRemoveResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import type { FavoriteItem } from './favoritesTypes';
 

@@ -7,7 +7,7 @@ import {
     type VrchatFavoriteGroupSaveInput,
     type VrchatFavoriteGroupsInput,
     type VrchatFavoriteWorldsInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import { collectPages } from './pagination';
 import { unwrapVrchatResponse } from './vrchatRequest';

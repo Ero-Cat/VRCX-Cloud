@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { FadeInImage } from '@/components/media/FadeInImage';
 import { formatClock } from '@/lib/dateTime';
 import { cn } from '@/lib/utils';
-import type { BrowseHistoryItemOutput } from '@/platform/tauri/bindings';
+import type { BrowseHistoryItemOutput } from '@/platform/native/bindings';
 import {
     openAvatarDialog,
     openGroupDialog,

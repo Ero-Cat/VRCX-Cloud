@@ -13,7 +13,7 @@ import { FadeInImage } from '@/components/media/FadeInImage';
 import type { FriendRosterById } from '@/domain/friends/types';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
 import { cn } from '@/lib/utils';
-import { commands, type NoteExportStatus } from '@/platform/tauri/bindings';
+import { commands, type NoteExportStatus } from '@/platform/native/bindings';
 import { openUserDialog } from '@/services/dialogService';
 import { userImage } from '@/services/entityMediaService';
 import { subscribeRuntimeEvent } from '@/services/runtime-event-bridge/subscription';

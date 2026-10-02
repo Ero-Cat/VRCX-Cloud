@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
-import type { ActivityPageAccessSlice } from '@/platform/tauri/bindings';
+import type { ActivityPageAccessSlice } from '@/platform/native/bindings';
 
 import {
     accessBucketLabelKey,

@@ -1,4 +1,4 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { normalizeString } from '@/shared/utils/string';
 
 import configRepository from './configRepository';

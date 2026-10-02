@@ -6,7 +6,7 @@ import {
     type AvatarCacheOutput,
     commands,
     type FavoriteGroupVisibility
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import avatarLocalRepository from '@/repositories/avatarLocalRepository';
 import favoritePersistenceRepository from '@/repositories/favoritePersistenceRepository';
 import vrchatFavoriteRepository from '@/repositories/vrchatFavoriteRepository';

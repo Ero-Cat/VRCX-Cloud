@@ -32,7 +32,7 @@ vi.mock('@/services/toastService', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: { appDeleteScreenshotFile: mocks.deleteScreenshotFile }
 }));
 

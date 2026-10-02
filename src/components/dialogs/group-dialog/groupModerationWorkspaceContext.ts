@@ -1,4 +1,4 @@
-import type { GroupModerationBatchProgress } from '@/platform/tauri/bindings';
+import type { GroupModerationBatchProgress } from '@/platform/native/bindings';
 
 interface GroupModerationBatchProgressEvent {
     count: number;

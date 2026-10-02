@@ -50,7 +50,6 @@ export const settingsTabs = [
     ['notifications', 'view.settings.category.notifications'],
     ['media', 'view.settings.category.media'],
     ['ai', 'view.settings.category.ai'],
-    ['sync', 'view.settings.category.sync'],
     ['advanced', 'view.settings.category.advanced']
 ];
 

@@ -1,5 +1,5 @@
 import type { FeedReadModelResult } from '@/domain/feed/readModel';
-import type { FeedFilter, FeedRowOutput } from '@/platform/tauri/bindings';
+import type { FeedFilter, FeedRowOutput } from '@/platform/native/bindings';
 
 import configRepository from './configRepository';
 import feedPersistenceRepository from './feedPersistenceRepository';

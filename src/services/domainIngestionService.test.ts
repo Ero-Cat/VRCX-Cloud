@@ -6,7 +6,7 @@ const tauriMock = vi.hoisted(() => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({ commands: tauriMock.commands }));
+vi.mock('@/platform/native/bindings', () => ({ commands: tauriMock.commands }));
 
 import { flushPendingUserFactEntries } from '@/services/userFactAccessService';
 import { useInstancePresenceStore } from '@/state/instancePresenceStore';

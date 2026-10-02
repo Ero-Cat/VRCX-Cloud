@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
     BackgroundImageCustomSource,
     BackgroundImageProjection
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     appBackgroundImageStateGet: vi.fn(),
@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => ({
     syncBackgroundImageAppearance: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appBackgroundImageStateGet: mocks.appBackgroundImageStateGet,
         appBackgroundImageConfigure: mocks.appBackgroundImageConfigure,
@@ -32,7 +32,7 @@ vi.mock('@/platform/tauri/bindings', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/assets', () => ({
+vi.mock('@/platform/native/assets', () => ({
     convertFileSrc: mocks.convertFileSrc
 }));
 

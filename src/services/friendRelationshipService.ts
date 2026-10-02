@@ -2,7 +2,7 @@ import {
     commands,
     type SocialUnfriendBatchItemResult,
     type SocialUnfriendBatchResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { signalFriendLogChanged } from '@/services/friendLogMutationService';
 import { useRuntimeStore } from '@/state/runtimeStore';
 

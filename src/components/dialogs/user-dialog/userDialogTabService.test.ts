@@ -4,7 +4,7 @@ const { appUserDialogTabCountsGet } = vi.hoisted(() => ({
     appUserDialogTabCountsGet: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appUserDialogTabCountsGet
     }

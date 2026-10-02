@@ -2,7 +2,7 @@ import { Trash2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { normalizeAvatarAutoCleanupPreference } from '@/shared/constants/settings';
 import { Button } from '@/ui/shadcn/button';

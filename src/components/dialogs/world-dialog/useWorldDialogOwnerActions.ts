@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { WorldProfileRecord } from '@/domain/entities/world';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import type { WorldUpdateRequest } from '@/platform/tauri/bindings';
+import type { WorldUpdateRequest } from '@/platform/native/bindings';
 import worldProfileRepository from '@/repositories/worldProfileRepository';
 import { toast } from '@/services/toastService';
 

@@ -8,7 +8,7 @@ const configMocks = vi.hoisted(() => ({
     getInt: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({ commands: commandMocks }));
+vi.mock('@/platform/native/bindings', () => ({ commands: commandMocks }));
 vi.mock('./configRepository', () => ({ default: configMocks }));
 
 import { queryNotifications } from './notificationPersistenceRepository';

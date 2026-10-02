@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { PresenceEntry } from '@/platform/tauri/bindings';
+import type { PresenceEntry } from '@/platform/native/bindings';
 import { onlinePresence } from '@/test/presenceFixtures';
 
 import { useFriendRosterStore } from './friendRosterStore';

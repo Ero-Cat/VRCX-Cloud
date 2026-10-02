@@ -2,7 +2,7 @@ import {
     commands,
     type InstanceActivityRowOutput,
     type WorldSummaryOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export interface InstanceActivityRow {
     id: number;

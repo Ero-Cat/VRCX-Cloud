@@ -26,7 +26,7 @@ import { FadeInImage } from '@/components/media/FadeInImage';
 import type {
     FavoriteEntityKind,
     FavoriteImportLocation
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import {
     openAvatarDialog,
     openUserDialog,

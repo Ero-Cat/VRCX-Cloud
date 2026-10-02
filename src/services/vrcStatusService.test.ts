@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { VrcStatusSnapshot } from '@/platform/tauri/bindings';
+import type { VrcStatusSnapshot } from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     get: vi.fn<() => Promise<VrcStatusSnapshot>>(),
     refresh: vi.fn<() => Promise<VrcStatusSnapshot>>()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appVrcStatusGet: mocks.get,
         appVrcStatusRefresh: mocks.refresh

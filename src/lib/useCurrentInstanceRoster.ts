@@ -6,7 +6,7 @@ import {
     type CurrentInstanceRosterPlayer
 } from '@/domain/instances/currentInstanceRoster';
 import { userFacingErrorMessage } from '@/lib/errorDisplay';
-import type { LogLocationSnapshot } from '@/platform/tauri/bindings';
+import type { LogLocationSnapshot } from '@/platform/native/bindings';
 import { loadCurrentInstanceRoster } from '@/services/currentInstanceRosterService';
 import { recordGameRuntimePresence } from '@/services/domainIngestionService';
 import { parseLocation } from '@/shared/utils/location';

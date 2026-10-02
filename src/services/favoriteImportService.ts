@@ -5,7 +5,7 @@ import {
     type FavoriteImportStatus,
     type FavoriteImportTarget,
     type VrchatFavoriteType
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import i18n from '@/services/i18nService';
 import { isRecord } from '@/shared/utils/record';
 import { normalizeString } from '@/shared/utils/string';

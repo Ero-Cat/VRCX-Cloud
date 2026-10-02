@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
     AuthenticatedSessionProjection,
     AuthenticatedSessionSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     recordCurrentUserSnapshot: vi.fn(),

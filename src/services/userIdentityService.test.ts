@@ -6,7 +6,7 @@ const tauriMock = vi.hoisted(() => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({ commands: tauriMock.commands }));
+vi.mock('@/platform/native/bindings', () => ({ commands: tauriMock.commands }));
 
 import { useFriendRosterStore } from '@/state/friendRosterStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

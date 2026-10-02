@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
     FavoriteImportStartInput,
     FavoriteImportStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 const AVATAR_ID = 'avtr_00000000-0000-0000-0000-000000000001';
 
@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
     translate: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appFavoriteImportStart: mocks.favoriteImportStart,
         appFavoriteImportStatus: mocks.favoriteImportStatus,

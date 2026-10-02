@@ -10,7 +10,7 @@ const tauriMock = vi.hoisted(() => ({
     commands: tauriApp
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({ commands: tauriMock.commands }));
+vi.mock('@/platform/native/bindings', () => ({ commands: tauriMock.commands }));
 
 import { clearEntityQueryCache } from '@/lib/entityQueryCache';
 

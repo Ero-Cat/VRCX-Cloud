@@ -66,7 +66,7 @@ vi.mock('@/components/media/ScreenshotThumbnailCard', () => ({
     useScreenshotThumbnailTitleMap: () => new Map()
 }));
 
-import type { ScreenshotLibraryImage } from '@/platform/tauri/bindings';
+import type { ScreenshotLibraryImage } from '@/platform/native/bindings';
 
 import { useScreenshotBrowseSelection } from '../useScreenshotBrowseSelection';
 import { ScreenshotGalleryView } from './ScreenshotGalleryView';

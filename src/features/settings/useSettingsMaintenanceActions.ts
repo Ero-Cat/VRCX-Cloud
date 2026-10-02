@@ -1,4 +1,4 @@
-import type { commands } from '@/platform/tauri/bindings';
+import type { commands } from '@/platform/native/bindings';
 import {
     openFolderSelectorDialog,
     restartApplication

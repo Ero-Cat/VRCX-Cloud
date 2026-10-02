@@ -1,9 +1,9 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     PlayerListSnapshotContext,
     PlayerListSnapshotOutput,
     PlayerListSnapshotPlayer
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { normalizeString } from '@/shared/utils/string';
 
 type PlayerListContext = PlayerListSnapshotContext;

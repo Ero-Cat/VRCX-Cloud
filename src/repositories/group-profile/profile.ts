@@ -7,8 +7,8 @@ import {
     fetchCachedData,
     queryKeys
 } from '@/lib/entityQueryCache';
-import { commands } from '@/platform/tauri/bindings';
-import type { UserGroupsOverviewOutput } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
+import type { UserGroupsOverviewOutput } from '@/platform/native/bindings';
 import { createDefaultGroupRef } from '@/shared/utils/groupTransforms';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
 

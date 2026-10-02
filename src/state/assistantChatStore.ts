@@ -11,7 +11,7 @@ import type {
     SessionSummary,
     UIMessage
 } from '@/domain/assistant/types';
-import type { Message, Session } from '@/platform/tauri/bindings';
+import type { Message, Session } from '@/platform/native/bindings';
 
 interface AssistantChatState {
     open: boolean;

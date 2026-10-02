@@ -1,9 +1,9 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     ModerationSyncMutationInput as ModerationSyncUpdateInput,
     ModerationSyncMutationOutput as ModerationSyncUpdateResult,
     ModerationSyncRefreshOutput as ModerationSyncRefreshResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 interface ModerationSyncRefreshInput {
     userId: string;

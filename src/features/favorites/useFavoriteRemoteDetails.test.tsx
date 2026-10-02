@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
     appFavoriteDetailsHydrate: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appFavoriteDetailsHydrate: mocks.appFavoriteDetailsHydrate
     }

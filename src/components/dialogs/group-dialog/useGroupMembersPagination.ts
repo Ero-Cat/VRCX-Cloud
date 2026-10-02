@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { GroupMemberRow } from '@/domain/entities/group';
 import type { RemoteTabStatus } from '@/domain/shared/types';
-import type { GroupMemberSort } from '@/platform/tauri/bindings';
+import type { GroupMemberSort } from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { VRCHAT_API_DEFAULT_PAGE_SIZE } from '@/shared/constants/pagination';
 

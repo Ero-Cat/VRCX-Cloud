@@ -1,5 +1,5 @@
 import { timeToText } from '@/lib/dateTime';
-import type { InstanceHistoryEntryOutput } from '@/platform/tauri/bindings';
+import type { InstanceHistoryEntryOutput } from '@/platform/native/bindings';
 import { parseLocation } from '@/shared/utils/location';
 import { localeIncludes } from '@/shared/utils/string';
 

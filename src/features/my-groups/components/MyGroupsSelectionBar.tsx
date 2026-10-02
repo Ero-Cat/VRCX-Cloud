@@ -2,7 +2,7 @@ import { EyeIcon, LogOutIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { SelectionActionBar } from '@/components/layout/SelectionActionBar';
-import type { GroupMemberVisibility } from '@/platform/tauri/bindings';
+import type { GroupMemberVisibility } from '@/platform/native/bindings';
 import { Button } from '@/ui/shadcn/button';
 import {
     DropdownMenu,

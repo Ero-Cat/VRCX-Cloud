@@ -1,4 +1,4 @@
-import { commands, type RawJson } from '@/platform/tauri/bindings';
+import { commands, type RawJson } from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 import { useFavoriteStore } from '@/state/favoriteStore';
 import { useFriendRosterStore } from '@/state/friendRosterStore';

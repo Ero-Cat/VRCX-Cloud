@@ -1,4 +1,4 @@
-import { convertFileSrc } from '@/platform/tauri/assets';
+import { convertFileSrc } from '@/platform/native/assets';
 import {
     commands,
     type BackgroundImageConfigureInput,
@@ -7,7 +7,7 @@ import {
     type BackgroundImageProjection,
     type BackgroundImageProviderId,
     type BackgroundImageSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import {
     disableCommunityThemesForBackgroundImage,

@@ -1,4 +1,4 @@
-import { tauriClient } from '@/platform/tauri/client';
+import { tauriClient } from '@/platform/native/client';
 
 import type { RuntimeEventName, RuntimeEventPayloadMap } from './types';
 

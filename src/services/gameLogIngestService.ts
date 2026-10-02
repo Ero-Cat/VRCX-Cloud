@@ -1,6 +1,6 @@
 import { collectRuntimeRosterPlayers } from '@/domain/instances/currentInstanceRoster';
-import { commands } from '@/platform/tauri/bindings';
-import type { GameLogProjection } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
+import type { GameLogProjection } from '@/platform/native/bindings';
 import { normalizeLocationValue, parseLocation } from '@/shared/utils/location';
 import { normalizeString } from '@/shared/utils/string';
 import { useInstanceJoinHistoryStore } from '@/state/instanceJoinHistoryStore';

@@ -7,7 +7,7 @@ const runtimeState = vi.hoisted(() => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: runtimeState.commands
 }));
 

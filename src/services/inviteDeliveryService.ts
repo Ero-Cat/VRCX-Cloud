@@ -2,7 +2,10 @@ import {
     toBoopEmojiSendParams,
     type BoopEmojiChoice
 } from '@/domain/entities/boopEmoji';
-import { commands, type RequestInviteRequest } from '@/platform/tauri/bindings';
+import {
+    commands,
+    type RequestInviteRequest
+} from '@/platform/native/bindings';
 import notificationPersistenceRepository from '@/repositories/notificationPersistenceRepository';
 import { recordRecentBoopEmoji } from '@/services/boopRecentService';
 

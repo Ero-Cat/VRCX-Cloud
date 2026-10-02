@@ -11,7 +11,7 @@ import type {
     FavoriteStore,
     RemoteFavoriteKind
 } from '@/domain/favorites/types';
-import type { VrchatFavoriteType } from '@/platform/tauri/bindings';
+import type { VrchatFavoriteType } from '@/platform/native/bindings';
 import favoritePersistenceRepository from '@/repositories/favoritePersistenceRepository';
 import vrchatFavoriteRepository from '@/repositories/vrchatFavoriteRepository';
 import { persistAvatarDetails } from '@/services/favoriteAvatarCacheService';

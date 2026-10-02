@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { UserGroupsOverviewGroup } from '@/platform/tauri/bindings';
+import type { UserGroupsOverviewGroup } from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { toast } from '@/services/toastService';
 

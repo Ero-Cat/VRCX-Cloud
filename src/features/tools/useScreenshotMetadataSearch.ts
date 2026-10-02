@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import type { ScreenshotLibraryImage } from '@/platform/tauri/bindings';
+import type { ScreenshotLibraryImage } from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 
 import {

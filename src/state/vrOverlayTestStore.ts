@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 
 interface VrOverlayTestState {
     testMode: boolean;

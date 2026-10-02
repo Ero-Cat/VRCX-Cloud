@@ -10,7 +10,7 @@ import type {
     GroupPostMutation,
     GroupJoinRequestAction,
     HttpApiExecuteResponse
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 import { replaceBioSymbols } from '@/shared/utils/string';
 

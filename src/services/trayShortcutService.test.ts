@@ -5,7 +5,7 @@ import type {
     TrayShortcutError,
     TrayShortcutSnapshot,
     TrayShortcutUpdate
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useTrayShortcutStore } from '@/state/trayShortcutStore';
 
 const mocks = vi.hoisted(() => ({
@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
     recording: vi.fn<(recording: boolean) => Promise<boolean>>()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appGetTrayShortcut: mocks.get,
         appSetTrayShortcut: mocks.set,

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { GameLogProjection } from '@/platform/tauri/bindings';
+import type { GameLogProjection } from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     appIsGameRunning: vi.fn(),
@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
     recordGameRuntimePresence: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appIsGameRunning: mocks.appIsGameRunning
     }

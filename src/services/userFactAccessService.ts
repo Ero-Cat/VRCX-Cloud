@@ -5,7 +5,7 @@ import {
     type UserFact,
     type UserFactMergeOptions
 } from '@/domain/users/userFacts';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 import { useUserFactsStore } from '@/state/userFactsStore';
 

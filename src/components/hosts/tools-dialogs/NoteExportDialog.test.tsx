@@ -24,7 +24,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: mocks.t }) }));
-vi.mock('@/platform/tauri/bindings', () => ({ commands: mocks.commands }));
+vi.mock('@/platform/native/bindings', () => ({ commands: mocks.commands }));
 vi.mock('@/services/entityMediaService', () => ({
     userImage: mocks.userImage
 }));
@@ -63,7 +63,7 @@ vi.mock('@/ui/shadcn/tooltip', () => ({
     TooltipContent: () => null
 }));
 
-import type { NoteExportStatus } from '@/platform/tauri/bindings';
+import type { NoteExportStatus } from '@/platform/native/bindings';
 import { useFriendRosterStore } from '@/state/friendRosterStore';
 
 import { NoteExportDialog } from './NoteExportDialog';

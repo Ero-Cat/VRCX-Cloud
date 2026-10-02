@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { commands, type PrivacyLockSnapshot } from '@/platform/tauri/bindings';
+import { commands, type PrivacyLockSnapshot } from '@/platform/native/bindings';
 import { usePrivacyLockDialogStore } from '@/state/privacyLockDialogStore';
 import { useRuntimeStore } from '@/state/runtimeStore';
 
 import { requestPrivacyLock, unlockPrivacyLock } from './privacyLockService';
 
-vi.mock('@/platform/tauri/bindings', async () =>
+vi.mock('@/platform/native/bindings', async () =>
     (await import('@/test/mockCommands')).mockBindingsModule()
 );
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { NotificationActionOutcome } from '@/platform/tauri/bindings';
+import type { NotificationActionOutcome } from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     queryNotifications: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock('@/services/boopRecentService', () => ({
     recordRecentBoopEmoji: mocks.recordRecentBoopEmoji
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appSocialFriendRequestNotificationAccept:
             mocks.appSocialFriendRequestNotificationAccept,

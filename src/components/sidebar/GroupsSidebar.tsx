@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import {
     commands,
     type SavedGroupFavoritesSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import groupProfileRepository from '@/repositories/groupProfileRepository';
 import { openGroupDialog } from '@/services/dialogService';
 import { convertFileUrlToImageUrl } from '@/services/entityMediaService';

@@ -18,7 +18,7 @@ import {
     DataTableHeaderRow,
     DataTableRow
 } from '@/components/data-table/DataTableView';
-import type { InviteMessageType } from '@/platform/tauri/bindings';
+import type { InviteMessageType } from '@/platform/native/bindings';
 import vrchatToolsRepository from '@/repositories/vrchatToolsRepository';
 import { toast } from '@/services/toastService';
 import { IMAGE_UPLOAD_ACCEPT } from '@/shared/constants/imageUpload';

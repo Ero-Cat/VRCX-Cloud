@@ -1,5 +1,5 @@
 import type { FeedReadModelResult } from '@/domain/feed/readModel';
-import type { FeedRowOutput as FeedRow } from '@/platform/tauri/bindings';
+import type { FeedRowOutput as FeedRow } from '@/platform/native/bindings';
 import {
     isFeedFilterType,
     type FeedFilterType

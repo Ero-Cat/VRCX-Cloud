@@ -8,7 +8,7 @@ import type {
     ScreenshotMetadata,
     ScreenshotSearchResult,
     WorldDetail
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { SCREENSHOT_GALLERY_CONFIG_KEYS } from '@/repositories/configKeys';
 import { isRecord } from '@/shared/utils/record';
 import { parseVrchatScreenshotDateFromFileName } from '@/shared/utils/screenshot';

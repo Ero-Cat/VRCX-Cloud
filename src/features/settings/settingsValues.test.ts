@@ -25,7 +25,6 @@ describe('settingsValues', () => {
             'notifications',
             'media',
             'ai',
-            'sync',
             'advanced'
         ]);
     });

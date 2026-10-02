@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
     commands,
     type NotificationDoNotDisturbMode
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { useRuntimeStore } from '@/state/runtimeStore';
 import { Button } from '@/ui/shadcn/button';

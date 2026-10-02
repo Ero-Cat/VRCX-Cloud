@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import worldProfileRepository from '@/repositories/worldProfileRepository';
 
 import { resolveMissingEntities } from './resolveMissingEntities';

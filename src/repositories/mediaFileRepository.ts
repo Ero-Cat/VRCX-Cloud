@@ -1,4 +1,4 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { safeJsonParse } from '@/repositories/baseRepository';
 
 function parseResponseValue(data: string): unknown {

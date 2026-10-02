@@ -1,7 +1,7 @@
 import {
     commands,
     type ProxySettingsTestResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import {
     setProxyEnabledPreference,

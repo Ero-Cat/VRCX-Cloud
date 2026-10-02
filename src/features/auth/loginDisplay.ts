@@ -1,4 +1,4 @@
-import type { SavedCredentialSnapshot } from '@/platform/tauri/bindings';
+import type { SavedCredentialSnapshot } from '@/platform/native/bindings';
 
 type LoginUserRecord = {
     displayName?: string | null;

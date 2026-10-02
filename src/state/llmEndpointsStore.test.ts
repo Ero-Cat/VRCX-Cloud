@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { LlmEndpointDto } from '@/platform/tauri/bindings';
+import type { LlmEndpointDto } from '@/platform/native/bindings';
 
 const mocks = vi.hoisted(() => ({
     list: vi.fn(),
@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
     detectModels: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appLlmEndpointList: mocks.list,
         appLlmEndpointUpsert: mocks.upsert,

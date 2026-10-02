@@ -10,7 +10,7 @@ import {
     type QueryOrder,
     type ReleaseStatusFilter,
     type WorldSearchSort
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import type { AvatarProfileRecord } from '@/repositories/avatarProfileRepository';
 import { isRecord } from '@/shared/utils/record';
 

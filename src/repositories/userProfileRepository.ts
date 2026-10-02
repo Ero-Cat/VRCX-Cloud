@@ -14,7 +14,7 @@ import {
     type CurrentUserProfileUpdateRequest,
     type CurrentUserUpdateRequest,
     type HttpApiExecuteResponse
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { stripDefaultAvatarImage } from '@/shared/utils/avatar';
 import { createConcurrencyLimiter } from '@/shared/utils/concurrency';
 import { isRecord } from '@/shared/utils/record';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { FavoriteRecord } from '@/domain/favorites/types';
-import type { FavoriteTransferItemResult } from '@/platform/tauri/bindings';
+import type { FavoriteTransferItemResult } from '@/platform/native/bindings';
 
 import type { FavoriteGroupView, FavoriteItem } from './favoritesTypes';
 import {

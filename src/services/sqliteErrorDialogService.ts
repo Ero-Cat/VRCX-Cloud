@@ -1,4 +1,4 @@
-import type { SqliteErrorCategory } from '@/platform/tauri/bindings';
+import type { SqliteErrorCategory } from '@/platform/native/bindings';
 import i18n from '@/services/i18nService';
 import { subscribeSQLiteError } from '@/shared/sqliteErrorEvents';
 import { useModalStore } from '@/state/modalStore';

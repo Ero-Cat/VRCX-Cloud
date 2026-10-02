@@ -1,4 +1,4 @@
-import type { ImageAnimationStyle } from '@/platform/tauri/bindings';
+import type { ImageAnimationStyle } from '@/platform/native/bindings';
 import type { EmojiAnimationStyleName } from '@/shared/constants/emoji';
 
 export const emojiAnimationStyleValues: Record<

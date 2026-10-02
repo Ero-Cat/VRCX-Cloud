@@ -1,7 +1,7 @@
 import {
     commands,
     type HostSessionProjection
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { resetGameLogSessionState } from '@/services/gameLogIngestService';
 import { useNotificationStore } from '@/state/notificationStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

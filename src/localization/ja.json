@@ -3509,7 +3509,7 @@
             }
         },
         "about": {
-            "tagline": "Tauri と Rust で作られた、高速で軽量な VRCX。",
+            "tagline": "Rust と Rust で作られた、高速で軽量な VRCX。",
             "contributors": "コントリビューター",
             "contributors_error": "コントリビューター一覧を読み込めませんでした。",
             "thanks": "翻訳、テスト、不具合報告、アイデアの一つひとつがコミュニティから届いています。ありがとうございます。",

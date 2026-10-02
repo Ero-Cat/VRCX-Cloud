@@ -40,7 +40,7 @@ import {
     type BrowseHistoryCursor,
     type BrowseHistoryEntityKind,
     type BrowseHistoryItemOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import { useModalStore } from '@/state/modalStore';
 import { useRuntimeStore } from '@/state/runtimeStore';

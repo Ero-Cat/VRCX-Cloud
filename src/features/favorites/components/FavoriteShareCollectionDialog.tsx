@@ -14,7 +14,7 @@ import { useCriticalTask } from '@/lib/useCriticalTask';
 import {
     commands,
     type ShareCollectionCreateResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { copyTextToClipboard } from '@/services/clipboardService';
 import { openExternalLink } from '@/services/entityMediaService';
 import { toast } from '@/services/toastService';

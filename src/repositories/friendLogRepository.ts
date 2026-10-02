@@ -1,7 +1,7 @@
 import {
     commands,
     type FriendLogCurrentOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export interface FriendLogCurrentRow {
     userId: string;

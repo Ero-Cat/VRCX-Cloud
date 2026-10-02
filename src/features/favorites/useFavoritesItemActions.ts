@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { FavoriteKind } from '@/domain/favorites/types';
 import { resolveFriendPresenceLocation } from '@/domain/friends/presence';
 import type { FriendRecord, FriendRosterById } from '@/domain/friends/types';
-import type { AvatarCacheOutput } from '@/platform/tauri/bindings';
+import type { AvatarCacheOutput } from '@/platform/native/bindings';
 import avatarLocalRepository from '@/repositories/avatarLocalRepository';
 import favoritePersistenceRepository from '@/repositories/favoritePersistenceRepository';
 import { selectAvatar as selectCurrentAvatar } from '@/services/avatarSelectionService';

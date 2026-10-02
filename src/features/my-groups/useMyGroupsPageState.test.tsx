@@ -38,7 +38,7 @@ const toastMocks = vi.hoisted(() => ({
     error: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: commandMocks
 }));
 vi.mock('@/repositories/groupProfileRepository', () => ({

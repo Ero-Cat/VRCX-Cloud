@@ -3,7 +3,7 @@ import {
     type QuickSearchEntityType,
     type QuickSearchQueryOutput,
     type QuickSearchResult as BackendQuickSearchResult
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { convertFileUrlToImageUrl } from '@/services/entityMediaService';
 import { isRecord } from '@/shared/utils/record';
 

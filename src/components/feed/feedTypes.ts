@@ -9,7 +9,7 @@ import type { AppColumnDef, AppTable } from '@/components/data-table/appTable';
 import type { LocationNewInstanceTarget } from '@/components/Location';
 import type { LoadStatus } from '@/domain/shared/types';
 import type { UserFact } from '@/domain/users/userFacts';
-import type { FeedRowOutput } from '@/platform/tauri/bindings';
+import type { FeedRowOutput } from '@/platform/native/bindings';
 import type { FeedFilterType } from '@/repositories/feedRepository';
 import type { GameLogPreviousInstanceWorldRow } from '@/repositories/gameLogRepository';
 

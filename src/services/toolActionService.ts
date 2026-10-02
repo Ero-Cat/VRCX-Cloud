@@ -1,5 +1,5 @@
-import { commands } from '@/platform/tauri/bindings';
-import type { HostCapabilities } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
+import type { HostCapabilities } from '@/platform/native/bindings';
 import {
     getHostCapabilityUnavailableReason,
     isHostCapabilityAvailable,

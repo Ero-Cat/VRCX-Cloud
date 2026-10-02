@@ -1,13 +1,11 @@
 import { HeartIcon, type LucideIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { cn } from '@/lib/utils';
 import { openExternalLink } from '@/services/entityMediaService';
 import { links } from '@/shared/constants/link';
 import { formatReleaseDisplayVersion } from '@/shared/utils/releaseVersion';
 import { useRuntimeStore } from '@/state/runtimeStore';
-import { Avatar, AvatarFallback, AvatarImage } from '@/ui/shadcn/avatar';
 import { Button } from '@/ui/shadcn/button';
 import {
     Dialog,
@@ -15,13 +13,6 @@ import {
     DialogDescription,
     DialogTitle
 } from '@/ui/shadcn/dialog';
-import { Skeleton } from '@/ui/shadcn/skeleton';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/shadcn/tooltip';
-
-import {
-    useAboutContributors,
-    type AboutContributor
-} from './useAboutContributors';
 
 const WORDMARK_FONT_LINK_ID = 'vrcx-0-about-wordmark-font';
 const WORDMARK_FONT_URL =
@@ -62,116 +53,6 @@ function ensureWordmarkFontLoaded() {
 
 function getAppDisplayVersion(): string {
     return formatReleaseDisplayVersion(VERSION || '') || String(VERSION || '');
-}
-
-function ContributorNode({
-    contributor,
-    index
-}: {
-    contributor: AboutContributor;
-    index: number;
-}) {
-    const initials = contributor.login.slice(0, 2).toUpperCase();
-    const [resolvedAvatarUrl, setResolvedAvatarUrl] = useState<string | null>(
-        null
-    );
-    const imageReady = resolvedAvatarUrl === contributor.avatarUrl;
-    const entranceDelayMs = Math.min(index * 30, 180);
-
-    return (
-        <Tooltip>
-            <TooltipTrigger
-                render={
-                    <button
-                        type="button"
-                        aria-label={contributor.login}
-                        className={cn(
-                            'relative size-11 rounded-full transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.07] active:scale-[0.98] motion-reduce:transition-none',
-                            index % 2 === 1 && 'mt-1.5'
-                        )}
-                        onClick={() => {
-                            openExternalLink(contributor.profileUrl);
-                        }}
-                    >
-                        <Skeleton
-                            aria-hidden="true"
-                            className={cn(
-                                'absolute inset-0 rounded-full transition-opacity duration-150',
-                                imageReady && 'animate-none opacity-0'
-                            )}
-                        />
-                        <Avatar
-                            className={cn(
-                                'size-11',
-                                imageReady
-                                    ? 'animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-200 ease-out motion-reduce:animate-none'
-                                    : 'invisible'
-                            )}
-                            style={
-                                imageReady
-                                    ? {
-                                          animationDelay: `${entranceDelayMs}ms`
-                                      }
-                                    : undefined
-                            }
-                        >
-                            <AvatarImage
-                                src={contributor.avatarUrl}
-                                alt={contributor.login}
-                                loading="eager"
-                                onLoadingStatusChange={(status) => {
-                                    if (
-                                        status === 'loaded' ||
-                                        status === 'error'
-                                    ) {
-                                        setResolvedAvatarUrl(
-                                            contributor.avatarUrl
-                                        );
-                                    }
-                                }}
-                            />
-                            <AvatarFallback>{initials}</AvatarFallback>
-                        </Avatar>
-                    </button>
-                }
-            />
-            <TooltipContent>{contributor.login}</TooltipContent>
-        </Tooltip>
-    );
-}
-
-function AboutContributorsWall({ open }: { open: boolean }) {
-    const { t } = useTranslation();
-    const contributorsQuery = useAboutContributors(open);
-    const contributors = contributorsQuery.data ?? [];
-
-    return (
-        <div className="flex min-h-11 flex-wrap items-start justify-center gap-2">
-            {contributorsQuery.isPending
-                ? Array.from({ length: 10 }, (_, index) => (
-                      <Skeleton
-                          key={index}
-                          className={cn(
-                              'size-11 rounded-full',
-                              index % 2 === 1 && 'mt-1.5'
-                          )}
-                      />
-                  ))
-                : null}
-            {contributorsQuery.isError ? (
-                <p className="text-muted-foreground self-center text-xs">
-                    {t('view.about.contributors_error')}
-                </p>
-            ) : null}
-            {contributors.map((contributor, index) => (
-                <ContributorNode
-                    key={contributor.login}
-                    contributor={contributor}
-                    index={index}
-                />
-            ))}
-        </div>
-    );
 }
 
 export function AboutVrcxDialog({
@@ -228,16 +109,6 @@ export function AboutVrcxDialog({
                         ) : null}
                     </div>
                 </div>
-
-                <section className="mt-5 flex flex-col items-center gap-3.5 text-center">
-                    <span className="text-muted-foreground/75 text-[10px] font-medium tracking-[0.18em] uppercase">
-                        {t('view.about.contributors')}
-                    </span>
-                    <AboutContributorsWall open={open} />
-                    <p className="text-muted-foreground/70 mx-auto max-w-sm text-xs text-balance">
-                        {t('view.about.thanks')}
-                    </p>
-                </section>
 
                 <div className="mt-6 flex flex-col items-center gap-3">
                     <span

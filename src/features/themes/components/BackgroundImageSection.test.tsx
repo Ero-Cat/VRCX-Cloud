@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
     BackgroundImageCustomSource,
     BackgroundImageSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import type { AppToastOptions } from '@/services/toastService';
 import { useBackgroundImageStore } from '@/state/backgroundImageStore';
 

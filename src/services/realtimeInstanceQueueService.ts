@@ -1,4 +1,4 @@
-import type { RealtimeInstanceQueueProjection } from '@/platform/tauri/bindings';
+import type { RealtimeInstanceQueueProjection } from '@/platform/native/bindings';
 import i18n from '@/services/i18nService';
 import { toast } from '@/services/toastService';
 import { displayLocation, parseLocation } from '@/shared/utils/location';

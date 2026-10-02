@@ -1,7 +1,7 @@
 import {
     commands,
     type UserTableContextOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 type UserTableContext = UserTableContextOutput;
 

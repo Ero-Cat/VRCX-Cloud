@@ -125,7 +125,6 @@ export default defineConfig(({ mode }) => {
                     '**/images/**',
                     '**/scripts/**',
                     '**/signatures/**',
-                    '**/src-tauri/**',
                     '**/target/**'
                 ]
             }

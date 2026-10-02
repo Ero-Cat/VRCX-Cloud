@@ -1,7 +1,7 @@
 import type {
     InstanceCreateGroupAccessType,
     InstanceCreateMinimumAvatarPerformance
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import type { buildCreatedInstanceDetails } from './worldInstances';
 

@@ -1,7 +1,6 @@
 import {
     BellIcon,
     BotIcon,
-    CloudCogIcon,
     ImageIcon,
     type LucideIcon,
     MonitorIcon,
@@ -25,7 +24,6 @@ import { SettingsInterfaceTab } from './components/settings-tabs/SettingsInterfa
 import { SettingsMediaTab } from './components/settings-tabs/SettingsMediaTab';
 import { SettingsNotificationsTab } from './components/settings-tabs/SettingsNotificationsTab';
 import { SettingsSocialTab } from './components/settings-tabs/SettingsSocialTab';
-import { SettingsSyncTab } from './components/settings-tabs/SettingsSyncTab';
 import { SettingsSystemTab } from './components/settings-tabs/SettingsSystemTab';
 import { SettingsDialogs } from './components/SettingsDialogs';
 import {
@@ -40,7 +38,6 @@ const SETTINGS_TAB_ICONS: Record<string, LucideIcon> = {
     ai: BotIcon,
     notifications: BellIcon,
     media: ImageIcon,
-    sync: CloudCogIcon,
     advanced: TerminalIcon
 };
 
@@ -90,7 +87,6 @@ function SettingsPageContent() {
                     <SettingsNotificationsTab />
                     <SettingsMediaTab />
                     <SettingsAiTab active={shell.activeSettingsTab === 'ai'} />
-                    <SettingsSyncTab />
                     <SettingsAdvancedTab />
                 </div>
             </Tabs>

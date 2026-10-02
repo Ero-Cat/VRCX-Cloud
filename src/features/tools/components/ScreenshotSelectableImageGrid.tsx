@@ -10,7 +10,7 @@ import {
     useScreenshotThumbnailTitleMap
 } from '@/components/media/ScreenshotThumbnailCard';
 import { useScreenshotGalleryGrid } from '@/components/media/useScreenshotGalleryGrid';
-import type { ScreenshotLibraryImage } from '@/platform/tauri/bindings';
+import type { ScreenshotLibraryImage } from '@/platform/native/bindings';
 
 export function ScreenshotSelectableImageGrid({
     density,

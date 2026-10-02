@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { useAssistantChatStore } from '@/state/assistantChatStore';
 
 export type AssistantHealth = 'checking' | 'ok' | 'error' | 'unconfigured';

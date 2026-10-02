@@ -2,7 +2,7 @@ import type { EntityRecord } from '@/domain/entities/shared';
 import type {
     GroupModerationBatchAction,
     GroupModerationBatchInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 import {
     moderationRowRoleIds,

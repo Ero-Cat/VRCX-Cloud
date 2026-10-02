@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import type { LoadStatus } from '@/domain/shared/types';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { useRuntimeStore } from '@/state/runtimeStore';
 
 import { normalizeFeedId as normalizeId } from './feedRows';

@@ -10,8 +10,8 @@ import { FadeInImage } from '@/components/media/FadeInImage';
 import { TileShell } from '@/components/tile/TileShell';
 import { formatScreenshotDateTime } from '@/lib/dateTime';
 import { cn } from '@/lib/utils';
-import { convertFileSrc } from '@/platform/tauri/assets';
-import type { ScreenshotLibraryImage } from '@/platform/tauri/bindings';
+import { convertFileSrc } from '@/platform/native/assets';
+import type { ScreenshotLibraryImage } from '@/platform/native/bindings';
 import { requestScreenshotThumbnail } from '@/services/screenshotThumbnailQueueService';
 import {
     TILE_SELECT_BOX,

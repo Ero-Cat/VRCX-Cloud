@@ -7,7 +7,7 @@ import {
 import {
     commands,
     type VrchatAvatarListByUserInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { VRCHAT_API_DEFAULT_PAGE_SIZE } from '@/shared/constants/pagination';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
 

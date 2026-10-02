@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
     applyTrustColorClasses: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appSystemCulture: mocks.appSystemCulture
     }

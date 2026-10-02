@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import {
     readLocalTextFile,
     writeLocalTextFile
-} from '@/platform/tauri/localFile';
+} from '@/platform/native/localFile';
 import { isRecord } from '@/shared/utils/record';
 
 const CACHE_FILE = 'navigation-state.json';

@@ -1,4 +1,4 @@
-import type { InstanceHistoryEntryOutput } from '@/platform/tauri/bindings';
+import type { InstanceHistoryEntryOutput } from '@/platform/native/bindings';
 import type { InstanceActivityRow } from '@/repositories/instanceActivityRepository';
 import type { parseLocation } from '@/shared/utils/location';
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { commands, type AvatarUsageRow } from '@/platform/tauri/bindings';
+import { commands, type AvatarUsageRow } from '@/platform/native/bindings';
 import avatarProfileRepository from '@/repositories/avatarProfileRepository';
 
 import { resolveMissingEntities } from './resolveMissingEntities';

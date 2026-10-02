@@ -8,13 +8,13 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import type {
     VrchatLogEntriesReadOutput,
     VrchatLogEntryOutput,
     VrchatLogFileOutput,
     VrchatLogLevelCountOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { copyTextToClipboard } from '@/services/clipboardService';
 import { toast } from '@/services/toastService';
 import { useRuntimeStore } from '@/state/runtimeStore';

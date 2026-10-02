@@ -1,5 +1,5 @@
-import { commands } from '@/platform/tauri/bindings';
-import type { LegacyVrcxMigrationStatus } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
+import type { LegacyVrcxMigrationStatus } from '@/platform/native/bindings';
 import type { AppToastOptions } from '@/services/toastService';
 
 type ConfirmResult = {

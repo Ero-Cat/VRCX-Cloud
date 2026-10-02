@@ -8,7 +8,7 @@ import type {
 import type { EntityRecord } from '@/domain/entities/shared';
 import type { PlatformFileAnalysis } from '@/domain/entities/world';
 import type { LoadStatus } from '@/domain/shared/types';
-import type { AvatarReleaseStatus as GeneratedAvatarReleaseStatus } from '@/platform/tauri/bindings';
+import type { AvatarReleaseStatus as GeneratedAvatarReleaseStatus } from '@/platform/native/bindings';
 import type { AvatarGalleryFile } from '@/repositories/avatarProfileRepository';
 import { getPlatformInfo } from '@/shared/utils/avatarPlatform';
 import { useDialogStore } from '@/state/dialogStore';

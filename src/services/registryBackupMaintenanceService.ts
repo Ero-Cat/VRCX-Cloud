@@ -1,6 +1,6 @@
-import { commands } from '@/platform/tauri/bindings';
-import type { RegistryBackupMaintenanceResult } from '@/platform/tauri/bindings';
-import { focusWindow } from '@/platform/tauri/webview';
+import { commands } from '@/platform/native/bindings';
+import type { RegistryBackupMaintenanceResult } from '@/platform/native/bindings';
+import { focusWindow } from '@/platform/native/webview';
 import configRepository from '@/repositories/configRepository';
 import { isHostCapabilityAvailable } from '@/services/hostCapabilityService';
 import i18n from '@/services/i18nService';

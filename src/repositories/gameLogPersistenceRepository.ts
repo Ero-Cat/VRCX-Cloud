@@ -7,7 +7,7 @@ import {
     type GameLogUserStatsOutput,
     type GameLogWriteKind,
     type InstanceHistoryEntryOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import {
     DEFAULT_MAX_TABLE_SIZE,
     DEFAULT_SEARCH_LIMIT

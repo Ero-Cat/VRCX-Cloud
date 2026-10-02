@@ -1,7 +1,7 @@
 import { UsersRoundIcon } from 'lucide-react';
 
 import { FadeInImage } from '@/components/media/FadeInImage';
-import type { UserGroupsOverviewGroup } from '@/platform/tauri/bindings';
+import type { UserGroupsOverviewGroup } from '@/platform/native/bindings';
 import { convertFileUrlToImageUrl } from '@/services/entityMediaService';
 
 export function GroupModerationGroupIcon({

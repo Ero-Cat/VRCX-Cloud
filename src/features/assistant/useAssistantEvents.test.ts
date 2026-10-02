@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
     recordTurnError: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/client', () => ({
+vi.mock('@/platform/native/client', () => ({
     tauriClient: {
         events: {
             subscribe: mocks.subscribe

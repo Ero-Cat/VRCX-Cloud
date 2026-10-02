@@ -1,7 +1,7 @@
 import type {
     FeedLiveEntry as FeedLiveEntryPayload,
     RealtimeEntryCorrectionFields
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 
 export type { FeedLiveEntryPayload };
 

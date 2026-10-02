@@ -37,7 +37,7 @@ export default defineConfig({
                 'src/components/feed/feedLiveTestEntries.ts',
                 'src/features/feed/feedLiveMergeTestUtils.ts',
                 'src/localization/**',
-                'src/platform/tauri/bindings.ts',
+                'src/platform/native/bindings.ts',
                 'src/test/**',
                 ...coverageExcludedPureConstants
             ],

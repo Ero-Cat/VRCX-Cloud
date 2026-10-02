@@ -5,7 +5,7 @@ const commandMocks = vi.hoisted(() => ({
     getFileBase64: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appExternalApiImageDataUrlGet: commandMocks.fetchImageDataUrl,
         appGetFileBase64: commandMocks.getFileBase64

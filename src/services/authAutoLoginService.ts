@@ -2,8 +2,8 @@ import {
     commands,
     type AutoLoginOutcome,
     type LoginFailureKind
-} from '@/platform/tauri/bindings';
-import { flashWindow } from '@/platform/tauri/webview';
+} from '@/platform/native/bindings';
+import { flashWindow } from '@/platform/native/webview';
 import type { SavedAuthSnapshot } from '@/repositories/authRepository';
 import { toast } from '@/services/toastService';
 import { useRuntimeStore } from '@/state/runtimeStore';

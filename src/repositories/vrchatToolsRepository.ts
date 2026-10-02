@@ -9,7 +9,7 @@ import {
     type CalendarListParams,
     type HttpApiExecuteResponse,
     type InviteMessageType
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
 
 import { unwrapVrchatResponse } from './vrchatRequest';

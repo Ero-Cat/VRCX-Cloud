@@ -1,4 +1,4 @@
-import type { GameLogSessionPlayerDurationRowDto } from '@/platform/tauri/bindings';
+import type { GameLogSessionPlayerDurationRowDto } from '@/platform/native/bindings';
 
 export type GameLogSessionDurationDetails = {
     durationByKey: Map<string, number>;

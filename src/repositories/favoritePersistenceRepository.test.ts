@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
     getArray: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({ commands: {} }));
+vi.mock('@/platform/native/bindings', () => ({ commands: {} }));
 vi.mock('./configRepository', () => ({
     default: {
         getArray: mocks.getArray

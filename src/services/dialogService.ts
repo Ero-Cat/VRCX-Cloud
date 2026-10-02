@@ -1,7 +1,7 @@
 import {
     commands,
     type BrowseHistoryEntityKind
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import i18n from '@/services/i18nService';
 import { toast } from '@/services/toastService';
 import { recordUserProfile } from '@/services/userFactAccessService';

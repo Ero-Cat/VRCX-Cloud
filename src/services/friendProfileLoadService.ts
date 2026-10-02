@@ -1,5 +1,5 @@
-import { commands } from '@/platform/tauri/bindings';
-import type { FriendProfileLoadStatusPayload } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
+import type { FriendProfileLoadStatusPayload } from '@/platform/native/bindings';
 import { toast } from '@/services/toastService';
 import {
     type FriendProfileLoadState,

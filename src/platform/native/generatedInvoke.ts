@@ -33,7 +33,7 @@ export function invoke<TReturn = unknown>(
         }
         const normalizedError = normalizePlatformError(
             error,
-            `Tauri command failed: ${command}`
+            `Web command failed: ${command}`
         );
 
         recordErrorLog('rust:command', [

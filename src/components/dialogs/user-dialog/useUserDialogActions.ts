@@ -13,7 +13,7 @@ import type { FriendRosterById } from '@/domain/friends/types';
 import {
     commands,
     type SocialFriendMutationOutcome
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import vrchatToolsRepository from '@/repositories/vrchatToolsRepository';
 import { signalFriendLogChanged } from '@/services/friendLogMutationService';
 import friendRelationshipService from '@/services/friendRelationshipService';

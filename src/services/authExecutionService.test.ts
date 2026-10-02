@@ -48,7 +48,7 @@ vi.mock('@/repositories/authRepository', () => ({
     }
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appVrchatAuthSessionStart: mocks.startLoginSession,
         appVrchatAuthSessionRespond: mocks.respondLoginSession,
@@ -85,7 +85,7 @@ import type {
     LoginSessionState,
     SavedAuthSnapshot,
     SavedCredentialSnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import {
     cachePreviousInstances,
     cacheUserStats,

@@ -1,4 +1,4 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { publishPreferenceChanged } from '@/shared/events/preferenceEvents';
 import { isAvatarSearchQueryLongEnough } from '@/shared/utils/avatarSearchQuery';
 import { isRecord } from '@/shared/utils/record';

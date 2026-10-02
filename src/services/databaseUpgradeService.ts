@@ -4,7 +4,7 @@ import {
     type DatabaseUpgradeProgress,
     type DatabaseUpgradeRunResult,
     type DatabaseUpgradeStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import i18n from '@/services/i18nService';
 import { confirmLegacyVrcxProcessState } from '@/services/legacyVrcxMigrationService';

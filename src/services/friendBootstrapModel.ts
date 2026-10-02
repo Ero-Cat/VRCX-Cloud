@@ -1,5 +1,5 @@
 import type { FriendRosterSnapshotInput } from '@/domain/friends/types';
-import type { FriendRosterSnapshot } from '@/platform/tauri/bindings';
+import type { FriendRosterSnapshot } from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 
 export type CurrentUserFriendSnapshot = Record<string, unknown> & {

@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
     appFavoriteLocalSnapshot: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appFavoriteLocalSnapshot: mocks.appFavoriteLocalSnapshot
     }

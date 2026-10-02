@@ -1,4 +1,4 @@
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import configRepository from '@/repositories/configRepository';
 import {
     normalizeHmdOverlayActivityFilterProfile,

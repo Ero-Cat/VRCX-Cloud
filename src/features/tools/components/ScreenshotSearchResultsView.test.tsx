@@ -17,7 +17,7 @@ vi.mock('./ScreenshotMetadataSections', () => ({
     }) => <div data-testid="results-table">{sortedSearchRows.length}</div>
 }));
 
-import type { ScreenshotLibraryImage } from '@/platform/tauri/bindings';
+import type { ScreenshotLibraryImage } from '@/platform/native/bindings';
 
 import { SCREENSHOT_METADATA_SEARCH_TYPES } from '../screenshotMetadataValues';
 import { ScreenshotSearchResultsView } from './ScreenshotSearchResultsView';

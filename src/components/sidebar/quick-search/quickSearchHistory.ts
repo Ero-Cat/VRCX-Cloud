@@ -1,7 +1,7 @@
 import {
     readLocalTextFile,
     writeLocalTextFile
-} from '@/platform/tauri/localFile';
+} from '@/platform/native/localFile';
 import { isRecord } from '@/shared/utils/record';
 
 import type { QuickSearchEntityType, QuickSearchResult } from '../quickSearch';

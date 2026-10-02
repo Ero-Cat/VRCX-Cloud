@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import {
     commands,
     type AssistantRuntimeStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useAssistantChatStore } from '@/state/assistantChatStore';
 
 export function useAssistantRuntimeStatus(): AssistantRuntimeStatus | null {

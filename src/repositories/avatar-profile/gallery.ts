@@ -3,7 +3,7 @@ import {
     fetchCachedData,
     queryKeys
 } from '@/lib/entityQueryCache';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
 
 import {

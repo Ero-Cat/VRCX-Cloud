@@ -6,7 +6,7 @@ import type {
     WebhookDeliveryChannelSnapshot,
     WebhookDeliveryRecord,
     WebhookDeliverySnapshot
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { GENERIC_WEBHOOK_FIELDS } from '@/shared/constants/webhook';
 import { Button } from '@/ui/shadcn/button';
 import { Checkbox } from '@/ui/shadcn/checkbox';

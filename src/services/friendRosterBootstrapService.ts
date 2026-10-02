@@ -1,7 +1,7 @@
 import {
     commands,
     type SocialFriendRosterBaselineOutput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { useFriendRosterStore } from '@/state/friendRosterStore';
 import { useRuntimeStore } from '@/state/runtimeStore';
 import { useSessionStore } from '@/state/sessionStore';

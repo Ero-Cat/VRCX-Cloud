@@ -4,7 +4,7 @@ import {
     type AuthenticatedRuntimeSession,
     type LoginFailureKind,
     type LoginSessionState
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import authRepository, {
     type SavedAuthSnapshot,
     type SavedCredentialRecord

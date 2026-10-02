@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 
 import { DataTableSortButton } from '@/components/data-table/DataTableSortButton';
 import { EmptyState as AppEmptyState } from '@/components/layout/PageScaffold';
-import type { AuthorDetail } from '@/platform/tauri/bindings';
+import type { AuthorDetail } from '@/platform/native/bindings';
 import userProfileRepository from '@/repositories/userProfileRepository';
 import { openUserDialog } from '@/services/dialogService';
 import { Button } from '@/ui/shadcn/button';

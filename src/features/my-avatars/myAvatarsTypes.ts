@@ -1,5 +1,5 @@
 import type { LoadStatus } from '@/domain/shared/types';
-import type { ReleaseStatusFilter } from '@/platform/tauri/bindings';
+import type { ReleaseStatusFilter } from '@/platform/native/bindings';
 import type { AvatarProfileRecord } from '@/repositories/avatarProfileRepository';
 
 export type MyAvatarsLoadStatus = LoadStatus;

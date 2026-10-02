@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { FriendLocationTime } from '@/platform/tauri/bindings';
+import type { FriendLocationTime } from '@/platform/native/bindings';
 
 export type FriendLocationTimeEntry = Omit<FriendLocationTime, 'userId'>;
 

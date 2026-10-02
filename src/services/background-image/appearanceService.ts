@@ -1,4 +1,4 @@
-import type { BackgroundImageSnapshot } from '@/platform/tauri/bindings';
+import type { BackgroundImageSnapshot } from '@/platform/native/bindings';
 import { APP_THEME_CONFIG_KEYS } from '@/repositories/configKeys';
 import configRepository from '@/repositories/configRepository';
 import { useBackgroundImageStore } from '@/state/backgroundImageStore';

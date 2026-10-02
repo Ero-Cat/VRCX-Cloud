@@ -7,7 +7,7 @@ import { formatDateFilter } from '@/lib/dateTime';
 import type {
     GroupProfileJoinState,
     GroupProfileUpdate
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import type { GroupCalendarEventRecord } from '@/repositories/vrchatToolsRepository';
 import {
     convertFileUrlToImageUrl,

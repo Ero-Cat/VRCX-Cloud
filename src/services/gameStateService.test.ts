@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
     resetGameLogSessionState: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appRuntimeDiscordReconcileRequest:
             mocks.appRuntimeDiscordReconcileRequest

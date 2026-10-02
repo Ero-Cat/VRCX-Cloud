@@ -5,14 +5,14 @@ const mocks = vi.hoisted(() => ({
     startScreenshotLibraryScan: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appGetScreenshotLibraryStatus: mocks.getScreenshotLibraryStatus,
         appStartScreenshotLibraryScan: mocks.startScreenshotLibraryScan
     }
 }));
 
-import type { ScreenshotLibraryScanStatus } from '@/platform/tauri/bindings';
+import type { ScreenshotLibraryScanStatus } from '@/platform/native/bindings';
 
 import {
     getCurrentScreenshotLibraryScanStatus,

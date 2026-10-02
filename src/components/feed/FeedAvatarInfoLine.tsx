@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import avatarProfileRepository from '@/repositories/avatarProfileRepository';
 import avatarSearchProviderRepository from '@/repositories/avatarSearchProviderRepository';
 import { openAvatarDialog, openUserDialog } from '@/services/dialogService';

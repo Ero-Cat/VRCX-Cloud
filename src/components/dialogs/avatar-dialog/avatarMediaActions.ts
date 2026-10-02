@@ -1,6 +1,6 @@
 import type { ChangeEvent } from 'react';
 
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import avatarProfileRepository from '@/repositories/avatarProfileRepository';
 import vrchatMediaRepository from '@/repositories/vrchatMediaRepository';
 import { openFolderAndSelectItem } from '@/services/shellIntegrationService';

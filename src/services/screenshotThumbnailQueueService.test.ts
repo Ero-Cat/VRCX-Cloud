@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
     ensureScreenshotThumbnail: vi.fn<(path: string) => Promise<unknown>>()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appEnsureScreenshotThumbnail: mocks.ensureScreenshotThumbnail
     }

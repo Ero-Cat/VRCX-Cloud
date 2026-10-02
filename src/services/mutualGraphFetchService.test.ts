@@ -7,14 +7,14 @@ const mocks = vi.hoisted(() => ({
     start: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({
+vi.mock('@/platform/native/bindings', () => ({
     commands: {
         appMutualGraphFetchCancel: mocks.cancel,
         appMutualGraphFetchStart: mocks.start
     }
 }));
 
-import type { MutualGraphFetchStatus } from '@/platform/tauri/bindings';
+import type { MutualGraphFetchStatus } from '@/platform/native/bindings';
 import { useRuntimeStore } from '@/state/runtimeStore';
 
 import {

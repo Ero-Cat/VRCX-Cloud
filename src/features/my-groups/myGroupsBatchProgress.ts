@@ -1,4 +1,4 @@
-import type { GroupMembershipBatchProgress } from '@/platform/tauri/bindings';
+import type { GroupMembershipBatchProgress } from '@/platform/native/bindings';
 
 interface MyGroupsBatchProgressEvent {
     count: number;

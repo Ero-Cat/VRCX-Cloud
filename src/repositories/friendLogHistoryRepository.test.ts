@@ -4,7 +4,7 @@ const commandMocks = vi.hoisted(() => ({
     appFriendLogHistoryQuery: vi.fn()
 }));
 
-vi.mock('@/platform/tauri/bindings', () => ({ commands: commandMocks }));
+vi.mock('@/platform/native/bindings', () => ({ commands: commandMocks }));
 
 import { getFriendLogHistory } from './friendLogHistoryRepository';
 

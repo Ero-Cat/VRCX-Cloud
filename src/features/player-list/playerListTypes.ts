@@ -10,7 +10,7 @@ import type {
     CurrentInstanceRosterPlayer
 } from '@/domain/instances/currentInstanceRoster';
 import type { MutualFriendCommunity } from '@/lib/mutual-friends/mutualFriendsTypes';
-import type { LocalModerationOutput } from '@/platform/tauri/bindings';
+import type { LocalModerationOutput } from '@/platform/native/bindings';
 
 import type { PlayerGroupRole } from './playerListGroupRoles';
 

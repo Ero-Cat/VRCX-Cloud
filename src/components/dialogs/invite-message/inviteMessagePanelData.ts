@@ -1,4 +1,4 @@
-import type { InviteMessageType } from '@/platform/tauri/bindings';
+import type { InviteMessageType } from '@/platform/native/bindings';
 import vrchatToolsRepository, {
     type InviteMessageRecord
 } from '@/repositories/vrchatToolsRepository';

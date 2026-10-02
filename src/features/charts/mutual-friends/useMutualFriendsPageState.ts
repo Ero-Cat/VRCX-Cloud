@@ -20,7 +20,7 @@ import { normalizeMutualFriendId } from '@/lib/mutual-friends/mutualFriendsSetti
 import { useMutualFriendsExclusionStore } from '@/lib/mutual-friends/useMutualFriendsExclusionStore';
 import { useMutualFriendsLayoutSettings } from '@/lib/mutual-friends/useMutualFriendsLayoutSettings';
 import { useMutualFriendsSigmaLifecycle } from '@/lib/mutual-friends/useMutualFriendsSigmaLifecycle';
-import { commands } from '@/platform/tauri/bindings';
+import { commands } from '@/platform/native/bindings';
 import { openUserDialog } from '@/services/dialogService';
 import { toast } from '@/services/toastService';
 import { useModalStore } from '@/state/modalStore';

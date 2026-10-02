@@ -3,7 +3,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SelectableTile } from '@/components/tile/SelectableTile';
-import type { CurrentUserProfileUpdateRequest } from '@/platform/tauri/bindings';
+import type { CurrentUserProfileUpdateRequest } from '@/platform/native/bindings';
 import { Button } from '@/ui/shadcn/button';
 import { Input } from '@/ui/shadcn/input';
 

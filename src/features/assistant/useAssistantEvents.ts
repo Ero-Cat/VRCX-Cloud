@@ -7,8 +7,8 @@ import type {
     AssistantToolCallEvent,
     AssistantToolResultEvent,
     AssistantTurnEntitiesEvent
-} from '@/platform/tauri/bindings';
-import { tauriClient } from '@/platform/tauri/client';
+} from '@/platform/native/bindings';
+import { tauriClient } from '@/platform/native/client';
 import {
     recordAssistantToolError,
     recordAssistantTurnError

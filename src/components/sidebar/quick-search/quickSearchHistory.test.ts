@@ -2,20 +2,41 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { QuickSearchResult } from '../quickSearch';
 
-const mocks = vi.hoisted(() => ({
-    contents: '',
-    missing: true,
-    mkdir: vi.fn(),
-    readTextFile: vi.fn(),
-    writeTextFile: vi.fn()
-}));
+const mocks = vi.hoisted(() => {
+    const backing = new Map<string, string>();
+    return {
+        backing,
+        contents: '',
+        missing: true,
+        readTextFile: vi.fn(async () => {
+            if (mocks.missing) {
+                throw new Error('file not found');
+            }
+            return mocks.contents;
+        }),
+        writeTextFile: vi.fn(async (_name: string, contents: string) => {
+            backing.set('vrcx-file:quick-search-history.json', contents);
+        })
+    };
+});
 
-vi.mock('@tauri-apps/plugin-fs', () => ({
-    BaseDirectory: { AppCache: 16 },
-    mkdir: mocks.mkdir,
-    readTextFile: mocks.readTextFile,
-    writeTextFile: mocks.writeTextFile
-}));
+vi.stubGlobal('window', {
+    localStorage: {
+        getItem: (key: string) =>
+            key === 'vrcx-file:quick-search-history.json' && !mocks.missing
+                ? mocks.contents
+                : null,
+        setItem: (key: string, value: string) => {
+            if (key === 'vrcx-file:quick-search-history.json') {
+                mocks.contents = value;
+                mocks.missing = false;
+                mocks.backing.set(key, value);
+            }
+        },
+        removeItem: () => {},
+        clear: () => {}
+    }
+});
 
 import {
     loadQuickSearchHistory,
@@ -45,21 +66,7 @@ describe('quickSearchHistory', () => {
     beforeEach(() => {
         mocks.contents = '';
         mocks.missing = true;
-        mocks.readTextFile.mockReset();
-        mocks.mkdir.mockReset();
-        mocks.writeTextFile.mockReset();
-        mocks.readTextFile.mockImplementation(async () => {
-            if (mocks.missing) {
-                throw new Error('missing');
-            }
-            return mocks.contents;
-        });
-        mocks.writeTextFile.mockImplementation(
-            async (_path: string, contents: string) => {
-                mocks.contents = contents;
-                mocks.missing = false;
-            }
-        );
+        mocks.backing.clear();
     });
 
     it('keeps the five most recently opened unique entries', async () => {

@@ -5,7 +5,7 @@ import { userFacingErrorMessage } from '@/lib/errorDisplay';
 import type {
     CurrentUserUpdateRequest,
     UserStatus
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import currentUserProfileService from '@/services/currentUserProfileService';
 import { openUserDialog } from '@/services/dialogService';
 import {

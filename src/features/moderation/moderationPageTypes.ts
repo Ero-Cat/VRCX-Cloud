@@ -1,5 +1,5 @@
 import type { LoadStatus } from '@/domain/shared/types';
-import type { RemoteModerationRow } from '@/platform/tauri/bindings';
+import type { RemoteModerationRow } from '@/platform/native/bindings';
 
 export type ModerationLoadStatus = LoadStatus;
 

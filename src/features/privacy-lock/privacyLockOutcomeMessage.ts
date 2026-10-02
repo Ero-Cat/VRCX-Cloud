@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 
-import type { PrivacyLockOutcome } from '@/platform/tauri/bindings';
+import type { PrivacyLockOutcome } from '@/platform/native/bindings';
 
 export function privacyLockOutcomeMessage(
     t: TFunction,

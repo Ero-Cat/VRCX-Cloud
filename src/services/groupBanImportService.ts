@@ -1,4 +1,7 @@
-import { commands, type GroupBanImportStatus } from '@/platform/tauri/bindings';
+import {
+    commands,
+    type GroupBanImportStatus
+} from '@/platform/native/bindings';
 
 type GroupBanImportStatusListener = (status: GroupBanImportStatus) => void;
 

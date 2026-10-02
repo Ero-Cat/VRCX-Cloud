@@ -16,7 +16,7 @@ import {
     type VrchatWorldSaveInput,
     type WorldUpdateRequest,
     type WorldSearchSort
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 import { DEFAULT_VRCHAT_API_ENDPOINT } from '@/shared/vrchatEndpoint';
 

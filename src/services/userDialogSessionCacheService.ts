@@ -1,4 +1,4 @@
-import type { InstanceHistoryEntryOutput } from '@/platform/tauri/bindings';
+import type { InstanceHistoryEntryOutput } from '@/platform/native/bindings';
 import { normalizeString } from '@/shared/utils/string';
 
 type UserDialogPreviousDisplayName = {

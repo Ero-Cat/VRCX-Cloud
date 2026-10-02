@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { resolveProfileDecorationMutation } from '@/domain/entities/inventory';
-import type { CurrentUserProfileUpdateRequest } from '@/platform/tauri/bindings';
+import type { CurrentUserProfileUpdateRequest } from '@/platform/native/bindings';
 import userProfileRepository from '@/repositories/userProfileRepository';
 import vrchatMediaRepository, {
     type InventoryItemRecord

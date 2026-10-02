@@ -7,7 +7,7 @@ import {
     type VrchatBoopInput,
     type VrchatRequestInvitePhotoSendInput,
     type VrchatRequestInviteSendInput
-} from '@/platform/tauri/bindings';
+} from '@/platform/native/bindings';
 import { isRecord } from '@/shared/utils/record';
 
 import configRepository from './configRepository';

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { GroupProfileRecord } from '@/domain/entities/group';
 import type { EntityRecord } from '@/domain/entities/shared';
-import type { GroupMemberSort } from '@/platform/tauri/bindings';
+import type { GroupMemberSort } from '@/platform/native/bindings';
 import { openUserDialog } from '@/services/dialogService';
 import { Button } from '@/ui/shadcn/button';
 import { Empty, EmptyHeader, EmptyTitle } from '@/ui/shadcn/empty';
