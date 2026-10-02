@@ -167,6 +167,14 @@ async fn async_main() -> ExitCode {
         .route("/healthz", axum::routing::get(healthz))
         .with_state(Arc::clone(&state))
         .route(
+            "/api/public/profile",
+            axum::routing::get(transport::public::profile),
+        )
+        .route(
+            "/api/public/mutual-friends",
+            axum::routing::get(transport::public::mutual_friends),
+        )
+        .route(
             "/api/auth/status",
             axum::routing::get(transport::auth::auth_status),
         )
