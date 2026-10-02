@@ -11,6 +11,8 @@ FROM rust:1-bookworm AS server
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY crates crates
+# vrcx-0-i18n's build script reads language codes + locale files from src/localization.
+COPY src/localization src/localization
 RUN cargo build --release --locked -p vrcx-0-server --bin vrcx-0-server
 
 # ---- Runtime --------------------------------------------------------------
