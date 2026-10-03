@@ -867,10 +867,10 @@ impl RemoteSyncStore for PostgresSyncStore {
         self.with_client(move |client| async move {
             client
                 .execute(
-                    "INSERT INTO _sync_devices (device_id, app_version, last_seen_at)
-                     VALUES ($1, $2, now())
-                     ON CONFLICT (device_id) DO UPDATE SET app_version = EXCLUDED.app_version, last_seen_at = now()",
-                    &[&record.device_id, &record.app_version],
+                    "INSERT INTO _sync_devices (device_id, app_version, last_seen_at, profile)
+                     VALUES ($1, $2, now(), $3)
+                     ON CONFLICT (device_id) DO UPDATE SET app_version = EXCLUDED.app_version, last_seen_at = now(), profile = EXCLUDED.profile",
+                    &[&record.device_id, &record.app_version, &record.profile],
                 )
                 .await
                 .map_err(pg_error)?;
@@ -883,7 +883,7 @@ impl RemoteSyncStore for PostgresSyncStore {
         self.with_client(|client| async move {
             let rows = client
                 .query(
-                    "SELECT device_id, app_version, last_seen_at FROM _sync_devices ORDER BY last_seen_at DESC",
+                    "SELECT device_id, app_version, last_seen_at, profile FROM _sync_devices ORDER BY last_seen_at DESC",
                     &[],
                 )
                 .await
@@ -899,6 +899,13 @@ impl RemoteSyncStore for PostgresSyncStore {
                             .flatten()
                             .map(|ts| ts.0),
                         last_pull_at: None,
+                        // NULL only for rows written by pre-profile builds.
+                        profile: row
+                            .try_get::<_, Option<String>>(3)
+                            .ok()
+                            .flatten()
+                            .filter(|profile| !profile.is_empty())
+                            .unwrap_or_else(vrcx_0_contracts::default_device_profile),
                     })
                     .collect(),
                 client,
@@ -972,14 +979,24 @@ const PROTOCOL_TABLE_DDL: [&str; 4] = [
     "CREATE TABLE IF NOT EXISTS _sync_devices (
         device_id TEXT PRIMARY KEY,
         app_version TEXT NOT NULL DEFAULT '',
-        last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        profile TEXT NOT NULL DEFAULT 'desktop'
     )",
+];
+
+/// Column additions for protocol tables that predate the profile
+/// column; `CREATE TABLE IF NOT EXISTS` alone cannot evolve them.
+const PROTOCOL_TABLE_PATCHES: [&str; 1] = [
+    "ALTER TABLE _sync_devices ADD COLUMN IF NOT EXISTS profile TEXT NOT NULL DEFAULT 'desktop'",
 ];
 
 async fn ensure_protocol_tables(
     client: &impl tokio_postgres::GenericClient,
 ) -> SyncStoreResult<()> {
     for sql in PROTOCOL_TABLE_DDL {
+        client.execute(sql, &[]).await.map_err(pg_error)?;
+    }
+    for sql in PROTOCOL_TABLE_PATCHES {
         client.execute(sql, &[]).await.map_err(pg_error)?;
     }
     Ok(())
@@ -1680,6 +1697,83 @@ mod pg_diag {
             ] {
                 client.execute(sql, &[]).await.expect("cleanup");
             }
+        });
+    }
+
+    /// Device presence rows round-trip their host profile, and rows that
+    /// predate the profile column read back as desktops (the safe
+    /// default for the realtime handoff).
+    #[test]
+    fn devices_roundtrip_profile_and_default_legacy_rows() {
+        let Ok(dsn) = std::env::var("VRCX_PG_TEST_DSN") else {
+            return;
+        };
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(async move {
+            let store = PostgresSyncStore::new(&PostgresSyncStoreConfig {
+                dsn: dsn.clone(),
+                tls_verify: false,
+                allow_plaintext: true,
+            })
+            .expect("store");
+            store
+                .devices_upsert(&SyncDeviceRecord {
+                    device_id: "profile-probe-server".into(),
+                    app_version: "test".into(),
+                    last_push_at: None,
+                    last_pull_at: None,
+                    profile: vrcx_0_contracts::DEVICE_PROFILE_SERVER.into(),
+                })
+                .await
+                .expect("upsert server profile");
+            // Simulate a pre-profile row by clearing the column directly.
+            let client = diag_client(&dsn).await;
+            client
+                .execute(
+                    "INSERT INTO _sync_devices (device_id, app_version)
+                     VALUES ('profile-probe-legacy', 'old')
+                     ON CONFLICT (device_id) DO UPDATE SET profile = 'desktop'",
+                    &[],
+                )
+                .await
+                .expect("seed legacy row");
+            client
+                .execute(
+                    "UPDATE _sync_devices SET profile = NULL WHERE device_id = 'profile-probe-legacy'",
+                    &[],
+                )
+                .await
+                .expect("null out legacy profile");
+
+            let listed = store.devices_list().await.expect("list devices");
+            let server = listed
+                .iter()
+                .find(|device| device.device_id == "profile-probe-server")
+                .expect("server probe row present");
+            assert_eq!(
+                server.profile,
+                vrcx_0_contracts::DEVICE_PROFILE_SERVER,
+                "profile survives the round-trip"
+            );
+            let legacy = listed
+                .iter()
+                .find(|device| device.device_id == "profile-probe-legacy")
+                .expect("legacy probe row present");
+            assert_eq!(
+                legacy.profile, "desktop",
+                "NULL profile (pre-upgrade row) reads back as desktop"
+            );
+
+            client
+                .execute(
+                    "DELETE FROM _sync_devices WHERE device_id LIKE 'profile-probe-%'",
+                    &[],
+                )
+                .await
+                .expect("cleanup probe rows");
         });
     }
 

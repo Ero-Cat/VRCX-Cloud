@@ -4512,6 +4512,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
+ "sha2",
  "specta",
  "thiserror 2.0.21",
  "tokio",

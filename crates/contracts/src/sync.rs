@@ -696,7 +696,22 @@ pub struct SyncDeviceRecord {
     pub app_version: String,
     pub last_push_at: Option<String>,
     pub last_pull_at: Option<String>,
+    /// Host flavor of the device: `desktop` (interactive VRCX-0 app) or
+    /// `server` (self-hosted data server). Rows written before the
+    /// profile column existed default to `desktop` at the store layer;
+    /// the realtime handoff treats every non-`server` device as a
+    /// desktop so old installs keep working.
+    #[serde(default = "default_device_profile")]
+    pub profile: String,
 }
+
+/// Devices written before the profile column existed behave as desktops.
+pub fn default_device_profile() -> String {
+    "desktop".to_string()
+}
+
+pub const DEVICE_PROFILE_DESKTOP: &str = "desktop";
+pub const DEVICE_PROFILE_SERVER: &str = "server";
 
 #[derive(Clone, Debug, Default, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]

@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::State;
+use axum::http::HeaderMap;
 use axum::response::Response;
 use futures_util::{SinkExt, StreamExt};
 use serde_json::{json, Value};
@@ -35,8 +36,12 @@ impl RuntimeEventSink for WebEventSink {
 
 pub async fn events_endpoint(
     State(ctx): State<Arc<super::WebContext>>,
+    headers: HeaderMap,
     ws: WebSocketUpgrade,
 ) -> Response {
+    if let Some(response) = super::admin_auth::gate(&ctx, &headers) {
+        return response;
+    }
     ws.on_upgrade(move |socket| event_loop(socket, ctx.events.subscribe()))
 }
 

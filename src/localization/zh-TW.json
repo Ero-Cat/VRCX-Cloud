@@ -854,6 +854,20 @@
             "failed": "鎖定操作失敗"
         }
     },
+    "admin_auth": {
+        "title": "管理員驗證",
+        "description": "此伺服器啟用了二次驗證。輸入管理員密碼以解鎖此瀏覽器，驗證一次後將保持有效，無需再次輸入。",
+        "field": {
+            "password": "管理員密碼"
+        },
+        "action": {
+            "unlock": "解鎖"
+        },
+        "error": {
+            "wrong_password": "管理員密碼不正確",
+            "failed": "驗證失敗，請重試"
+        }
+    },
     "side_panel": {
         "search_placeholder": "快速搜尋...",
         "search_input_placeholder": "搜尋或跳至頁面…",

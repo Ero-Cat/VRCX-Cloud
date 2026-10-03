@@ -142,6 +142,7 @@ remaining connection fields default to the values shown.
 | --------------------------------- | ------------------------- | ------------------------ | ------------------------------------------------------------------------ |
 | `VRCX_CLOUD_DATA_DIR`             | `[server] data_dir`       | `<config>/VRCX-0-Server` | SQLite profile + image cache                                             |
 | `VRCX_CLOUD_LISTEN`               | `[server] listen_addr`    | `0.0.0.0:8800`           | HTTP listen address                                                      |
+| `VRCX_CLOUD_ADMIN_PASSWORD`       | `[server] admin_password` | — (gate off)             | admin 2nd factor: browsers unlock once via dialog, cookie is permanent   |
 | `VRCX_CLOUD_DIST_DIR`             | `[web] dist_dir`          | `./dist`                 | frontend static files                                                    |
 | `VRCX_CLOUD_SYNC_HOST`            | `[sync] host`             | — (required)             | remote sync PostgreSQL host                                              |
 | `VRCX_CLOUD_SYNC_PASSWORD`        | `[sync] password`         | — (required)             | remote sync PostgreSQL password                                          |

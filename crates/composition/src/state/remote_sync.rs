@@ -22,6 +22,8 @@ pub struct RemoteSyncHost {
     background_jobs: RuntimeBackgroundJobs,
     tasks: TaskSupervisor,
     app_version: String,
+    /// Host flavor advertised in `_sync_devices` (`desktop`/`server`).
+    device_profile: String,
     engine: RwLock<Option<Arc<RemoteSyncEngine>>>,
 }
 
@@ -31,12 +33,14 @@ impl RemoteSyncHost {
         background_jobs: RuntimeBackgroundJobs,
         tasks: TaskSupervisor,
         app_version: String,
+        device_profile: String,
     ) -> Self {
         Self {
             db,
             background_jobs,
             tasks,
             app_version,
+            device_profile,
             engine: RwLock::new(None),
         }
     }
@@ -113,6 +117,7 @@ impl RemoteSyncHost {
             store,
             self.background_jobs.clone(),
             self.app_version.clone(),
+            self.device_profile.clone(),
         )
         .map_err(|error| Error::Custom(error.to_string()))?;
         engine
@@ -387,6 +392,7 @@ mod pg_integration {
             RuntimeBackgroundJobs::new(),
             TaskSupervisor::default(),
             "integration-test".into(),
+            vrcx_0_contracts::DEVICE_PROFILE_DESKTOP.to_string(),
         );
         let settings = host_state.settings();
         assert!(

@@ -46,15 +46,18 @@ impl PauseGate {
         })
     }
 
+    /// Wait until the pause flag reaches `target` (e.g. `false` = held
+    /// transport waits for the desktop to go quiet). Returns `Cancelled`
+    /// when a newer transport generation supersedes this one.
     async fn wait_until(
         &self,
-        paused: bool,
+        target: bool,
         mut cancel: watch::Receiver<u64>,
         generation: u64,
     ) -> WaitOutcome {
         let mut rx = self.rx.clone();
         loop {
-            if *rx.borrow() != paused {
+            if *rx.borrow() == target {
                 return WaitOutcome::State;
             }
             if is_cancelled(&cancel, generation) {
@@ -161,5 +164,150 @@ impl RealtimeTransport for GatedRealtimeTransport {
                 }
             }
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+
+    use tokio::sync::{watch, Notify};
+
+    use vrcx_0_application_realtime::{
+        RealtimeMessageSink, RealtimeSessionContext, RealtimeTransport, RealtimeTransportFuture,
+        RealtimeTransportTermination, RealtimeWsMessagePayload,
+    };
+
+    use super::{GatedRealtimeTransport, PauseGate, PAUSE_REASON};
+
+    struct NoopSink;
+    impl RealtimeMessageSink for NoopSink {
+        fn handle_realtime_ws_message(
+            &self,
+            _generation: u64,
+            _session_generation: u64,
+            _session: &RealtimeSessionContext,
+            _payload: &RealtimeWsMessagePayload,
+        ) {
+        }
+    }
+
+    /// Inner transport that records each start and then stays "connected"
+    /// forever until dropped, mirroring a live VRChat websocket.
+    struct RecordingTransport {
+        starts: AtomicUsize,
+        started: Notify,
+    }
+
+    impl RecordingTransport {
+        fn new() -> Arc<Self> {
+            Arc::new(Self {
+                starts: AtomicUsize::new(0),
+                started: Notify::new(),
+            })
+        }
+    }
+
+    impl RealtimeTransport for RecordingTransport {
+        fn run(
+            &self,
+            _message_sink: Arc<dyn RealtimeMessageSink>,
+            _client_run_id: u64,
+            _generation: u64,
+            _session_generation: u64,
+            _session: RealtimeSessionContext,
+            _cancel_rx: watch::Receiver<u64>,
+        ) -> RealtimeTransportFuture {
+            self.starts.fetch_add(1, Ordering::SeqCst);
+            self.started.notify_waiters();
+            Box::pin(std::future::pending())
+        }
+    }
+
+    fn session() -> RealtimeSessionContext {
+        RealtimeSessionContext::new(
+            "usr_test".into(),
+            "https://api.vrchat.cloud".into(),
+            "wss://pipeline.vrchat.cloud".into(),
+        )
+    }
+
+    fn spawn_gated(
+        inner: Arc<dyn RealtimeTransport>,
+        gate: &PauseGate,
+    ) -> tokio::task::JoinHandle<RealtimeTransportTermination> {
+        let gated = GatedRealtimeTransport::new(inner, gate.clone());
+        let (cancel_tx, cancel_rx) = watch::channel(1);
+        let _ = cancel_tx.send(1);
+        let sink: Arc<dyn RealtimeMessageSink> = Arc::new(NoopSink);
+        tokio::spawn(gated.run(sink, 1, 1, 1, session(), cancel_rx))
+    }
+
+    #[tokio::test]
+    async fn held_transport_connects_once_desktop_goes_quiet() {
+        let gate = PauseGate::new();
+        gate.set_paused(true);
+        let inner = RecordingTransport::new();
+        let run = spawn_gated(inner.clone(), &gate);
+
+        // Held: no websocket while the desktop owns collection.
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        assert_eq!(inner.starts.load(Ordering::SeqCst), 0);
+
+        // Desktop exits: supervisor flips the gate, transport must connect.
+        gate.set_paused(false);
+        let notified = inner.started.notified();
+        tokio::time::timeout(std::time::Duration::from_secs(2), notified)
+            .await
+            .expect("inner transport starts after unpause");
+        assert_eq!(inner.starts.load(Ordering::SeqCst), 1);
+        run.abort();
+    }
+
+    #[tokio::test]
+    async fn pause_mid_connection_reports_unexpected_exit() {
+        let gate = PauseGate::new();
+        let inner = RecordingTransport::new();
+        let run = spawn_gated(inner.clone(), &gate);
+
+        let notified = inner.started.notified();
+        tokio::time::timeout(std::time::Duration::from_secs(2), notified)
+            .await
+            .expect("inner transport starts while unpaused");
+
+        gate.set_paused(true);
+        let termination = tokio::time::timeout(std::time::Duration::from_secs(2), run)
+            .await
+            .expect("gated run exits on pause")
+            .unwrap();
+        match termination {
+            RealtimeTransportTermination::UnexpectedExit { reason, .. } => {
+                assert_eq!(reason, PAUSE_REASON);
+            }
+            other => panic!("expected UnexpectedExit, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn cancel_while_held_stops_the_transport() {
+        let gate = PauseGate::new();
+        gate.set_paused(true);
+        let inner = RecordingTransport::new();
+
+        let gated = GatedRealtimeTransport::new(inner.clone(), gate.clone());
+        let (cancel_tx, cancel_rx) = watch::channel(7);
+        let _ = cancel_tx.send(7);
+        let sink: Arc<dyn RealtimeMessageSink> = Arc::new(NoopSink);
+        let run = tokio::spawn(gated.run(sink, 1, 1, 1, session(), cancel_rx));
+
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        let _ = cancel_tx.send(8);
+        let termination = tokio::time::timeout(std::time::Duration::from_secs(2), run)
+            .await
+            .expect("held run exits on cancel")
+            .unwrap();
+        assert!(matches!(termination, RealtimeTransportTermination::Stopped));
+        assert_eq!(inner.starts.load(Ordering::SeqCst), 0);
     }
 }

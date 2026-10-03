@@ -855,6 +855,20 @@
             "failed": "The lock operation failed"
         }
     },
+    "admin_auth": {
+        "title": "Administrator verification",
+        "description": "This server requires a second verification step. Enter the administrator password to unlock this browser — it stays unlocked afterwards, so you only do this once.",
+        "field": {
+            "password": "Administrator password"
+        },
+        "action": {
+            "unlock": "Unlock"
+        },
+        "error": {
+            "wrong_password": "Incorrect administrator password",
+            "failed": "Verification failed, please try again"
+        }
+    },
     "side_panel": {
         "search_placeholder": "Quick Search...",
         "search_input_placeholder": "Search or jump to a page…",

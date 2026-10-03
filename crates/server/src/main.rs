@@ -104,13 +104,26 @@ async fn async_main() -> ExitCode {
     }
 
     // Web transport context: realtime broadcast and the command registry
-    // installed as the runtime event sink.
+    // installed as the runtime event sink. The admin browser gate is
+    // active only when an admin password is configured.
+    let admin_auth = config.admin_password.clone().map(|password| {
+        let tokens_path = config.data_dir.join("admin-auth-tokens.json");
+        if let Err(error) = std::fs::create_dir_all(&config.data_dir) {
+            tracing::warn!(error = %error, "failed to create admin auth token dir");
+        }
+        tracing::info!("admin browser gate enabled (web API requires a one-time browser unlock)");
+        Arc::new(transport::admin_auth::AdminAuthState::new(
+            password,
+            tokens_path,
+        ))
+    });
     let (event_tx, _) = tokio::sync::broadcast::channel::<(String, Value)>(1024);
     state.set_runtime_event_sink(transport::events::WebEventSink::new(event_tx.clone()));
     let ctx = Arc::new(transport::WebContext {
         state: Arc::clone(&state),
         events: event_tx,
         registry: commands::build_registry(),
+        admin: admin_auth,
     });
 
     if let Err(error) = state.start_headless_backend_runtime().await {
@@ -176,6 +189,18 @@ async fn async_main() -> ExitCode {
         .route(
             "/api/invoke",
             axum::routing::post(transport::invoke::invoke_endpoint),
+        )
+        .route(
+            "/api/admin/status",
+            axum::routing::get(transport::admin_auth::status_endpoint),
+        )
+        .route(
+            "/api/admin/auth",
+            axum::routing::post(transport::admin_auth::auth_endpoint),
+        )
+        .route(
+            "/api/admin/logout",
+            axum::routing::post(transport::admin_auth::logout_endpoint),
         )
         .route(
             "/api/events",

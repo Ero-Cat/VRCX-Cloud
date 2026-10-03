@@ -1,3 +1,5 @@
+import { useAdminAuthStore } from '@/state/adminAuthStore';
+
 /**
  * Web transport for the self-hosted server build.
  *
@@ -12,7 +14,11 @@ export function isWebPlatform(): boolean {
     return true;
 }
 
-export type WebErrorCode = 'badRequest' | 'unsupportedOnWeb' | 'commandFailed';
+export type WebErrorCode =
+    | 'badRequest'
+    | 'unsupportedOnWeb'
+    | 'commandFailed'
+    | 'adminAuthRequired';
 
 export class WebCommandError extends Error {
     readonly code: WebErrorCode;
@@ -62,6 +68,12 @@ export async function webInvoke<TReturn = unknown>(
 
     if (!envelope.ok) {
         const code = (envelope.code ?? 'commandFailed') as WebErrorCode;
+        if (code === 'adminAuthRequired') {
+            // The server's admin gate rejected this browser; surface the
+            // unlock dialog. This command stays failed — the app reboots
+            // with the unlock cookie after a successful unlock.
+            useAdminAuthStore.getState().markLocked();
+        }
         throw new WebCommandError(code, envelope.message ?? command);
     }
     return envelope.result as TReturn;
@@ -84,6 +96,11 @@ export function ensureWebEventConnection(dispatch: WebEventDispatcher): void {
         return;
     }
     if (typeof window === 'undefined') {
+        return;
+    }
+    if (useAdminAuthStore.getState().phase === 'locked') {
+        // The admin gate rejects the upgrade until this browser
+        // unlocks; the page reboots after unlocking and reconnects.
         return;
     }
 

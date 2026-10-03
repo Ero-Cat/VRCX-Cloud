@@ -854,6 +854,20 @@
             "failed": "锁定操作失败"
         }
     },
+    "admin_auth": {
+        "title": "管理员验证",
+        "description": "此服务器启用了二次验证。输入管理员密码以解锁此浏览器，验证一次后将保持有效，无需再次输入。",
+        "field": {
+            "password": "管理员密码"
+        },
+        "action": {
+            "unlock": "解锁"
+        },
+        "error": {
+            "wrong_password": "管理员密码不正确",
+            "failed": "验证失败，请重试"
+        }
+    },
     "side_panel": {
         "search_placeholder": "搜索",
         "search_input_placeholder": "搜索或跳转到页面…",

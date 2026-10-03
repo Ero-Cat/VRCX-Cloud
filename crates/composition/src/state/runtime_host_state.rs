@@ -78,6 +78,18 @@ pub(super) fn web_ua_app_version(app_version: &str, profile: RuntimeHostProfile)
     }
 }
 
+/// Host flavor recorded in the sync device table. Only the interactive
+/// desktop app is a `desktop`; headless and server runtimes are
+/// `server` so the realtime handoff can elect one collector among them.
+pub(super) fn sync_device_profile(profile: RuntimeHostProfile) -> String {
+    match profile {
+        RuntimeHostProfile::Desktop => vrcx_0_contracts::DEVICE_PROFILE_DESKTOP.to_string(),
+        RuntimeHostProfile::HeadlessData | RuntimeHostProfile::Server => {
+            vrcx_0_contracts::DEVICE_PROFILE_SERVER.to_string()
+        }
+    }
+}
+
 pub struct RuntimeHostStateBuilder {
     profile: RuntimeHostProfile,
     app_data_dir: AppDataDirResolution,
@@ -333,6 +345,7 @@ impl RuntimeHostStateBuilder {
             runtime_context.background_jobs.clone(),
             runtime_context.tasks.clone(),
             app_version.clone(),
+            sync_device_profile(profile),
         ));
         let desktop_assembly =
             RuntimeHostDesktopAssemblyDeps::from_context(Arc::clone(&runtime_context));

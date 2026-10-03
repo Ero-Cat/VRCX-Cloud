@@ -7,7 +7,7 @@
 use std::path::{Path, PathBuf};
 
 use axum::extract::{Path as AxumPath, State};
-use axum::http::{header, StatusCode};
+use axum::http::{header, HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use std::sync::Arc;
 
@@ -15,8 +15,12 @@ use super::WebContext;
 
 pub async fn img_endpoint(
     State(ctx): State<Arc<WebContext>>,
+    headers: HeaderMap,
     AxumPath((file_id, version)): AxumPath<(String, String)>,
 ) -> Response {
+    if let Some(response) = super::admin_auth::gate(&ctx, &headers) {
+        return response;
+    }
     let cache_dir = ctx.state.app_data_path().join("ImageCache");
     // Reject traversal: components must be plain cache segments.
     if !is_safe_cache_component(&file_id) || !is_safe_cache_component(&version) {

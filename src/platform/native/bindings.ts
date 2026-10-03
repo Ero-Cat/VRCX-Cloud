@@ -6618,6 +6618,8 @@ export type SyncDeviceRecord = {
     appVersion: string;
     lastPushAt: string | null;
     lastPullAt: string | null;
+    /** `desktop` (interactive app) or `server` (self-hosted data server). */
+    profile: string;
 };
 /**
  * Snapshot of sync health surfaced to the frontend.

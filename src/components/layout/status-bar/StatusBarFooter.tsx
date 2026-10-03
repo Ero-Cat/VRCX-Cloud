@@ -285,7 +285,8 @@ export const StatusBarFooter = forwardRef<HTMLElement, StatusBarFooterProps>(
                                             ? t(
                                                   'status_bar.desktop_collecting',
                                                   {
-                                                      defaultValue: '桌面端接管'
+                                                      defaultValue:
+                                                          '其他设备接管'
                                                   }
                                               )
                                             : t(
@@ -308,7 +309,7 @@ export const StatusBarFooter = forwardRef<HTMLElement, StatusBarFooterProps>(
                                           'status_bar.desktop_collecting_tooltip',
                                           {
                                               defaultValue:
-                                                  '桌面端 VRCX-0 正在采集数据，服务器实时会话已暂停（数据经同步到达）'
+                                                  '其他设备（桌面端 VRCX-0 或另一台服务器）正在采集数据，本服务器实时会话已暂停（数据经同步到达）'
                                           }
                                       )
                                     : t(

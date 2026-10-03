@@ -103,6 +103,9 @@ pub struct RemoteSyncEngine {
     store: Arc<dyn RemoteSyncStore>,
     background_jobs: RuntimeBackgroundJobs,
     app_version: String,
+    /// Host flavor advertised in `_sync_devices` (`desktop`/`server`) so
+    /// consumers can tell interactive apps apart from self-hosted servers.
+    device_profile: String,
     handle: SyncCaptureHandle,
     waker: Arc<Notify>,
     state: Mutex<EngineState>,
@@ -115,12 +118,14 @@ pub struct RemoteSyncEngine {
 
 impl RemoteSyncEngine {
     /// Build the engine and install local change capture. Fails if the local
-    /// database is unavailable.
+    /// database is unavailable. `device_profile` is the host flavor
+    /// (`desktop` or `server`) recorded in the remote device table.
     pub fn new(
         db: Arc<DatabaseService>,
         store: Arc<dyn RemoteSyncStore>,
         background_jobs: RuntimeBackgroundJobs,
         app_version: String,
+        device_profile: String,
     ) -> EngineResult<Arc<Self>> {
         let handle = install_capture(&db)?;
         Ok(Arc::new(Self {
@@ -128,6 +133,7 @@ impl RemoteSyncEngine {
             store,
             background_jobs,
             app_version,
+            device_profile,
             handle,
             waker: Arc::new(Notify::new()),
             ensured_schema_hash: Mutex::new(None),
@@ -263,6 +269,7 @@ impl RemoteSyncEngine {
                 app_version: self.app_version.clone(),
                 last_push_at: Some(now_iso()),
                 last_pull_at: Some(now_iso()),
+                profile: self.device_profile.clone(),
             })
             .await;
 

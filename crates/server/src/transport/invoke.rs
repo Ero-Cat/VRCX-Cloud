@@ -11,6 +11,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use axum::extract::State;
+use axum::http::HeaderMap;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::Deserialize;
@@ -67,8 +68,13 @@ pub struct InvokeRequest {
 
 pub async fn invoke_endpoint(
     State(ctx): State<Arc<super::WebContext>>,
+    headers: HeaderMap,
     Json(request): Json<InvokeRequest>,
 ) -> Response {
+    if let Some(response) = super::admin_auth::gate(&ctx, &headers) {
+        tracing::debug!(cmd = %request.cmd, "invoke: blocked by admin auth gate");
+        return response;
+    }
     let Some(future) = ctx
         .registry
         .dispatch(Arc::clone(&ctx.state), &request.cmd, request.args)

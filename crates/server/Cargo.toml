@@ -32,6 +32,7 @@ tokio = { workspace = true, features = [
     "time",
 ] }
 toml = "0.9"
+sha2 = { workspace = true }
 rusqlite = { workspace = true }
 tokio-postgres = { workspace = true }
 tracing = { workspace = true }

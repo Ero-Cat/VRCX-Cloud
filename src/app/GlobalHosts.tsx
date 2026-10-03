@@ -7,6 +7,7 @@ import { NotificationHost } from '@/components/hosts/NotificationHost';
 import { PreviousInstancesDialogHost } from '@/components/hosts/PreviousInstancesDialogHost';
 import { SystemDialogsHost } from '@/components/hosts/SystemDialogsHost';
 import { ToolsDialogsHost } from '@/components/hosts/ToolsDialogsHost';
+import { AdminAuthGate } from '@/features/admin-auth/AdminAuthGate';
 import { AssistantDialogHost } from '@/features/assistant/AssistantDialogHost';
 import { VrcNotificationCenterHost } from '@/features/notifications/VrcNotificationCenterHost';
 import { PrivacyLockDialogHost } from '@/features/privacy-lock/PrivacyLockDialogHost';
@@ -18,6 +19,7 @@ export function GlobalHosts() {
             <AppToaster />
             <ModalHost />
             <DialogHost />
+            <AdminAuthGate />
             <FriendProfileLoadHost />
             <NotificationHost />
             <VrcNotificationCenterHost />

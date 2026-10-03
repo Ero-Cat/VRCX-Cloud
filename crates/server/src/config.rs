@@ -33,6 +33,11 @@ pub struct ServerSection {
     pub data_dir: Option<String>,
     /// HTTP listen address for the web server.
     pub listen_addr: Option<String>,
+    /// Optional admin password acting as a second factor in front of the
+    /// web API. When set, a browser must unlock once by entering this
+    /// password; the issued cookie token is permanent and survives server
+    /// restarts. Also settable via `VRCX_CLOUD_ADMIN_PASSWORD`.
+    pub admin_password: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
@@ -64,6 +69,8 @@ pub struct SyncSection {
 pub struct ServerConfig {
     pub data_dir: PathBuf,
     pub listen_addr: String,
+    /// Admin browser gate password; `None` = gate disabled.
+    pub admin_password: Option<String>,
     pub sync: SyncSettings,
     pub web: WebSettings,
     /// None = default (feed logging on).
@@ -135,6 +142,9 @@ impl ServerConfig {
         let listen_addr = env_non_empty("VRCX_CLOUD_LISTEN")
             .or(server_section.listen_addr)
             .unwrap_or_else(|| DEFAULT_LISTEN_ADDR.to_string());
+        let admin_password = env_non_empty("VRCX_CLOUD_ADMIN_PASSWORD")
+            .or(server_section.admin_password)
+            .filter(|password| !password.is_empty());
 
         let sync_file = file.sync.unwrap_or_default();
         let mut sync = SyncSettings {
@@ -178,6 +188,7 @@ impl ServerConfig {
         Ok(Self {
             data_dir,
             listen_addr,
+            admin_password,
             sync,
             web,
             feed_logging,
