@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 
 import {
     computeBioDiff,
-    hasBioDiffChanges,
     type BioDiffSegment
 } from '@/components/dialogs/user-dialog/bioInlineDiff';
 import { AvatarInfoLine } from '@/components/feed/FeedAvatarInfoLine';
@@ -624,7 +623,7 @@ function UserDialogProfileLinksPanel({
 function UserDialogBioPanel({ profile, bioLinks }: UserDialogBioSectionProps) {
     const { t } = useTranslation();
     const currentUserId = useRuntimeStore((state) => state.auth.currentUserId);
-    const [diffEnabled, setDiffEnabled] = useState(true);
+    const [diffEnabled, setDiffEnabled] = useState(false);
     const [diffSegments, setDiffSegments] = useState<BioDiffSegment[] | null>(
         null
     );
@@ -638,11 +637,22 @@ function UserDialogBioPanel({ profile, bioLinks }: UserDialogBioSectionProps) {
                 cancelled = true;
             };
         }
+        // jirai parity: every dialog open records the current bio as a
+        // snapshot first (appending a history row only when it changed),
+        // then renders the diff of the latest change chain.
         socialAnalyticsService
-            .loadBioHistory({
+            .recordBioSnapshot({
                 ownerUserId: currentUserId,
-                targetUserId: profile.id
+                targetUserId: profile.id,
+                bio: profile.bio || '',
+                displayName: profile.displayName ?? ''
             })
+            .then(() =>
+                socialAnalyticsService.loadBioHistory({
+                    ownerUserId: currentUserId,
+                    targetUserId: profile.id || ''
+                })
+            )
             .then((output) => {
                 if (cancelled) {
                     return;
@@ -668,8 +678,9 @@ function UserDialogBioPanel({ profile, bioLinks }: UserDialogBioSectionProps) {
                         break;
                     }
                 }
-                const segments = computeBioDiff(baseBio, latest.bio || '');
-                setDiffSegments(hasBioDiffChanges(segments) ? segments : null);
+                // No textual change yet → the diff equals the plain bio, so
+                // the toggle stays usable and simply shows the text.
+                setDiffSegments(computeBioDiff(baseBio, latest.bio || ''));
             })
             .catch(() => {
                 if (!cancelled) {
@@ -679,9 +690,21 @@ function UserDialogBioPanel({ profile, bioLinks }: UserDialogBioSectionProps) {
         return () => {
             cancelled = true;
         };
-    }, [currentUserId, isSelf, profile?.id]);
+    }, [
+        currentUserId,
+        isSelf,
+        profile?.id,
+        profile?.bio,
+        profile?.displayName
+    ]);
 
-    const showDiff = diffEnabled && diffSegments !== null;
+    // Only swap the plain bio for the diff view when there is an actual
+    // textual change to highlight; an unchanged diff would just re-render
+    // the same text (and CJK re-joining can disturb the original layout).
+    const hasDiffChange = Boolean(
+        diffSegments?.some((segment) => segment.kind !== 'same')
+    );
+    const showDiff = diffEnabled && diffSegments !== null && hasDiffChange;
 
     return (
         <TranslatableText
@@ -731,7 +754,6 @@ function UserDialogBioPanel({ profile, bioLinks }: UserDialogBioSectionProps) {
                                             }
                                         >
                                             {segment.text}
-                                            {segment.kind === 'same' ? ' ' : ''}
                                         </span>
                                     ))}
                                 </span>

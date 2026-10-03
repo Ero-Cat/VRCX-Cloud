@@ -1064,6 +1064,13 @@ const generatedCommands = {
     ): Promise<FeedBioHistoryOutput> {
         return await TAURI_INVOKE('app__feed_bio_history_query', { query });
     },
+    async appFeedBioSnapshotRecord(
+        input: FeedBioSnapshotRecordInput
+    ): Promise<FeedBioSnapshotRecordOutput> {
+        return await TAURI_INVOKE('app__feed_bio_snapshot_record', {
+            input
+        });
+    },
     async appStatusStatsView(
         input: StatusStatsViewInput
     ): Promise<StatusStatsViewOutput> {
@@ -4400,6 +4407,16 @@ export type FeedBioHistoryRow = {
 };
 export type FeedBioHistoryOutput = {
     rows: FeedBioHistoryRow[];
+};
+export type FeedBioSnapshotRecordInput = {
+    userId: string;
+    targetUserId: string;
+    bio: string;
+    displayName?: string;
+};
+export type FeedBioSnapshotRecordOutput = {
+    changed: boolean;
+    firstRecord: boolean;
 };
 export type StatusStatsTotal = {
     status: string;

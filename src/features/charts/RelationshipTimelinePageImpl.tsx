@@ -28,6 +28,13 @@ import {
     HoverCardContent,
     HoverCardTrigger
 } from '@/ui/shadcn/hover-card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from '@/ui/shadcn/select';
 import { Slider } from '@/ui/shadcn/slider';
 import { Spinner } from '@/ui/shadcn/spinner';
 import { Switch } from '@/ui/shadcn/switch';
@@ -63,10 +70,13 @@ export function RelationshipTimelinePage() {
         | null
     >(null);
     const [loading, setLoading] = useState(false);
+    const [friendCountLive, setFriendCountLive] = useState(5);
     const [friendCount, setFriendCount] = useState(5);
     const [showOthers, setShowOthers] = useState(false);
     const [showFriendsOnly, setShowFriendsOnly] = useState(false);
+    const [scaleLive, setScaleLive] = useState(DEFAULT_SCALE_SLIDER);
     const [scaleSlider, setScaleSlider] = useState(DEFAULT_SCALE_SLIDER);
+    const [rangeDays, setRangeDays] = useState(0);
     const [zoomRange, setZoomRange] = useState<{
         start: number;
         end: number;
@@ -94,7 +104,26 @@ export function RelationshipTimelinePage() {
         return map;
     }, [rows]);
 
-    const perFriendDays = useMemo(() => groupRowsByFriend(rows ?? []), [rows]);
+    const rangeStartDay = useMemo(() => {
+        if (!rangeDays) {
+            return null;
+        }
+        const cutoff = new Date(Date.now() - rangeDays * 24 * 60 * 60 * 1000);
+        const pad = (value: number) => String(value).padStart(2, '0');
+        return `${cutoff.getFullYear()}-${pad(cutoff.getMonth() + 1)}-${pad(cutoff.getDate())}`;
+    }, [rangeDays]);
+
+    const filteredRows = useMemo(() => {
+        if (!rangeStartDay || !rows) {
+            return rows ?? [];
+        }
+        return rows.filter((row) => row.day >= rangeStartDay);
+    }, [rows, rangeStartDay]);
+
+    const perFriendDays = useMemo(
+        () => groupRowsByFriend(filteredRows),
+        [filteredRows]
+    );
 
     const seriesData = useMemo(() => {
         let data = perFriendDays;
@@ -111,13 +140,17 @@ export function RelationshipTimelinePage() {
             aggregation,
             friendCount,
             showOthers,
-            resolveDisplayName: (userId) =>
+            resolveDisplayName: (userId, fallback) =>
                 friendsById[userId]?.displayName ||
                 namesByUserId.get(userId) ||
+                fallback ||
                 userId,
             othersName: t('view.charts.relationship_timeline.others'),
             colorPalette: COLOR_PALETTE
         });
+        if (!series) {
+            return null;
+        }
         return { aggregation, series };
     }, [
         perFriendDays,
@@ -130,7 +163,7 @@ export function RelationshipTimelinePage() {
         t
     ]);
 
-    const hasData = (rows ?? []).length > 0;
+    const hasData = filteredRows.length > 0;
 
     const option = useMemo(() => {
         if (!seriesData) {
@@ -270,7 +303,8 @@ export function RelationshipTimelinePage() {
                 stack: 'total',
                 areaStyle: { opacity: 0.75 },
                 lineStyle: { width: 0 },
-                smooth: false,
+                smooth: true,
+                smoothMonotone: 'x' as const,
                 symbol: 'none',
                 color: item.color,
                 emphasis: { focus: 'series' as const },
@@ -428,12 +462,21 @@ export function RelationshipTimelinePage() {
                             </span>
                             <div className="ml-3 flex items-center gap-2">
                                 <Slider
-                                    value={[friendCount]}
+                                    value={[friendCountLive]}
                                     min={1}
                                     max={10}
                                     step={1}
-                                    className="w-24"
+                                    className="w-28"
                                     onValueChange={(
+                                        value: number | readonly number[]
+                                    ) =>
+                                        setFriendCountLive(
+                                            (Array.isArray(value)
+                                                ? value[0]
+                                                : value) ?? 5
+                                        )
+                                    }
+                                    onValueCommitted={(
                                         value: number | readonly number[]
                                     ) =>
                                         setFriendCount(
@@ -444,7 +487,7 @@ export function RelationshipTimelinePage() {
                                     }
                                 />
                                 <span className="text-muted-foreground w-4 text-right text-xs tabular-nums">
-                                    {friendCount}
+                                    {friendCountLive}
                                 </span>
                             </div>
                         </div>
@@ -469,6 +512,40 @@ export function RelationshipTimelinePage() {
                                 checked={showFriendsOnly}
                                 onCheckedChange={setShowFriendsOnly}
                             />
+                        </div>
+                        <div className="flex h-[30px] items-center gap-2 px-0.5">
+                            <span className="shrink-0 text-sm">
+                                {t(
+                                    'view.charts.relationship_timeline.settings.time_range'
+                                )}
+                            </span>
+                            <Select
+                                value={String(rangeDays)}
+                                onValueChange={(value: string | null) =>
+                                    setRangeDays(Number(value ?? 0) || 0)
+                                }
+                            >
+                                <SelectTrigger className="h-7 w-24 text-xs">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[90, 180, 365, 0].map((days) => (
+                                        <SelectItem
+                                            key={days}
+                                            value={String(days)}
+                                        >
+                                            {days === 0
+                                                ? t(
+                                                      'view.charts.relationship_timeline.settings.range_all'
+                                                  )
+                                                : t(
+                                                      'view.charts.relationship_timeline.settings.range_days',
+                                                      { count: days }
+                                                  )}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <Tooltip>
                             <TooltipTrigger
@@ -522,15 +599,20 @@ export function RelationshipTimelinePage() {
                                 min={0}
                                 max={100}
                                 step={1}
-                                value={scaleSlider}
-                                className="accent-primary w-28"
+                                value={scaleLive}
+                                className="accent-primary w-44"
                                 onChange={(event) =>
-                                    setScaleSlider(Number(event.target.value))
+                                    setScaleLive(Number(event.target.value))
                                 }
+                                onPointerUp={() => setScaleSlider(scaleLive)}
+                                onKeyUp={() => setScaleSlider(scaleLive)}
                             />
                             <ZoomInIcon className="text-muted-foreground size-3.5 shrink-0" />
                             <span className="text-muted-foreground w-20 text-right text-xs tabular-nums">
-                                {bucketDays}{' '}
+                                {Math.max(
+                                    1,
+                                    Math.round(Math.pow(90, scaleLive / 100))
+                                )}{' '}
                                 {t(
                                     'view.charts.relationship_timeline.days_per_unit'
                                 )}

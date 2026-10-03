@@ -391,8 +391,11 @@ export function UserDialogStatusTab({
                     <span>{t('dialog.user.status_distribution.loading')}</span>
                 </div>
             ) : !hasData ? (
-                <div className="text-muted-foreground mt-8 flex flex-1 items-center justify-center text-sm">
-                    {t('dialog.user.status_distribution.no_data')}
+                <div className="text-muted-foreground mt-8 flex max-w-sm flex-1 flex-col items-center justify-center gap-1 px-4 text-center text-sm">
+                    <span>{t('dialog.user.status_distribution.no_data')}</span>
+                    <span className="text-xs">
+                        {t('dialog.user.status_distribution.no_data_hint')}
+                    </span>
                 </div>
             ) : (
                 <div

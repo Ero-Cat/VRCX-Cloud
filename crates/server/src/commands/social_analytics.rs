@@ -7,8 +7,8 @@ use std::sync::Arc;
 use crate::transport::error::ApiError;
 use crate::transport::invoke::CommandRegistry;
 use vrcx_0_runtime_host_server::local_data::{
-    FeedBioHistoryQueryInput, RelationshipTimelineRowsInput, StatusStatsViewInput,
-    TwoPersonRelationshipQueryInput,
+    FeedBioHistoryQueryInput, FeedBioSnapshotRecordInput, RelationshipTimelineRowsInput,
+    StatusStatsViewInput, TwoPersonRelationshipQueryInput,
 };
 use vrcx_0_runtime_host_server::ServerRuntimeHostState;
 
@@ -29,6 +29,20 @@ pub fn register(registry: &mut CommandRegistry) {
             run_blocking("feed bio history", move || {
                 local_data
                     .feed_bio_history_query(query)
+                    .map_err(vrcx_0_composition::Error::from)
+            })
+            .await
+            .and_then(ok)
+        },
+    );
+    registry.register(
+        "app__feed_bio_snapshot_record",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let input: FeedBioSnapshotRecordInput = arg(&args, "input")?;
+            let local_data = state.local_data().clone();
+            run_blocking("feed bio snapshot record", move || {
+                local_data
+                    .feed_bio_snapshot_record(input)
                     .map_err(vrcx_0_composition::Error::from)
             })
             .await

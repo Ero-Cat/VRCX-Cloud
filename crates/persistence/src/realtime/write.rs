@@ -259,6 +259,31 @@ fn add_friend_log_history(
     user_prefix: &str,
     entry: &FriendLogHistoryEntry<'_>,
 ) -> Result<u64, Error> {
+    // The sync grid's row key includes created_at, so the same logical
+    // event observed by two devices (server session + desktop replay)
+    // converges as two rows. Skip when an identical (user, type) event was
+    // already recorded within the last 24 hours on this device.
+    let duplicate = tx.execute(
+        &format!(
+            "SELECT COUNT(*) FROM {user_prefix}_friend_log_history
+             WHERE user_id = @user_id AND type = @type
+               AND julianday(@created_at) - julianday(created_at) BETWEEN 0 AND 1"
+        ),
+        &ParamsBuilder::new()
+            .set("user_id", entry.user_id)
+            .set("type", entry.entry_type)
+            .set("created_at", entry.created_at)
+            .build(),
+    )?;
+    if duplicate
+        .first()
+        .and_then(|row| row.first())
+        .and_then(serde_json::Value::as_i64)
+        .unwrap_or(0)
+        > 0
+    {
+        return Ok(0);
+    }
     tx.execute_non_query(
         &format!(
             "INSERT INTO {user_prefix}_friend_log_history (created_at, type, user_id, display_name, previous_display_name, trust_level, previous_trust_level, friend_number) VALUES (@created_at, @type, @user_id, @display_name, @previous_display_name, @trust_level, @previous_trust_level, @friend_number)"

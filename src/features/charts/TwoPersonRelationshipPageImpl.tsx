@@ -99,6 +99,9 @@ export function TwoPersonRelationshipPage() {
     const [showSelfPresence, setShowSelfPresence] = useState(false);
     const [items, setItems] = useState<SharedInstanceItem[] | null>(null);
     const [loading, setLoading] = useState(false);
+    const [playtimeByUserId, setPlaytimeByUserId] = useState<
+        Map<string, number>
+    >(() => new Map());
     const requestIdRef = useRef(0);
 
     const userIdA = searchParams.get('a') ?? '';
@@ -119,9 +122,16 @@ export function TwoPersonRelationshipPage() {
                 user: friendsById[friendId] ?? null
             });
         }
-        options.sort((left, right) => left.label.localeCompare(right.label));
+        options.sort((left, right) => {
+            const leftTime = playtimeByUserId.get(left.value) ?? 0;
+            const rightTime = playtimeByUserId.get(right.value) ?? 0;
+            if (leftTime !== rightTime) {
+                return rightTime - leftTime;
+            }
+            return left.label.localeCompare(right.label);
+        });
         return options;
-    }, [friendsById, currentUser]);
+    }, [friendsById, currentUser, playtimeByUserId]);
 
     const optionsA = useMemo(
         () => friendOptions.filter((option) => option.value !== userIdB),
@@ -174,6 +184,34 @@ export function TwoPersonRelationshipPage() {
     useEffect(() => {
         void loadData();
     }, [loadData]);
+
+    useEffect(() => {
+        if (!currentUserId) {
+            return undefined;
+        }
+        let cancelled = false;
+        commands
+            .appRelationshipTimelineRows({ ownerUserId: currentUserId })
+            .then((output) => {
+                if (cancelled) {
+                    return;
+                }
+                const totals = new Map<string, number>();
+                for (const row of output.rows ?? []) {
+                    totals.set(
+                        row.userId,
+                        (totals.get(row.userId) ?? 0) + row.totalTimeMs
+                    );
+                }
+                setPlaytimeByUserId(totals);
+            })
+            .catch(() => {
+                // Ranking falls back to alphabetical order.
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [currentUserId]);
 
     function updateParam(key: string, value: string) {
         const next = new URLSearchParams(searchParams);

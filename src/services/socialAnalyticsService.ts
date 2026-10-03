@@ -1,6 +1,7 @@
 import {
     commands,
     type FeedBioHistoryOutput,
+    type FeedBioSnapshotRecordOutput,
     type StatusStatsViewOutput
 } from '@/platform/native/bindings';
 
@@ -21,6 +22,23 @@ export const socialAnalyticsService = Object.freeze({
             userId: input.ownerUserId,
             targetUserId: input.targetUserId,
             limit: input.limit ?? 50
+        });
+    },
+
+    async recordBioSnapshot(input: {
+        ownerUserId: string;
+        targetUserId: string;
+        bio: string;
+        displayName: string;
+    }): Promise<FeedBioSnapshotRecordOutput> {
+        if (!input.ownerUserId || !input.targetUserId) {
+            return { changed: false, firstRecord: false };
+        }
+        return commands.appFeedBioSnapshotRecord({
+            userId: input.ownerUserId,
+            targetUserId: input.targetUserId,
+            bio: input.bio,
+            displayName: input.displayName
         });
     },
 

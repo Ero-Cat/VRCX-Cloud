@@ -637,3 +637,74 @@ fn friend_log_history_cursor_orders_actual_times_across_legacy_formats() {
         vec!["usr_older", "usr_unknown_time"]
     );
 }
+
+#[test]
+fn friend_log_history_collapses_cross_device_duplicates() {
+    let dir = TestDir::new("history-dedupe");
+    let db = DatabaseService::new(&dir.path.join("VRCX-0.sqlite3")).unwrap();
+    let owner = "usr_self".to_string();
+    ensure_realtime_tables(&db, &normalize_user_table_prefix(&owner).unwrap()).unwrap();
+    // Same logical Friend-add recorded by two devices 81 minutes apart.
+    db.execute_non_query(
+        &format!(
+            "INSERT INTO {pfx}_friend_log_history (created_at, type, user_id, display_name) VALUES
+             ('2026-10-02T01:59:41.790391+00:00', 'Friend', 'usr_x', 'A'),
+             ('2026-10-02T03:21:03.845764500+00:00', 'Friend', 'usr_x', 'A')",
+            pfx = normalize_user_table_prefix(&owner).unwrap()
+        ),
+        &Default::default(),
+    )
+    .unwrap();
+    let rows = friend_log_history_query(
+        &db,
+        FriendLogHistoryQueryInput {
+            user_id: owner,
+            target_user_id: "usr_x".into(),
+            types: Vec::new(),
+            excluded_types: Vec::new(),
+            date_from: String::new(),
+            date_to: String::new(),
+            cursor: None,
+            limit: None,
+        },
+    )
+    .unwrap();
+    assert_eq!(rows.len(), 1, "cross-device duplicate should collapse");
+    assert_eq!(
+        rows[0].created_at, "2026-10-02T01:59:41.790391+00:00",
+        "the earliest observation is kept"
+    );
+}
+
+#[test]
+fn friend_log_history_keeps_re_add_after_long_gap() {
+    let dir = TestDir::new("history-readd");
+    let db = DatabaseService::new(&dir.path.join("VRCX-0.sqlite3")).unwrap();
+    let owner = "usr_self".to_string();
+    ensure_realtime_tables(&db, &normalize_user_table_prefix(&owner).unwrap()).unwrap();
+    db.execute_non_query(
+        &format!(
+            "INSERT INTO {pfx}_friend_log_history (created_at, type, user_id, display_name) VALUES
+             ('2026-09-01T00:00:00Z', 'Unfriend', 'usr_x', 'A'),
+             ('2026-10-02T00:00:00Z', 'Friend', 'usr_x', 'A')",
+            pfx = normalize_user_table_prefix(&owner).unwrap()
+        ),
+        &Default::default(),
+    )
+    .unwrap();
+    let rows = friend_log_history_query(
+        &db,
+        FriendLogHistoryQueryInput {
+            user_id: owner,
+            target_user_id: "usr_x".into(),
+            types: Vec::new(),
+            excluded_types: Vec::new(),
+            date_from: String::new(),
+            date_to: String::new(),
+            cursor: None,
+            limit: None,
+        },
+    )
+    .unwrap();
+    assert_eq!(rows.len(), 2, "re-add after a real gap must survive");
+}

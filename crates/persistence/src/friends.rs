@@ -140,7 +140,7 @@ pub fn friend_log_history_query(
         "created_at DESC, id DESC"
     };
     let where_sql = format!(" WHERE {}", clauses.join(" AND "));
-    Ok(db
+    let rows: Vec<FriendLogHistoryOutput> = db
         .execute(
             &format!("SELECT id, created_at, type, user_id, display_name, previous_display_name, trust_level, previous_trust_level, friend_number FROM {user_prefix}_friend_log_history{where_sql} ORDER BY {order_sql}{limit_sql}"),
             &db_params,
@@ -158,7 +158,49 @@ pub fn friend_log_history_query(
             friend_number: row_i64(&row, 8),
         })
         .filter(|row| !row.user_id.trim().is_empty())
-        .collect())
+        .collect();
+    Ok(collapse_duplicate_friend_log_history(rows))
+}
+
+/// The sync row key includes created_at, so one logical event recorded by
+/// both the server session and the desktop (baseline replay) converges as
+/// two rows with different timestamps. Collapse same-type rows for the
+/// same user that fall within a 24h window, keeping the earliest (closest
+/// to when the event actually happened). Rows arrive newest-first.
+pub(crate) fn collapse_duplicate_friend_log_history(
+    mut rows: Vec<FriendLogHistoryOutput>,
+) -> Vec<FriendLogHistoryOutput> {
+    use std::collections::HashMap as DupMap;
+    let day_ms: i64 = 24 * 60 * 60 * 1000;
+    let mut kept_earliest: DupMap<(String, String), i64> = DupMap::new();
+    let mut keep = vec![false; rows.len()];
+    for index in (0..rows.len()).rev() {
+        let row = &rows[index];
+        let Ok(at_ms) = chrono::DateTime::parse_from_rfc3339(&row.created_at)
+            .map(|value| value.timestamp_millis())
+        else {
+            keep[index] = true;
+            continue;
+        };
+        let key = (row.user_id.clone(), row.r#type.clone());
+        match kept_earliest.get(&key) {
+            Some(earliest_ms) if at_ms - *earliest_ms <= day_ms => {
+                // A newer duplicate within the window of an already-kept
+                // earlier row: drop it.
+            }
+            _ => {
+                kept_earliest.insert(key, at_ms);
+                keep[index] = true;
+            }
+        }
+    }
+    let mut output = Vec::with_capacity(rows.len());
+    for (index, row) in rows.drain(..).enumerate() {
+        if keep[index] {
+            output.push(row);
+        }
+    }
+    output
 }
 
 pub fn friend_log_replace_current(

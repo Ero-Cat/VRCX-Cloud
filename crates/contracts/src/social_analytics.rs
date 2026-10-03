@@ -40,6 +40,26 @@ pub struct FeedBioHistoryOutput {
     pub rows: Vec<FeedBioHistoryRow>,
 }
 
+/// jirai's recordBioSnapshot: when a dialog opens with the current bio,
+/// diff it against the last recorded one and append a history row when it
+/// changed. The first record is the baseline.
+#[derive(Clone, Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FeedBioSnapshotRecordInput {
+    pub user_id: String,
+    pub target_user_id: String,
+    pub bio: String,
+    #[serde(default)]
+    pub display_name: String,
+}
+
+#[derive(Clone, Debug, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FeedBioSnapshotRecordOutput {
+    pub changed: bool,
+    pub first_record: bool,
+}
+
 // ── Status light distribution ──
 
 #[derive(Clone, Debug, Serialize, specta::Type)]

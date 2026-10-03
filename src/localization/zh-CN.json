@@ -1968,7 +1968,10 @@
                 "settings": {
                     "top_friends": "显示好友数",
                     "show_others": "显示其他",
-                    "show_friends_only": "仅显示好友"
+                    "show_friends_only": "仅显示好友",
+                    "time_range": "时间范围",
+                    "range_all": "全部",
+                    "range_days": "近 {count} 天"
                 }
             }
         },
@@ -4222,7 +4225,8 @@
                     "join_me": "加入我",
                     "ask_me": "询问我",
                     "busy": "请勿打扰"
-                }
+                },
+                "no_data_hint": "该好友暂无已记录的状态变更。状态记录只在该好友切换灯色时产生，并随桌面端同步积累。"
             }
         },
         "world": {

@@ -46,8 +46,10 @@ export function groupRowsByFriend(
 export interface TimelineAggregation {
     bucketCount: number;
     xLabels: string[];
-    /** userId → bucket index → score (ms). */
+    /** userId → per-bucket score (ms). */
     perFriendBuckets: Map<string, Map<number, number>>;
+    /** Per-bucket (userId, score) entries. */
+    bucketEntries: Array<Array<{ userId: string; score: number }>>;
     bucketTotals: number[];
 }
 
@@ -76,6 +78,8 @@ export function aggregateFriendDaysToBuckets(
 
     const bucketCount = Math.floor((lastDay - firstDay) / bucketDays) + 1;
     const perFriendBuckets = new Map<string, Map<number, number>>();
+    const bucketEntries: Array<Array<{ userId: string; score: number }>> =
+        Array.from({ length: bucketCount }, () => []);
     const bucketTotals = Array.from<number>({ length: bucketCount }).fill(0);
 
     for (const [userId, entry] of friendDays) {
@@ -87,6 +91,7 @@ export function aggregateFriendDaysToBuckets(
         }
         perFriendBuckets.set(userId, buckets);
         for (const [bucketIndex, score] of buckets) {
+            bucketEntries[bucketIndex].push({ userId, score });
             bucketTotals[bucketIndex] += score;
         }
     }
@@ -94,7 +99,13 @@ export function aggregateFriendDaysToBuckets(
     const xLabels = Array.from({ length: bucketCount }, (_, index) =>
         bucketLabel(index, firstDay, bucketDays)
     );
-    return { bucketCount, xLabels, perFriendBuckets, bucketTotals };
+    return {
+        bucketCount,
+        xLabels,
+        perFriendBuckets,
+        bucketEntries,
+        bucketTotals
+    };
 }
 
 function bucketLabel(
@@ -117,10 +128,17 @@ export interface TimelineSeries {
     name: string;
     userId: string;
     color: string;
-    /** Percentage share per bucket (0-100), null bucket → 0. */
+    /** Percentage share per bucket (0-100). */
     data: number[];
 }
 
+/**
+ * VRCX-jirai parity: each bucket independently keeps its own top-N friends;
+ * a friend's series only scores in buckets where it made that bucket's
+ * top-N, the remainder folds into "others", and the percentage denominator
+ * is the shown total (top sum + others when enabled) so the stack always
+ * fills 100%.
+ */
 export function buildPerBucketTopNPercentageSeries({
     aggregation,
     friendCount,
@@ -132,91 +150,100 @@ export function buildPerBucketTopNPercentageSeries({
     aggregation: TimelineAggregation;
     friendCount: number;
     showOthers: boolean;
-    resolveDisplayName: (userId: string) => string;
+    resolveDisplayName: (userId: string, fallback: string) => string;
     othersName: string;
     colorPalette: string[];
-}): TimelineSeries[] {
-    const { bucketCount, perFriendBuckets, bucketTotals } = aggregation;
+}): TimelineSeries[] | null {
+    const { bucketCount, perFriendBuckets, bucketEntries, bucketTotals } =
+        aggregation;
+    if (!bucketCount) {
+        return null;
+    }
 
-    // Top-N per bucket: rank friends by their share inside each bucket,
-    // then keep the friends that appear in the top-N of any bucket most
-    // often (jirai semantics: per-bucket top-N, rest folded into others).
-    const topSet = new Set<string>();
+    const topN = Math.max(1, Math.min(friendCount, perFriendBuckets.size));
+    const unionFriendIds = new Set<string>();
+    const friendRawData = new Map<string, number[]>();
+    const friendSelectedTotals = new Map<string, number>();
+    const othersRawData = Array.from<number>({ length: bucketCount }).fill(0);
+    const totalsPerBucket = Array.from<number>({ length: bucketCount }).fill(0);
+
     for (let bucket = 0; bucket < bucketCount; bucket += 1) {
-        const entries: Array<{ userId: string; score: number }> = [];
-        for (const [userId, buckets] of perFriendBuckets) {
-            const score = buckets.get(bucket) ?? 0;
-            if (score > 0) {
-                entries.push({ userId, score });
+        const sorted = [...bucketEntries[bucket]].sort(
+            (left, right) => right.score - left.score
+        );
+        const topEntries = sorted.slice(0, topN);
+        let topSum = 0;
+        for (const entry of topEntries) {
+            topSum += entry.score;
+            unionFriendIds.add(entry.userId);
+            if (!friendRawData.has(entry.userId)) {
+                friendRawData.set(
+                    entry.userId,
+                    Array.from<number>({ length: bucketCount }).fill(0)
+                );
             }
+            (friendRawData.get(entry.userId) as number[])[bucket] = entry.score;
+            friendSelectedTotals.set(
+                entry.userId,
+                (friendSelectedTotals.get(entry.userId) ?? 0) + entry.score
+            );
         }
-        entries.sort((left, right) => right.score - left.score);
-        for (const entry of entries.slice(0, friendCount)) {
-            topSet.add(entry.userId);
+        const othersScore = bucketTotals[bucket] - topSum;
+        if (othersScore > 0) {
+            othersRawData[bucket] = othersScore;
         }
+        totalsPerBucket[bucket] =
+            topSum + (showOthers ? othersRawData[bucket] : 0);
     }
 
-    const series: TimelineSeries[] = [];
-    let hasOthers = false;
-    const othersScores = Array.from<number>({ length: bucketCount }).fill(0);
-    for (const [userId, buckets] of perFriendBuckets) {
-        if (topSet.has(userId)) {
-            series.push({
-                userId,
-                name: resolveDisplayName(userId),
-                color: '',
-                data: bucketsToPercent(buckets, bucketTotals, bucketCount)
-            });
-            continue;
+    const friendOrder = Array.from(unionFriendIds).sort((left, right) => {
+        const scoreDiff =
+            (friendSelectedTotals.get(right) ?? 0) -
+            (friendSelectedTotals.get(left) ?? 0);
+        if (scoreDiff !== 0) {
+            return scoreDiff;
         }
-        hasOthers = true;
-        for (let bucket = 0; bucket < bucketCount; bucket += 1) {
-            othersScores[bucket] += buckets.get(bucket) ?? 0;
-        }
-    }
-
-    // Stable color assignment by total score, descending.
-    series.sort(
-        (left, right) =>
-            totalScore(right.data) - totalScore(left.data) ||
-            left.name.localeCompare(right.name)
-    );
-    series.forEach((item, index) => {
-        item.color = colorPalette[index % colorPalette.length];
+        return left.localeCompare(right);
     });
 
-    if (showOthers && hasOthers) {
+    const toPercent = (value: number, bucket: number): number => {
+        const total = totalsPerBucket[bucket];
+        if (!total) {
+            return 0;
+        }
+        return Number.parseFloat(((value / total) * 100).toFixed(2));
+    };
+
+    const series: TimelineSeries[] = [];
+    const includeOthers =
+        showOthers && othersRawData.some((value) => value > 0);
+    if (includeOthers) {
         series.push({
-            userId: '__others__',
             name: othersName,
-            color: '#8b949e',
-            data: othersScores.map((scoreMs, index) =>
-                bucketTotals[index] > 0
-                    ? +((scoreMs / bucketTotals[index]) * 100).toFixed(1)
-                    : 0
+            userId: '__others__',
+            color: '#aaaaaa',
+            data: othersRawData.map((value, bucket) => toPercent(value, bucket))
+        });
+    }
+
+    // Stack from lowest to highest selected score: the most significant
+    // friend ends up as the top band, matching jirai's push order.
+    for (
+        let orderIndex = friendOrder.length - 1;
+        orderIndex >= 0;
+        orderIndex -= 1
+    ) {
+        const userId = friendOrder[orderIndex];
+        series.push({
+            name: resolveDisplayName(userId, ''),
+            userId,
+            color: colorPalette[orderIndex % colorPalette.length],
+            data: (friendRawData.get(userId) as number[]).map((value, bucket) =>
+                toPercent(value, bucket)
             )
         });
     }
     return series;
-}
-
-function totalScore(data: number[]): number {
-    return data.reduce((total, value) => total + value, 0);
-}
-
-function bucketsToPercent(
-    buckets: Map<number, number>,
-    bucketTotals: number[],
-    bucketCount: number
-): number[] {
-    return Array.from({ length: bucketCount }, (_, index) =>
-        bucketTotals[index] > 0
-            ? +(
-                  ((buckets.get(index) ?? 0) / bucketTotals[index]) *
-                  100
-              ).toFixed(1)
-            : 0
-    );
 }
 
 export function computeZoomRange(

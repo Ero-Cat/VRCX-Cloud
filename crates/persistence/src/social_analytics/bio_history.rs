@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde_json::Value;
 
-use crate::common::{normalize_text, row_string};
+use crate::common::{normalize_text, row_string, ParamsBuilder};
 use crate::database::DatabaseService;
 use crate::realtime::{ensure_realtime_tables, normalize_user_table_prefix};
 use crate::Error;
@@ -123,4 +123,68 @@ pub fn feed_bio_history_query(
     merged.reverse();
     merged.truncate(limit as usize);
     Ok(FeedBioHistoryOutput { rows: merged })
+}
+
+pub fn feed_bio_snapshot_record(
+    db: &DatabaseService,
+    input: vrcx_0_contracts::social_analytics::FeedBioSnapshotRecordInput,
+) -> Result<vrcx_0_contracts::social_analytics::FeedBioSnapshotRecordOutput, Error> {
+    use vrcx_0_contracts::social_analytics::FeedBioSnapshotRecordOutput;
+    let user_id = normalize_text(&input.user_id);
+    let target_user_id = normalize_text(&input.target_user_id);
+    if user_id.is_empty() || target_user_id.is_empty() {
+        return Ok(FeedBioSnapshotRecordOutput {
+            changed: false,
+            first_record: false,
+        });
+    }
+    let user_prefix = normalize_user_table_prefix(&user_id)?;
+    ensure_realtime_tables(db, &user_prefix)?;
+    let mut params = HashMap::new();
+    params.insert("@user_id".into(), Value::String(target_user_id.clone()));
+    let latest_bio = db
+        .execute(
+            &format!(
+                "SELECT bio FROM {user_prefix}_feed_bio WHERE user_id = @user_id
+                 ORDER BY created_at DESC, id DESC LIMIT 1"
+            ),
+            &params,
+        )?
+        .first()
+        .map(|row| row_string(row, 0))
+        .unwrap_or_default();
+    let first_record = latest_bio.is_empty()
+        && db
+            .execute(
+                &format!("SELECT COUNT(*) FROM {user_prefix}_feed_bio WHERE user_id = @user_id"),
+                &params,
+            )?
+            .first()
+            .map(|row| row.first().and_then(Value::as_i64).unwrap_or(0))
+            .unwrap_or(0)
+            == 0;
+    if !first_record && latest_bio == input.bio {
+        return Ok(FeedBioSnapshotRecordOutput {
+            changed: false,
+            first_record: false,
+        });
+    }
+    let created_at = super::tracks::iso_from_ms(chrono::Utc::now().timestamp_millis());
+    db.execute_non_query(
+        &format!(
+            "INSERT INTO {user_prefix}_feed_bio (created_at, user_id, display_name, bio, previous_bio)
+             VALUES (@created_at, @user_id, @display_name, @bio, @previous_bio)"
+        ),
+        &ParamsBuilder::new()
+            .set("created_at", created_at)
+            .set("user_id", target_user_id)
+            .set("display_name", normalize_text(&input.display_name))
+            .set("bio", input.bio.clone())
+            .set("previous_bio", if first_record { String::new() } else { latest_bio })
+            .build(),
+    )?;
+    Ok(FeedBioSnapshotRecordOutput {
+        changed: !first_record,
+        first_record,
+    })
 }

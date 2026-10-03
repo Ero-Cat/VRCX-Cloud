@@ -71,9 +71,10 @@ pub use vrcx_0_persistence::notifications::{
 pub use vrcx_0_persistence::player_list::InstanceActivityRowOutput;
 pub use vrcx_0_persistence::social_aggregates::{WorldFriendVisitRow, WorldFriendVisitsOutput};
 pub use vrcx_0_persistence::social_analytics::{
-    FeedBioHistoryOutput, FeedBioHistoryQueryInput, RelationshipTimelineRowsInput,
-    RelationshipTimelineRowsOutput, StatusStatsViewInput, StatusStatsViewOutput,
-    TwoPersonRelationshipOutput, TwoPersonRelationshipQueryInput,
+    FeedBioHistoryOutput, FeedBioHistoryQueryInput, FeedBioSnapshotRecordInput,
+    FeedBioSnapshotRecordOutput, RelationshipTimelineRowsInput, RelationshipTimelineRowsOutput,
+    StatusStatsViewInput, StatusStatsViewOutput, TwoPersonRelationshipOutput,
+    TwoPersonRelationshipQueryInput,
 };
 pub use vrcx_0_persistence::watched_users::WatchedUserOutput;
 pub use vrcx_0_persistence::worlds::WorldSummaryOutput;
@@ -663,6 +664,18 @@ impl LocalDataRuntime {
         query: FeedBioHistoryQueryInput,
     ) -> Result<FeedBioHistoryOutput> {
         Ok(vrcx_0_persistence::social_analytics::feed_bio_history_query(self.db.as_ref(), query)?)
+    }
+
+    pub fn feed_bio_snapshot_record(
+        &self,
+        input: FeedBioSnapshotRecordInput,
+    ) -> Result<FeedBioSnapshotRecordOutput> {
+        Ok(
+            vrcx_0_persistence::social_analytics::feed_bio_snapshot_record(
+                self.db.as_ref(),
+                input,
+            )?,
+        )
     }
 
     pub fn status_stats_view(&self, input: StatusStatsViewInput) -> Result<StatusStatsViewOutput> {

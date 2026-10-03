@@ -1980,7 +1980,10 @@
                 "settings": {
                     "top_friends": "Top friends",
                     "show_others": "Show others",
-                    "show_friends_only": "Friends only"
+                    "show_friends_only": "Friends only",
+                    "time_range": "Time range",
+                    "range_all": "All",
+                    "range_days": "Last {count} days"
                 }
             }
         },
@@ -4234,7 +4237,8 @@
                     "join_me": "Join Me",
                     "ask_me": "Ask Me",
                     "busy": "Do Not Disturb"
-                }
+                },
+                "no_data_hint": "No recorded status changes for this friend yet. Records appear when they switch their status light and accumulate as the desktop client syncs."
             }
         },
         "world": {
