@@ -2,6 +2,7 @@ import type { FormEvent } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { isAdminGateError } from '@/platform/native/webTransport';
 import type {
     SavedAuthSnapshot,
     SavedCredentialRecord
@@ -124,6 +125,11 @@ export function useLoginPageState() {
                 }
             })
             .catch((error: unknown) => {
+                if (isAdminGateError(error)) {
+                    // The admin unlock dialog is already up; the page
+                    // reboots after unlocking, so stay quiet.
+                    return;
+                }
                 toast.add({
                     type: 'error',
                     title:

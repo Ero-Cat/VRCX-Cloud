@@ -30,6 +30,26 @@ export class WebCommandError extends Error {
     }
 }
 
+/**
+ * Whether an error (possibly wrapped by `normalizePlatformError`) is the
+ * admin browser gate rejecting the request. Callers that surface command
+ * failures to the user should stay quiet in this case: the unlock dialog
+ * is already up and the app reboots after a successful unlock.
+ */
+export function isAdminGateError(error: unknown): boolean {
+    let current: unknown = error;
+    for (let depth = 0; depth < 8 && current; depth += 1) {
+        if (
+            current instanceof WebCommandError &&
+            current.code === 'adminAuthRequired'
+        ) {
+            return true;
+        }
+        current = (current as { cause?: unknown }).cause;
+    }
+    return false;
+}
+
 interface InvokeEnvelope {
     ok?: boolean;
     result?: unknown;

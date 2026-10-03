@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { normalizeLanguageCode } from '@/localization/locales';
 import {
     setTaskbarOverlayNotification,
     setTrayIconNotification
@@ -25,6 +26,17 @@ function loadWindowDisplayMode(): WindowDisplayMode {
     return localStorage.getItem(WINDOW_DISPLAY_MODE_STORAGE_KEY) === 'sidebar'
         ? 'sidebar'
         : 'normal';
+}
+
+/**
+ * The user's saved language preference lives server-side and only
+ * arrives with the preference snapshot; until then (fresh browser, or
+ * the admin gate still locked) follow the browser language.
+ */
+function loadInitialLocale(): string {
+    return normalizeLanguageCode(
+        typeof navigator === 'undefined' ? 'en' : navigator.language
+    );
 }
 
 function saveWindowDisplayMode(windowDisplayMode: WindowDisplayMode): void {
@@ -120,7 +132,7 @@ const initialState: ShellStoreState = {
     sidebarOpen: true,
     rightSidebarOpen: true,
     navWidth: 240,
-    locale: 'en',
+    locale: loadInitialLocale(),
     themeMode: 'system',
     themeColor: DEFAULT_THEME_COLOR_KEY,
     tableDensity: 'standard',

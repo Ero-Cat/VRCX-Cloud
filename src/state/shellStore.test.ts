@@ -154,3 +154,36 @@ describe('shellStore settings navigation state', () => {
         useShellStore.getState().setWindowDisplayMode('normal');
     });
 });
+
+describe('initial locale follows the browser language', () => {
+    function stubBrowserLanguage(language: string): void {
+        Object.defineProperty(window.navigator, 'language', {
+            configurable: true,
+            value: language
+        });
+    }
+
+    it('starts a Chinese browser in zh-CN before any server preference loads', async () => {
+        stubBrowserLanguage('zh-CN');
+        vi.resetModules();
+        const { useShellStore: freshStore } = await import('./shellStore');
+
+        expect(freshStore.getState().locale).toBe('zh-CN');
+    });
+
+    it('maps a bare zh browser language to Simplified Chinese', async () => {
+        stubBrowserLanguage('zh');
+        vi.resetModules();
+        const { useShellStore: freshStore } = await import('./shellStore');
+
+        expect(freshStore.getState().locale).toBe('zh-CN');
+    });
+
+    it('falls back to English for unsupported browser languages', async () => {
+        stubBrowserLanguage('xx-YY');
+        vi.resetModules();
+        const { useShellStore: freshStore } = await import('./shellStore');
+
+        expect(freshStore.getState().locale).toBe('en');
+    });
+});
