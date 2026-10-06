@@ -175,7 +175,13 @@ export function useInstanceActionBarController({
     );
     const userCount = instanceUserCount(instanceInfo);
     const providedPlayerCount = firstNonNegativeLocationNumber(playerCount);
-    const resolvedUserCount = userCount ?? providedPlayerCount;
+    // VRChat's instance endpoint masks occupancy as 0 for instances the
+    // account is not in, so a provided roster-derived count must be able
+    // to raise the displayed number above the instance payload's 0.
+    const resolvedUserCount =
+        userCount === null && providedPlayerCount === null
+            ? null
+            : Math.max(userCount ?? 0, providedPlayerCount ?? 0);
     const capacity =
         instanceCapacity(instanceInfo) ??
         finiteLocationNumber(providedCapacity) ??

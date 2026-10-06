@@ -57,6 +57,10 @@ const PULL_BATCHES_PER_CYCLE: usize = 100;
 const BOOTSTRAP_CHUNK: i64 = 500;
 const BOOTSTRAP_MATERIALIZED_PAGE: i64 = 1000;
 const GC_INTERVAL_HOURS: i64 = 24;
+/// How often the op-log vs materialized-state invariant is verified.
+const MATERIALIZATION_CHECK_INTERVAL_HOURS: i64 = 24;
+/// Hours (unix, UTC) of the most recent completed divergence check.
+const META_LAST_DIVERGENCE_CHECK_AT: &str = "sync.lastDivergenceCheckAt";
 /// Set while a first-time bootstrap should (re)run; cleared on completion.
 const META_BOOTSTRAP_PENDING: &str = "sync.pendingBootstrap";
 /// Written once after the first successful bootstrap.
@@ -289,7 +293,86 @@ impl RemoteSyncEngine {
         let pulled = self.pull_until_caught_up().await?;
         self.reconcile_if_gap().await?;
         self.maybe_gc_ops().await?;
+        self.maybe_check_materialization().await;
         Ok((pushed, pulled))
+    }
+
+    /// Daily invariant check between the retained op log and the
+    /// materialized tables it feeds. Divergence cannot originate from the
+    /// current push path (ops and materialization commit together, and a
+    /// missing schema abort the push), but a historical hole, manual SQL or
+    /// a future bug would otherwise persist silently: every later device's
+    /// first-merge adopts materialized state and skips the op log, so the
+    /// log is the only place the missing rows are still provable. On gaps,
+    /// replay the affected tables' retained ops through the exact
+    /// materialization path pushes use — idempotent upserts, so replaying a
+    /// consistent table is a no-op. A failed check retries next cycle; the
+    /// timestamp only advances on a completed pass.
+    async fn maybe_check_materialization(self: &Arc<Self>) {
+        let Ok(last) = sync_meta_get(&self.db, META_LAST_DIVERGENCE_CHECK_AT) else {
+            return;
+        };
+        let last = last
+            .and_then(|value| value.parse::<i64>().ok())
+            .unwrap_or(0);
+        let now = chrono_now_hours();
+        if now - last < MATERIALIZATION_CHECK_INTERVAL_HOURS {
+            return;
+        }
+        let check = self.check_materialization_once().await;
+        if let Err(error) = check {
+            tracing::error!(error = %error, "materialization divergence check failed");
+            return;
+        }
+        let _ = sync_meta_set(&self.db, META_LAST_DIVERGENCE_CHECK_AT, &now.to_string());
+    }
+
+    async fn check_materialization_once(&self) -> EngineResult<()> {
+        let gaps = self.store.materialization_gaps().await?;
+        if gaps.is_empty() {
+            return Ok(());
+        }
+        let summary = gaps
+            .iter()
+            .map(|gap| {
+                format!(
+                    "{}: {} rows, log proves {}",
+                    gap.table,
+                    gap.materialized_rows,
+                    gap.ops_set_keys - gap.ops_del_keys
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("; ");
+        tracing::warn!(gaps = %summary, "sync op log diverged from materialized state; replaying retained ops to heal");
+        let tables = gaps.iter().map(|gap| gap.table.clone()).collect::<Vec<_>>();
+        let replayed = self.store.rematerialize(&tables).await?;
+        let remaining = self.store.materialization_gaps().await?;
+        if remaining.is_empty() {
+            tracing::info!(
+                replayed,
+                "materialization heal completed; op log and materialized state agree again"
+            );
+        } else {
+            let summary = remaining
+                .iter()
+                .map(|gap| {
+                    format!(
+                        "{}: {} rows, log proves {}",
+                        gap.table,
+                        gap.materialized_rows,
+                        gap.ops_set_keys - gap.ops_del_keys
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("; ");
+            tracing::error!(
+                replayed,
+                gaps = %summary,
+                "materialized state still divergent after heal replay; manual investigation needed"
+            );
+        }
+        Ok(())
     }
 
     async fn push_until_drained(self: &Arc<Self>) -> EngineResult<u64> {

@@ -19,7 +19,7 @@ use tokio_postgres::types::ToSql;
 use tokio_postgres::Client;
 use vrcx_0_application_sync::{
     MaterializedRow, PulledOp, RemoteColumnType, RemoteSyncStore, RemoteTableSchema,
-    SyncStoreError, SyncStoreResult,
+    SyncMaterializationGap, SyncStoreError, SyncStoreResult,
 };
 use vrcx_0_contracts::{
     SyncConnectionTestResult, SyncDeviceRecord, SyncFieldSemantic, SyncOpKind, SyncOpRecord,
@@ -28,6 +28,9 @@ use vrcx_0_contracts::{
 
 const META_PROTOCOL_VERSION: &str = "sync.protocolVersion";
 const META_PROVISIONED_AT: &str = "sync.provisionedAt";
+
+/// Ops replayed per transaction during a materialization heal.
+const REMATERIALIZE_PAGE: i64 = 2000;
 
 /// Connection settings for the remote sync database.
 #[derive(Clone, Debug)]
@@ -930,6 +933,152 @@ impl RemoteSyncStore for PostgresSyncStore {
         })
         .await
     }
+
+    async fn materialization_gaps(&self) -> SyncStoreResult<Vec<SyncMaterializationGap>> {
+        // One pass over the op log for the per-table key census, then one
+        // COUNT(*) per materialized table. `ops_del_keys` over-counts the
+        // rows deletes actually removed (a delete may target a row a newer
+        // set had already replaced), so subtracting it can only under-report
+        // gaps — never false-alarm.
+        let counts = self
+            .with_client(|client| async move {
+                let rows = client
+                    .query(
+                        "SELECT table_name,
+                                COUNT(DISTINCT entity_key) FILTER (WHERE op = 'set'),
+                                COUNT(DISTINCT entity_key) FILTER (WHERE op = 'del')
+                         FROM sync_ops GROUP BY table_name",
+                        &[],
+                    )
+                    .await
+                    .map_err(pg_error)?;
+                let counts: Vec<(String, i64, i64)> = rows
+                    .iter()
+                    .map(|row| {
+                        let table: String = row.get(0);
+                        let set_keys: i64 = row.get(1);
+                        let del_keys: i64 = row.get(2);
+                        (table, set_keys, del_keys)
+                    })
+                    .collect();
+                Ok((counts, client))
+            })
+            .await?;
+        let mut gaps = Vec::new();
+        for (table, set_keys, del_keys) in counts {
+            let expected = set_keys - del_keys;
+            if expected <= 0 {
+                continue;
+            }
+            let materialized = self
+                .with_client({
+                    let table = table.clone();
+                    move |client| async move {
+                        let sql = format!("SELECT COUNT(*) FROM {}", quoted(&table));
+                        let row = client.query_one(&sql[..], &[]).await.map_err(pg_error)?;
+                        let rows: i64 = row.get(0);
+                        Ok((rows, client))
+                    }
+                })
+                .await;
+            let materialized_rows = materialized.unwrap_or(0);
+            if materialized_rows < expected {
+                tracing::warn!(
+                    table = %table,
+                    ops_set_keys = set_keys,
+                    ops_del_keys = del_keys,
+                    materialized_rows,
+                    "materialized table is missing rows the retained op log proves"
+                );
+                gaps.push(SyncMaterializationGap {
+                    table,
+                    ops_set_keys: set_keys,
+                    ops_del_keys: del_keys,
+                    materialized_rows,
+                });
+            }
+        }
+        Ok(gaps)
+    }
+
+    async fn rematerialize(&self, tables: &[String]) -> SyncStoreResult<u64> {
+        if tables.is_empty() {
+            return Ok(0);
+        }
+        // The replay must run the exact materialization pushes run, so every
+        // table needs a schema; adopt from the remote DDL and fail loudly on
+        // tables neither the local snapshot nor the remote knows.
+        self.adopt_remote_schemas(tables).await?;
+        {
+            let schemas = self.schemas.read().unwrap();
+            for table in tables {
+                if !schemas.contains_key(table) {
+                    return Err(SyncStoreError::Other(format!(
+                        "cannot rematerialize {table}: no materialization schema is known for it"
+                    )));
+                }
+            }
+        }
+        let schemas = self.schemas.read().unwrap().clone();
+        let mut replayed: u64 = 0;
+        for table in tables {
+            let mut cursor: i64 = 0;
+            loop {
+                let (page, last_seq) = self
+                    .fetch_table_ops(table, cursor, REMATERIALIZE_PAGE)
+                    .await?;
+                let count = page.len();
+                if count == 0 {
+                    break;
+                }
+                let mut ops = page;
+                ops.sort_by(|a, b| {
+                    (
+                        a.table.as_str(),
+                        entity_key_text(&a.entity_key).as_str(),
+                        a.op_id.as_str(),
+                    )
+                        .cmp(&(
+                            b.table.as_str(),
+                            entity_key_text(&b.entity_key).as_str(),
+                            b.op_id.as_str(),
+                        ))
+                });
+                let page_len = ops.len();
+                let table_for_logs = table.clone();
+                let page_schemas = schemas.clone();
+                self.with_client(move |mut client| async move {
+                    let transaction = client.transaction().await.map_err(pg_error)?;
+                    // Same serialization lock pushes take: the heal must not
+                    // interleave with a concurrent push on the same rows.
+                    transaction
+                        .execute("SELECT pg_advisory_xact_lock(940817)", &[])
+                        .await
+                        .map_err(pg_error)?;
+                    materialize_sorted_ops(&transaction, &page_schemas, ops.iter())
+                        .await
+                        .map_err(|error| {
+                            tracing::error!(
+                                table = %table_for_logs,
+                                error = %error,
+                                "materialization heal page failed"
+                            );
+                            error
+                        })?;
+                    transaction.commit().await.map_err(pg_error)?;
+                    Ok(((), client))
+                })
+                .await?;
+                replayed += page_len as u64;
+                cursor = last_seq;
+                if (count as i64) < REMATERIALIZE_PAGE {
+                    break;
+                }
+            }
+            tracing::info!(table = %table, "materialization heal replay finished");
+        }
+        Ok(replayed)
+    }
 }
 
 // Minimal timestamp shim so we do not pull chrono into this adapter.
@@ -1168,6 +1317,55 @@ fn parse_kind(code: &str) -> SyncOpKind {
 }
 
 impl PostgresSyncStore {
+    /// Page through one table's retained ops in arrival order; the heal
+    /// replay reads them here and re-materializes each page transactionally.
+    /// Returns the ops and the highest `server_seq` in the page (0 when the
+    /// page is empty) so the caller can advance its cursor.
+    async fn fetch_table_ops(
+        &self,
+        table: &str,
+        cursor: i64,
+        limit: i64,
+    ) -> SyncStoreResult<(Vec<SyncOpRecord>, i64)> {
+        let table = table.to_string();
+        self.with_client(move |client| async move {
+            let rows = client
+                .query(
+                    "SELECT server_seq, op_id, table_name, entity_key, op, payload::text, hlc, device
+                     FROM sync_ops
+                     WHERE table_name = $1 AND server_seq > $2
+                     ORDER BY server_seq LIMIT $3",
+                    &[&table, &cursor, &limit],
+                )
+                .await
+                .map_err(pg_error)?;
+            let mut ops = Vec::with_capacity(rows.len());
+            let mut last_seq = 0i64;
+            for row in rows {
+                let server_seq: i64 = row.try_get(0).map_err(pg_error)?;
+                let op_id: String = row.try_get(1).map_err(pg_error)?;
+                let table: String = row.try_get(2).map_err(pg_error)?;
+                let entity_key_text: String = row.try_get(3).map_err(pg_error)?;
+                let op_code: String = row.try_get(4).map_err(pg_error)?;
+                let payload_text: Option<String> = row.try_get(5).map_err(pg_error)?;
+                let hlc: String = row.try_get(6).map_err(pg_error)?;
+                let device: String = row.try_get(7).map_err(pg_error)?;
+                last_seq = last_seq.max(server_seq);
+                ops.push(SyncOpRecord {
+                    op_id,
+                    table,
+                    entity_key: serde_json::from_str(&entity_key_text).unwrap_or_default(),
+                    kind: parse_kind(&op_code),
+                    payload: payload_text.and_then(|text| serde_json::from_str(&text).ok()),
+                    hlc,
+                    device,
+                });
+            }
+            Ok(((ops, last_seq), client))
+        })
+        .await
+    }
+
     /// Build RemoteTableSchema entries from information_schema for tables
     /// the remote already materializes; used to self-heal the schema cache
     /// when local schema snapshots lag behind remote table creation.
@@ -1208,6 +1406,12 @@ impl PostgresSyncStore {
                                     _ => RemoteColumnType::Text,
                                 },
                             }
+                        })
+                        // The materializer appends the watermark columns
+                        // itself; leaving them in an adopted schema would
+                        // make every upsert list them twice (42701).
+                        .filter(|column| {
+                            !matches!(column.name.as_str(), "sync_hlc" | "sync_device")
                         })
                         .collect::<Vec<_>>();
                     adopted.push(RemoteTableSchema {
@@ -1333,47 +1537,65 @@ impl PostgresSyncStore {
 
             // 2. Materialize freshly appended ops through lattice merges.
             //    `ops` is already in the deterministic global order from the
-            //    top of this function. Runs of Set ops for one table are
-            //    materialized as a single multi-row upsert — bootstrap
-            //    uploads are Set-heavy, and batching them is an order of
-            //    magnitude faster than per-op statements.
-            let mut set_batch: Vec<&SyncOpRecord> = Vec::new();
-            for op in ops.iter().filter(|op| inserted_ids.contains(&op.op_id)) {
-                if op.kind == SyncOpKind::Set {
-                    // Start a new statement whenever the table changes OR the
-                    // natural key repeats: PostgreSQL rejects a multi-row
-                    // upsert that would affect the same row twice (21000),
-                    // and source tables without a local unique index (feed
-                    // tables) legitimately contain duplicate natural keys.
-                    // Ops are sorted, so equal keys are adjacent — sequential
-                    // statements preserve exact last-write-wins semantics.
-                    let key_repeats = set_batch
-                        .last()
-                        .is_some_and(|last| {
-                            last.table == op.table
-                                && entity_key_text(&last.entity_key)
-                                    == entity_key_text(&op.entity_key)
-                        });
-                    if key_repeats || (!set_batch.is_empty() && set_batch[0].table != op.table) {
-                        flush_set_batch(&transaction, &schemas, &mut set_batch).await?;
-                    }
-                    set_batch.push(op);
-                    if set_batch.len() >= 500 {
-                        flush_set_batch(&transaction, &schemas, &mut set_batch).await?;
-                    }
-                    continue;
-                }
-                flush_set_batch(&transaction, &schemas, &mut set_batch).await?;
-                let schema = schemas.get(&op.table).expect("checked above");
-                materialize_op(&transaction, op, schema).await?;
-            }
-            flush_set_batch(&transaction, &schemas, &mut set_batch).await?;
+            //    top of this function.
+            let fresh: Vec<&SyncOpRecord> = ops
+                .iter()
+                .filter(|op| inserted_ids.contains(&op.op_id))
+                .collect();
+            materialize_sorted_ops(&transaction, &schemas, fresh)
+                .await?;
 
             transaction.commit().await.map_err(pg_error)?;
             Ok(((), client))
         })
         .await
     }
+}
+
+/// Materialize already-sorted ops through the lattice merges: runs of Set
+/// ops for one table become a single multi-row upsert — bootstrap uploads
+/// and heal replays are Set-heavy, and batching them is an order of
+/// magnitude faster than per-op statements. `ops` must be sorted by
+/// (table, entity key, op id), as `push_ops_once` and the heal replay do.
+async fn materialize_sorted_ops<'a, I>(
+    transaction: &tokio_postgres::Transaction<'_>,
+    schemas: &HashMap<String, Arc<RemoteTableSchema>>,
+    ops: I,
+) -> SyncStoreResult<()>
+where
+    I: IntoIterator<Item = &'a SyncOpRecord>,
+{
+    let mut set_batch: Vec<&SyncOpRecord> = Vec::new();
+    for op in ops {
+        if op.kind == SyncOpKind::Set {
+            // Start a new statement whenever the table changes OR the
+            // natural key repeats: PostgreSQL rejects a multi-row
+            // upsert that would affect the same row twice (21000),
+            // and source tables without a local unique index (feed
+            // tables) legitimately contain duplicate natural keys.
+            // Ops are sorted, so equal keys are adjacent — sequential
+            // statements preserve exact last-write-wins semantics.
+            let key_repeats = set_batch.last().is_some_and(|last| {
+                last.table == op.table
+                    && entity_key_text(&last.entity_key) == entity_key_text(&op.entity_key)
+            });
+            if key_repeats || (!set_batch.is_empty() && set_batch[0].table != op.table) {
+                flush_set_batch(transaction, schemas, &mut set_batch).await?;
+            }
+            set_batch.push(op);
+            if set_batch.len() >= 500 {
+                flush_set_batch(transaction, schemas, &mut set_batch).await?;
+            }
+            continue;
+        }
+        flush_set_batch(transaction, schemas, &mut set_batch).await?;
+        let schema = schemas
+            .get(&op.table)
+            .ok_or_else(|| SyncStoreError::Other(format!("no schema for {}", op.table)))?;
+        materialize_op(transaction, op, schema).await?;
+    }
+    flush_set_batch(transaction, schemas, &mut set_batch).await?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -1433,7 +1655,7 @@ mod pg_smoke {
             payload.insert("id".to_string(), Value::String("row-1".into()));
             payload.insert("name".to_string(), Value::String("alpha".into()));
             let set_op = SyncOpRecord {
-                op_id: "smoke-set-1".into(),
+                op_id: "00000000000000001-00000000-smoketest".into(),
                 table: "smoke_test_rows".into(),
                 entity_key: key.clone(),
                 kind: SyncOpKind::Set,
@@ -1445,7 +1667,7 @@ mod pg_smoke {
             inc_payload.insert("field".to_string(), Value::String("tally".into()));
             inc_payload.insert("delta".to_string(), Value::from(5i64));
             let inc_op = SyncOpRecord {
-                op_id: "smoke-inc-1".into(),
+                op_id: "00000000000000002-00000000-smoketest".into(),
                 table: "smoke_test_rows".into(),
                 entity_key: key,
                 kind: SyncOpKind::Inc,
@@ -1466,7 +1688,14 @@ mod pg_smoke {
 
             let pulled = store.fetch_ops(0, 10).await.expect("fetch ops");
             assert_eq!(pulled.len(), 2, "op log contains exactly the two ops");
-            assert_eq!(pulled[0].op.op_id, "smoke-set-1");
+            // Pushes sort by (table, key, op id) before appending, so the
+            // Inc fact lands before the Set here; only membership is
+            // contractual for a single batch.
+            let ids: Vec<&str> = pulled.iter().map(|item| item.op.op_id.as_str()).collect();
+            assert!(
+                ids.contains(&"00000000000000001-00000000-smoketest")
+                    && ids.contains(&"00000000000000002-00000000-smoketest")
+            );
 
             let materialized = store
                 .fetch_materialized("smoke_test_rows", 10, 0)
@@ -1502,6 +1731,186 @@ mod pg_smoke {
                 client.execute(sql, &[]).await.expect("cleanup");
             }
             println!("smoke roundtrip OK; remote cleaned");
+        });
+    }
+
+    /// Regression test for the 2026-10-01 incident class: ops appended to
+    /// the log while their materialization silently vanished (a pre-fix
+    /// dev build did this). The retained log must still prove the rows, the
+    /// gap detector must find the table, and rematerialize must heal it
+    /// through the same lattice merges pushes use — including honoring
+    /// delete ops. Runs only when VRCX_PG_TEST_DSN is set, against a
+    /// disposable database.
+    #[test]
+    fn rematerialize_heals_rows_the_log_still_proves() {
+        let Ok(dsn) = std::env::var("VRCX_PG_TEST_DSN") else {
+            return;
+        };
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("test runtime");
+        runtime.block_on(async move {
+            let store = PostgresSyncStore::new(&PostgresSyncStoreConfig {
+                dsn: dsn.clone(),
+                tls_verify: false,
+                allow_plaintext: true,
+            })
+            .expect("store");
+            // Raw handle for carving holes and cleaning leftovers; a failed
+            // earlier run may have left its rows behind.
+            let mut raw_config = tokio_postgres::Config::from_str(&dsn).unwrap();
+            raw_config.ssl_mode(tokio_postgres::config::SslMode::Prefer);
+            let (client, connection) = raw_config
+                .connect(make_tls_connector(false).unwrap())
+                .await
+                .expect("raw connect");
+            tokio::spawn(async move {
+                let _ = connection.await;
+            });
+            // A per-user catalog table so adopt_remote_schemas can resolve
+            // its descriptor (the heal only replays tables it can merge).
+            let table = "usrfeedtest_feed_status";
+            let schema = vec![RemoteTableSchema {
+                table: table.into(),
+                columns: vec![
+                    vrcx_0_application_sync::RemoteColumnDef {
+                        name: "created_at".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    vrcx_0_application_sync::RemoteColumnDef {
+                        name: "user_id".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    vrcx_0_application_sync::RemoteColumnDef {
+                        name: "display_name".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    vrcx_0_application_sync::RemoteColumnDef {
+                        name: "status".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                    vrcx_0_application_sync::RemoteColumnDef {
+                        name: "previous_status".into(),
+                        column_type: RemoteColumnType::Text,
+                    },
+                ],
+                key_columns: vec![
+                    "created_at".into(),
+                    "user_id".into(),
+                    "previous_status".into(),
+                ],
+                row_semantic: SyncRowSemantic::GSet,
+                field_semantics: vec![],
+            }];
+            store.ensure_schema(&schema, 1).await.expect("schema");
+            for sql in [
+                format!("DROP TABLE IF EXISTS {table}"),
+                "DELETE FROM sync_ops WHERE device = 'healtest'".to_string(),
+            ] {
+                client.execute(&sql, &[]).await.expect("start clean");
+            }
+            store
+                .ensure_schema(&schema, 1)
+                .await
+                .expect("re-ensure after drop");
+
+            let mk_op = |seq: u64, created_at: &str, user_id: &str, previous: &str| SyncOpRecord {
+                // Production op ids are the op's HLC, so id order matches
+                // causal order — the replay sort depends on that.
+                op_id: format!("{seq:017}-00000000-healtest"),
+                table: table.into(),
+                entity_key: vec![
+                    Value::String(created_at.into()),
+                    Value::String(user_id.into()),
+                    Value::String(previous.into()),
+                ],
+                kind: SyncOpKind::Set,
+                payload: Some({
+                    let mut payload = Map::new();
+                    payload.insert("created_at".into(), Value::String(created_at.into()));
+                    payload.insert("user_id".into(), Value::String(user_id.into()));
+                    payload.insert("display_name".into(), Value::String(format!("user-{seq}")));
+                    payload.insert("status".into(), Value::String("online".into()));
+                    payload.insert("previous_status".into(), Value::String(previous.into()));
+                    payload
+                }),
+                hlc: format!("{seq:017}-00000000-healtest"),
+                device: "healtest".into(),
+            };
+            let ops: Vec<SyncOpRecord> = (1..=12)
+                .map(|seq| {
+                    mk_op(
+                        seq,
+                        &format!("2026-10-0{}T00:00:00Z", (seq % 9) + 1),
+                        &format!("usr_{seq:04}"),
+                        "",
+                    )
+                })
+                .collect();
+            store.push_ops(&ops).await.expect("push");
+            let materialized = store.fetch_materialized(table, 100, 0).await.expect("rows");
+            assert_eq!(materialized.len(), 12, "push materialized every op");
+
+            // Simulate the incident: rows vanish while the log keeps them.
+            client
+                .execute(
+                    &format!("DELETE FROM {table} WHERE user_id IN ('usr_0001','usr_0002')"),
+                    &[],
+                )
+                .await
+                .expect("hole");
+            // A delete op for one of the lost rows must also survive replay:
+            // the heal restores what the log proves, including that this row
+            // was later deleted.
+            let del_op = SyncOpRecord {
+                op_id: format!("{}-00000001-healtest", 9_000_000_000_000_009u64),
+                table: table.into(),
+                entity_key: vec![
+                    Value::String("2026-10-02T00:00:00Z".into()),
+                    Value::String("usr_0001".into()),
+                    Value::String("".into()),
+                ],
+                kind: SyncOpKind::Delete,
+                payload: None,
+                hlc: format!("{}-00000001-healtest", 9_000_000_000_000_009u64),
+                device: "healtest".into(),
+            };
+            store
+                .push_ops(std::slice::from_ref(&del_op))
+                .await
+                .expect("del push");
+
+            let gaps = store.materialization_gaps().await.expect("gaps");
+            let gap = gaps.iter().find(|gap| gap.table == table);
+            let gap = gap.expect("detector found the holed table");
+            // 12 set keys − 1 del key = 11 provable rows; 10 remain after the hole.
+            assert_eq!(gap.ops_set_keys, 12);
+            assert_eq!(gap.ops_del_keys, 1);
+            assert_eq!(gap.materialized_rows, 10);
+
+            let replayed = store.rematerialize(&[table.into()]).await.expect("heal");
+            assert_eq!(replayed, 13, "replayed every retained op exactly once");
+
+            let gaps = store.materialization_gaps().await.expect("recheck");
+            assert!(
+                gaps.iter().all(|gap| gap.table != table),
+                "heal closed the gap: {gaps:?}"
+            );
+            let materialized = store.fetch_materialized(table, 100, 0).await.expect("rows");
+            assert_eq!(materialized.len(), 11, "delete honored by the replay");
+
+            // Replaying a consistent table is a no-op.
+            let replayed = store.rematerialize(&[table.into()]).await.expect("replay");
+            assert_eq!(replayed, 13, "idempotent replay re-reads the log");
+
+            for sql in [
+                &format!("DROP TABLE IF EXISTS {table}"),
+                "DELETE FROM sync_ops WHERE device = 'healtest'",
+            ] {
+                client.execute(sql, &[]).await.expect("cleanup");
+            }
+            println!("rematerialize heal roundtrip OK; remote cleaned");
         });
     }
 }

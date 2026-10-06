@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { SidebarFriendRecord } from '@/components/sidebar/friends-sidebar/friendsSidebarModel';
 import { localGameLocation } from '@/domain/friends/presence';
+import { resolveSameInstanceFriendLocation } from '@/domain/friends/sameInstanceFriends';
+import { isSameInstanceLocation } from '@/domain/instances/instanceRoster';
 import { useFriendLocationTimeEpoch } from '@/lib/useFriendLocationTimeEpoch';
 import { useNowMs } from '@/lib/useNowMs';
 import memoPersistenceRepository from '@/repositories/memoPersistenceRepository';
@@ -29,6 +31,38 @@ type UserHoverCardDataInput = {
     userId: string;
     seed?: SidebarFriendRecord | Record<string, unknown> | null;
 };
+
+/**
+ * VRChat's instance endpoint masks occupancy as 0 for instances the
+ * account is not inside; count the users the roster can observe at the
+ * location so the display never shows fewer people than that.
+ */
+function observedUserCountAtLocation(
+    location: string,
+    hoveredUserId: string
+): number {
+    if (!location) {
+        return 0;
+    }
+    const { friendsById } = useFriendRosterStore.getState();
+    let count = 0;
+    let hoveredSeen = false;
+    for (const friend of Object.values(friendsById)) {
+        const friendId = normalizeId((friend as Record<string, unknown>)?.id);
+        if (friendId && friendId === hoveredUserId) {
+            hoveredSeen = true;
+        }
+        if (
+            isSameInstanceLocation(
+                resolveSameInstanceFriendLocation(friend, null),
+                location
+            )
+        ) {
+            count += 1;
+        }
+    }
+    return count + (hoveredSeen ? 0 : 1);
+}
 
 export function useUserHoverCardData({
     userId,
@@ -122,6 +156,8 @@ export function useUserHoverCardData({
     const worldId = model.location.worldId;
     const instanceId = model.location.instanceId;
     const isRealInstance = model.location.isRealInstance;
+    const locationTagRef = useRef(model.location.effectiveLocation);
+    locationTagRef.current = model.location.effectiveLocation;
 
     useEffect(() => {
         let active = true;
@@ -155,12 +191,28 @@ export function useUserHoverCardData({
             setPopulationLoading(false);
             return undefined;
         }
+        // Read via refs: `model` re-computes every second (nowMs) and must
+        // stay out of the dependency array.
+        const locationTag = locationTagRef.current;
+        const hoveredUserId = normalizedUserId;
         setPopulationLoading(true);
         vrchatInstanceRepository
             .getInstance({ worldId, instanceId })
             .then((response) => {
                 if (active) {
-                    setPopulation(normalizeInstanceCounts(response.json));
+                    const counts = normalizeInstanceCounts(response.json);
+                    const observed = observedUserCountAtLocation(
+                        locationTag,
+                        hoveredUserId
+                    );
+                    setPopulation(
+                        counts
+                            ? {
+                                  ...counts,
+                                  nUsers: Math.max(counts.nUsers, observed)
+                              }
+                            : counts
+                    );
                 }
             })
             .catch(() => {})
@@ -172,7 +224,7 @@ export function useUserHoverCardData({
         return () => {
             active = false;
         };
-    }, [worldId, instanceId, isRealInstance, endpoint]);
+    }, [worldId, instanceId, isRealInstance, endpoint, normalizedUserId]);
 
     return {
         model,

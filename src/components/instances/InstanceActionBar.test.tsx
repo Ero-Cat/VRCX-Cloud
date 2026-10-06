@@ -404,6 +404,25 @@ describe('InstanceActionBar', () => {
         expect(unknownHtml).not.toContain('-1/32');
     });
 
+    it('shows the observed roster count when the instance payload masks occupancy as zero', () => {
+        // VRChat's instance endpoint reports n_users: 0 / active: false for
+        // instances the account is not inside, even with friends verifiably
+        // present; a roster-derived count must not be hidden by that zero.
+        const html = renderActionBar({
+            target: { location: 'wrld_test:12345' },
+            instance: {
+                n_users: 0,
+                active: false,
+                capacity: 32
+            },
+            playerCount: 2,
+            capacity: 32
+        });
+
+        expect(html).toContain('2/32');
+        expect(html).not.toContain('0/32');
+    });
+
     it('falls back to users length and world capacity from instance details', () => {
         const html = renderActionBar({
             target: { location: 'wrld_test:12345' },

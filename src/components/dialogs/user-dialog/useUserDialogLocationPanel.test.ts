@@ -24,11 +24,39 @@ vi.mock('@/services/domainIngestionService', () => ({
 
 import {
     enrichLocationUsersWithProfiles,
+    resolveLocationPlayerCount,
     useUserDialogLocationPanel
 } from './useUserDialogLocationPanel';
 
 beforeEach(() => {
     vi.clearAllMocks();
+});
+
+describe('resolveLocationPlayerCount', () => {
+    it('never shows fewer users than the observed roster when VRChat masks occupancy as zero', () => {
+        expect(
+            resolveLocationPlayerCount(
+                { n_users: 0, active: false, userCount: 0 },
+                null,
+                2
+            )
+        ).toBe(2);
+    });
+
+    it('keeps the larger API count above the observed roster', () => {
+        expect(resolveLocationPlayerCount({ n_users: 7 }, undefined, 2)).toBe(
+            7
+        );
+    });
+
+    it('falls back to the observed roster when the API reports no count', () => {
+        expect(resolveLocationPlayerCount(null, null, 3)).toBe(3);
+        expect(resolveLocationPlayerCount({}, undefined, 3)).toBe(3);
+    });
+
+    it('lets the observed roster (which includes the current-instance snapshot) cover a masked zero', () => {
+        expect(resolveLocationPlayerCount({ n_users: 0 }, 4, 4)).toBe(4);
+    });
 });
 
 describe('enrichLocationUsersWithProfiles', () => {

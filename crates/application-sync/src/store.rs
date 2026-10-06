@@ -8,6 +8,7 @@
 //! first-merge can be replayed through the same lattice merge as ops.
 
 use async_trait::async_trait;
+use serde::Serialize;
 use serde_json::{Map, Value};
 use vrcx_0_contracts::{
     SyncConnectionTestResult, SyncDeviceRecord, SyncFieldSemantic, SyncOpRecord, SyncRowSemantic,
@@ -53,6 +54,21 @@ pub struct MaterializedRow {
     pub sync_hlc: String,
     pub sync_device: String,
     pub columns: Map<String, Value>,
+}
+
+/// One table where the retained op log and the materialized state disagree:
+/// fewer materialized rows than the retained facts can explain. `ops_del_keys`
+/// is an upper bound on rows legitimately removed by delete ops, so a table
+/// only counts as divergent when deletes cannot account for the difference.
+#[derive(Clone, Debug, Serialize)]
+pub struct SyncMaterializationGap {
+    pub table: String,
+    /// Distinct natural keys touched by retained Set ops.
+    pub ops_set_keys: i64,
+    /// Distinct natural keys touched by retained Delete ops.
+    pub ops_del_keys: i64,
+    /// Rows currently in the materialized table (0 when the table is gone).
+    pub materialized_rows: i64,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -132,4 +148,19 @@ pub trait RemoteSyncStore: Send + Sync {
 
     /// Drop ops older than the retention window; returns rows removed.
     async fn ops_gc(&self, retain_days: i64) -> SyncStoreResult<u64>;
+
+    /// Tables whose materialized state lost rows the retained op log still
+    /// proves existed. Default: no divergence (stores that materialize
+    /// transactionally with every append cannot diverge).
+    async fn materialization_gaps(&self) -> SyncStoreResult<Vec<SyncMaterializationGap>> {
+        Ok(Vec::new())
+    }
+
+    /// Replay the retained op log of the given tables through the same
+    /// materialization path pushes use; idempotent, converges the
+    /// materialized state to what the log proves. Returns ops replayed.
+    /// Default: nothing to replay (see [`Self::materialization_gaps`]).
+    async fn rematerialize(&self, _tables: &[String]) -> SyncStoreResult<u64> {
+        Ok(0)
+    }
 }

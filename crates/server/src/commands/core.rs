@@ -127,6 +127,18 @@ pub fn register(registry: &mut CommandRegistry) {
         },
     );
     registry.register(
+        "sync__rematerialize",
+        |state: Arc<ServerRuntimeHostState>, args| async move {
+            let tables: Option<Vec<String>> = serde_json::from_value(
+                args.get("tables")
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null),
+            )
+            .map_err(|error| ApiError::BadRequest(format!("invalid `tables` argument: {error}")))?;
+            ok(state.remote_sync().rematerialize_remote(tables).await?)
+        },
+    );
+    registry.register(
         "sync__bootstrap_progress",
         |state: Arc<ServerRuntimeHostState>, _args| async move {
             ok(state

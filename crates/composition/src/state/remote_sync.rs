@@ -9,8 +9,8 @@ use std::sync::{Arc, RwLock};
 
 use vrcx_0_application_core::{RuntimeBackgroundJobs, TaskSupervisor};
 use vrcx_0_application_sync::{
-    RemoteSyncEngine, CONFIG_ALLOW_PLAINTEXT, CONFIG_DATABASE, CONFIG_ENABLED, CONFIG_HOST,
-    CONFIG_PASSWORD, CONFIG_PORT, CONFIG_TLS_VERIFY, CONFIG_USER,
+    RemoteSyncEngine, RemoteSyncStore, CONFIG_ALLOW_PLAINTEXT, CONFIG_DATABASE, CONFIG_ENABLED,
+    CONFIG_HOST, CONFIG_PASSWORD, CONFIG_PORT, CONFIG_TLS_VERIFY, CONFIG_USER,
 };
 use vrcx_0_outbound_adapters::{PostgresSyncStore, PostgresSyncStoreConfig};
 use vrcx_0_persistence::config::{get_bool, get_string};
@@ -172,6 +172,48 @@ impl RemoteSyncHost {
         Ok(())
     }
 
+    /// Manual materialization heal: report op-log vs materialized-state
+    /// divergence, replay the given tables' retained ops (or every divergent
+    /// table when none are given) through the same materialization pushes
+    /// use, and report what remains. The engine runs this automatically once
+    /// a day; this is the on-demand path for the admin panel.
+    pub async fn rematerialize_remote(
+        &self,
+        tables: Option<Vec<String>>,
+    ) -> Result<RemoteRematerializeReport> {
+        let settings = self.settings();
+        if !settings.is_configured() {
+            return Err(Error::Custom(
+                "Remote sync is not configured; fill in the Data Sync settings first.".to_string(),
+            ));
+        }
+        let store = PostgresSyncStore::new(&PostgresSyncStoreConfig {
+            dsn: settings.dsn(),
+            tls_verify: settings.tls_verify,
+            allow_plaintext: settings.allow_plaintext,
+        })
+        .map_err(|error| Error::Custom(error.to_string()))?;
+        let gaps_before = store
+            .materialization_gaps()
+            .await
+            .map_err(|error| Error::Custom(error.to_string()))?;
+        let targets =
+            tables.unwrap_or_else(|| gaps_before.iter().map(|gap| gap.table.clone()).collect());
+        let replayed_ops = store
+            .rematerialize(&targets)
+            .await
+            .map_err(|error| Error::Custom(error.to_string()))?;
+        let gaps_after = store
+            .materialization_gaps()
+            .await
+            .map_err(|error| Error::Custom(error.to_string()))?;
+        Ok(RemoteRematerializeReport {
+            replayed_ops,
+            gaps_before,
+            gaps_after,
+        })
+    }
+
     /// Called once after data services start; a no-op unless the user has
     /// sync enabled.
     pub fn start_auto(self: &Arc<Self>) {
@@ -296,6 +338,14 @@ pub struct RemoteSyncSettings {
     pub database: String,
     pub tls_verify: bool,
     pub allow_plaintext: bool,
+}
+
+/// Outcome of a manual materialization heal, surfaced to the admin panel.
+#[derive(Clone, Debug, serde::Serialize)]
+pub struct RemoteRematerializeReport {
+    pub replayed_ops: u64,
+    pub gaps_before: Vec<vrcx_0_application_sync::SyncMaterializationGap>,
+    pub gaps_after: Vec<vrcx_0_application_sync::SyncMaterializationGap>,
 }
 
 impl RemoteSyncSettings {

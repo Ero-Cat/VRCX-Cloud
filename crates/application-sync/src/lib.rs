@@ -17,5 +17,5 @@ pub use engine::{
 };
 pub use store::{
     MaterializedRow, PulledOp, RemoteColumnDef, RemoteColumnType, RemoteSyncStore,
-    RemoteTableSchema, SyncStoreError, SyncStoreResult,
+    RemoteTableSchema, SyncMaterializationGap, SyncStoreError, SyncStoreResult,
 };

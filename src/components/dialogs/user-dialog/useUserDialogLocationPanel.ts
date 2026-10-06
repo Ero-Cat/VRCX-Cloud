@@ -113,6 +113,27 @@ function sortLocationUsers(users: InstanceRosterRow[]) {
     );
 }
 
+/**
+ * VRChat's instance endpoint reports masked or stale occupancy for
+ * instances the account is not inside of — it returns `n_users: 0` and
+ * `active: false` even while friends are verifiably in the room (their
+ * presence events prove it). Never display fewer people than the roster
+ * observed locally; only let the API raise the count above it.
+ */
+export function resolveLocationPlayerCount(
+    instance: Record<string, unknown> | null,
+    snapshotPlayerCount: number | null | undefined,
+    observedUserCount: number
+): number {
+    const apiPlayerCount = firstNonNegativeLocationNumber(
+        instance?.userCount,
+        instance?.occupants,
+        instance?.n_users,
+        snapshotPlayerCount
+    );
+    return Math.max(apiPlayerCount ?? 0, observedUserCount);
+}
+
 function locationUserHasImage(userValue: unknown) {
     const user = record(userValue);
     return Boolean(user?.iconUrl);
@@ -581,13 +602,11 @@ export function useUserDialogLocationPanel({
                         ownerGroup,
                         users,
                         friendCount,
-                        playerCount:
-                            firstNonNegativeLocationNumber(
-                                instance?.userCount,
-                                instance?.occupants,
-                                instance?.n_users,
-                                playerSnapshot?.context?.playerCount
-                            ) || allUsers.length
+                        playerCount: resolveLocationPlayerCount(
+                            instance,
+                            playerSnapshot?.context?.playerCount,
+                            allUsers.length
+                        )
                     });
 
                     enrichLocationUsersWithProfiles({
