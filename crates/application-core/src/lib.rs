@@ -27,6 +27,7 @@ mod sync;
 mod task_supervisor;
 pub mod vrchat_api;
 mod web_client;
+mod web_client_auth_guard;
 mod world_cache;
 
 pub use async_runtime_policy::{
@@ -112,6 +113,7 @@ pub use vrcx_0_contracts::{
 };
 pub use vrcx_0_core::FavoriteGroupVisibility;
 pub use web_client::{WebClient, WebClientPort};
+pub use web_client_auth_guard::WebClientAuthFailureGuard;
 pub use world_cache::{WorldCache, WorldCachePort};
 
 pub use vrcx_0_contracts::UgcCategory;

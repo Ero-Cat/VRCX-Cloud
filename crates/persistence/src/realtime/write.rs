@@ -1,13 +1,14 @@
 use serde_json::Value;
 
 use crate::activity::activity_iso_from_ms;
-use crate::common::ParamsBuilder;
+use crate::common::{DbParams, ParamsBuilder};
 use crate::database::{DatabaseService, DatabaseWriteTransaction};
 use crate::game_log::{ensure_game_log_tables, GameLogLocationEntry, GameLogLocationTimeUpdate};
 use crate::ownership::{owner_id_get_or_insert, OwnerId, OwnerRowId};
 use crate::Error;
 use vrcx_0_contracts::feed_live::FeedLiveEntry;
 use vrcx_0_contracts::friend_log::FriendLogCurrentOutput;
+use vrcx_0_contracts::{sync_logical_fact_columns, SYNC_FACT_DEDUPE_WINDOW_DAYS};
 use vrcx_0_core::friend_log::{plan_friend_log_upsert, FriendLogCurrent, FriendLogUpsertInput};
 
 use super::schema::{ensure_realtime_tables, normalize_user_table_prefix};
@@ -302,6 +303,45 @@ fn add_friend_log_history(
     .map(affected_count)
 }
 
+/// COUNT query + params detecting an existing row for the same logical
+/// fact: every mapped column matches (whitespace-normalized, NULL-safe)
+/// and created_at falls within the convergence window. Bio rows are keyed
+/// by the observing device's clock, so the same change discovered twice —
+/// background scan plus profile dialog, or two devices converging through
+/// sync — is recognized by content, not by row key.
+pub(crate) fn logical_fact_duplicate_query(
+    table: &str,
+    fact_columns: &[&str],
+    values: &[(&str, &str)],
+    created_at: &str,
+) -> Option<(String, DbParams)> {
+    if created_at.trim().is_empty() {
+        return None;
+    }
+    let mut params = ParamsBuilder::new().set("created_at", created_at);
+    let mut clauses = Vec::with_capacity(fact_columns.len() + 1);
+    for column in fact_columns {
+        let value = values
+            .iter()
+            .find(|(name, _)| name == column)
+            .map(|(_, value)| *value)?;
+        clauses.push(format!(
+            "TRIM(COALESCE(\"{column}\", '')) = TRIM(COALESCE(@{column}, ''))"
+        ));
+        params = params.set(column, value);
+    }
+    clauses.push(format!(
+        "ABS(julianday(@created_at) - julianday(created_at)) <= {SYNC_FACT_DEDUPE_WINDOW_DAYS}"
+    ));
+    Some((
+        format!(
+            "SELECT COUNT(*) FROM \"{table}\" WHERE {} LIMIT 1",
+            clauses.join(" AND ")
+        ),
+        params.build(),
+    ))
+}
+
 fn insert_feed_entry(
     tx: &mut DatabaseWriteTransaction<'_>,
     user_prefix: &str,
@@ -391,16 +431,43 @@ fn insert_feed_entry(
             bio,
             previous_bio,
             ..
-        } => tx.execute_non_query(
-            &format!("INSERT OR IGNORE INTO {user_prefix}_feed_bio (created_at, user_id, display_name, bio, previous_bio) VALUES (@created_at, @user_id, @display_name, @bio, @previous_bio)"),
-            &ParamsBuilder::new()
-                .set("created_at", created_at.clone())
-                .set("user_id", user_id.clone())
-                .set("display_name", display_name.clone())
-                .set("bio", bio.clone())
-                .set("previous_bio", previous_bio.clone())
-                .build(),
-        )?,
+        } => {
+            let table = format!("{user_prefix}_feed_bio");
+            if let Some(fact_columns) = sync_logical_fact_columns(&table) {
+                let values = [
+                    ("user_id", user_id.as_str()),
+                    ("previous_bio", previous_bio.as_str()),
+                    ("bio", bio.as_str()),
+                ];
+                if let Some((sql, params)) = logical_fact_duplicate_query(
+                    &table,
+                    fact_columns,
+                    &values,
+                    created_at,
+                ) {
+                    let duplicate = tx.execute(&sql, &params)?;
+                    if duplicate
+                        .first()
+                        .and_then(|row| row.first())
+                        .and_then(Value::as_i64)
+                        .unwrap_or(0)
+                        > 0
+                    {
+                        return Ok(0);
+                    }
+                }
+            }
+            tx.execute_non_query(
+                &format!("INSERT OR IGNORE INTO {user_prefix}_feed_bio (created_at, user_id, display_name, bio, previous_bio) VALUES (@created_at, @user_id, @display_name, @bio, @previous_bio)"),
+                &ParamsBuilder::new()
+                    .set("created_at", created_at.clone())
+                    .set("user_id", user_id.clone())
+                    .set("display_name", display_name.clone())
+                    .set("bio", bio.clone())
+                    .set("previous_bio", previous_bio.clone())
+                    .build(),
+            )?
+        }
         FeedLiveEntry::Avatar {
             created_at,
             user_id,

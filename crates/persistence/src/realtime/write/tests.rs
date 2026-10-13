@@ -219,6 +219,103 @@ fn writes_bio_feed_rows() -> Result<(), crate::Error> {
     Ok(())
 }
 
+fn bio_entry(created_at: &str, previous_bio: &str, bio: &str) -> FeedLiveEntry {
+    FeedLiveEntry::Bio {
+        created_at: created_at.into(),
+        user_id: "usr_friend".into(),
+        display_name: "Friend".into(),
+        bio: bio.into(),
+        previous_bio: previous_bio.into(),
+        owner_user_id: String::new(),
+    }
+}
+
+#[test]
+fn repeated_bio_observations_of_the_same_change_persist_once() -> Result<(), crate::Error> {
+    let dir = TestDir::new("realtime-feed-bio-dedupe");
+    let db = DatabaseService::new(&dir.path.join("VRCX-0.sqlite3"))?;
+    let owner = OwnerId::new("usr_self");
+
+    let first = write_realtime_batch(
+        &db,
+        &owner,
+        &RealtimePersistenceBatch {
+            feed_entries: vec![bio_entry("2026-10-12T15:25:01Z", "old bio", "new bio")],
+            ..RealtimePersistenceBatch::default()
+        },
+    )?;
+    assert_eq!(first.affected_count, 1);
+
+    // The same change observed again — a racing dialog observation, or the
+    // same fact replayed from another device's clock — stays one row.
+    let second = write_realtime_batch(
+        &db,
+        &owner,
+        &RealtimePersistenceBatch {
+            feed_entries: vec![bio_entry("2026-10-12T15:25:47Z", "old bio", "new bio")],
+            ..RealtimePersistenceBatch::default()
+        },
+    )?;
+    assert_eq!(second.affected_count, 0);
+
+    // A genuinely different change still persists.
+    let third = write_realtime_batch(
+        &db,
+        &owner,
+        &RealtimePersistenceBatch {
+            feed_entries: vec![bio_entry("2026-10-12T16:00:00Z", "new bio", "newer bio")],
+            ..RealtimePersistenceBatch::default()
+        },
+    )?;
+    assert_eq!(third.affected_count, 1);
+
+    let rows = db.execute(
+        "SELECT created_at FROM usrself_feed_bio ORDER BY created_at",
+        &Default::default(),
+    )?;
+    assert_eq!(
+        rows,
+        vec![
+            vec![json!("2026-10-12T15:25:01Z")],
+            vec![json!("2026-10-12T16:00:00Z")]
+        ]
+    );
+    Ok(())
+}
+
+#[test]
+fn bio_feed_schema_startup_collapses_duplicate_change_rows() -> Result<(), crate::Error> {
+    let dir = TestDir::new("realtime-feed-bio-dedupe-repair");
+    let path = dir.path.join("VRCX-0.sqlite3");
+    {
+        let db = DatabaseService::new(&path)?;
+        write_realtime_batch(
+            &db,
+            &OwnerId::new("usr_self"),
+            &RealtimePersistenceBatch {
+                feed_entries: vec![bio_entry("2026-10-12T15:25:01Z", "old bio", "new bio")],
+                ..RealtimePersistenceBatch::default()
+            },
+        )?;
+        // A second row for the same change, as dual observation paths and
+        // cross-device convergence produced before insert-time dedupe.
+        db.execute_non_query(
+            "INSERT INTO usrself_feed_bio (created_at, user_id, display_name, bio, previous_bio)
+             VALUES ('2026-10-12T15:25:47Z', 'usr_friend', 'Friend', 'new bio', 'old bio')",
+            &Default::default(),
+        )?;
+    }
+
+    let reopened = DatabaseService::new(&path)?;
+    ensure_realtime_tables(&reopened, "usrself")?;
+    let rows = reopened.execute(
+        "SELECT created_at FROM usrself_feed_bio ORDER BY created_at",
+        &Default::default(),
+    )?;
+    assert_eq!(rows, vec![vec![json!("2026-10-12T15:25:01Z")]]);
+    Ok(())
+}
+
 #[test]
 fn writes_remote_location_intervals_and_allows_same_location_after_closed_interval(
 ) -> Result<(), crate::Error> {

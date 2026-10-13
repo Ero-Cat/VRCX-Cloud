@@ -594,6 +594,24 @@ pub fn register_sync_table_owned(
     });
 }
 
+/// Convergence window (in days) for [`sync_logical_fact_columns`] tables:
+/// rows with identical fact columns inside this window are the same fact.
+pub const SYNC_FACT_DEDUPE_WINDOW_DAYS: f64 = 1.0;
+
+/// Fact columns for GSet tables whose row key embeds a producer-local
+/// timestamp (e.g. `_feed_bio` keys on the observing device's clock). Two
+/// devices discovering the same change stamp different clocks, so exact-key
+/// convergence still lands two rows; matching these columns within
+/// [`SYNC_FACT_DEDUPE_WINDOW_DAYS`] identifies the same logical fact for
+/// insert-time and pull-apply dedupe.
+pub fn sync_logical_fact_columns(table: &str) -> Option<&'static [&'static str]> {
+    if table.ends_with("_feed_bio") {
+        Some(&["user_id", "previous_bio", "bio"])
+    } else {
+        None
+    }
+}
+
 /// Find the descriptor for a physical table name: the curated static catalog
 /// first, then runtime-registered tables (derived or declared).
 pub fn sync_table_descriptor(table: &str) -> Option<&'static SyncTableDescriptor> {

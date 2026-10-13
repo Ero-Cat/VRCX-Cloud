@@ -1,5 +1,6 @@
 use crate::database::{schema::add_column_if_missing, DatabaseService};
 use crate::Error;
+use vrcx_0_contracts::SYNC_FACT_DEDUPE_WINDOW_DAYS;
 
 pub fn ensure_realtime_tables(db: &DatabaseService, user_prefix: &str) -> Result<(), Error> {
     ensure_user_prefix(user_prefix)?;
@@ -20,6 +21,27 @@ pub fn ensure_realtime_tables(db: &DatabaseService, user_prefix: &str) -> Result
             )?;
         }
         add_column_if_missing(db, &notification_v1_table, "location", "TEXT")?;
+        // Collapse bio rows that recorded the same change twice — the dual
+        // observation paths (background scan, profile dialog) and cross-device
+        // sync converged duplicates before inserts deduplicated by content.
+        // Keeps the earliest observation of each duplicate cluster.
+        db.execute_non_query(
+            &format!(
+                "DELETE FROM {user_prefix}_feed_bio WHERE id IN (
+                     SELECT newer.id FROM {user_prefix}_feed_bio newer
+                     WHERE EXISTS (
+                         SELECT 1 FROM {user_prefix}_feed_bio older
+                         WHERE older.user_id IS newer.user_id
+                           AND TRIM(COALESCE(older.previous_bio, '')) = TRIM(COALESCE(newer.previous_bio, ''))
+                           AND TRIM(COALESCE(older.bio, '')) = TRIM(COALESCE(newer.bio, ''))
+                           AND (julianday(older.created_at) < julianday(newer.created_at)
+                                OR (older.created_at IS newer.created_at AND older.id < newer.id))
+                           AND ABS(julianday(older.created_at) - julianday(newer.created_at)) <= {SYNC_FACT_DEDUPE_WINDOW_DAYS}
+                     )
+                 )"
+            ),
+            &Default::default(),
+        )?;
         Ok(())
     })
 }

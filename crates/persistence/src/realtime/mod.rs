@@ -10,4 +10,5 @@ pub use types::{
     NotificationExpiration, NotificationV2Update, RealtimePersistenceBatch, RealtimeWriteCounts,
     SelfProfileField, SelfProfileLogEntry,
 };
+pub(crate) use write::logical_fact_duplicate_query;
 pub use write::write_realtime_batch;

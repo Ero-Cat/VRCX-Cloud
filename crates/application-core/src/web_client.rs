@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use async_trait::async_trait;
 use serde_json::Value;
@@ -11,6 +11,7 @@ use vrcx_0_contracts::{
     WebExecuteRequest,
 };
 
+use crate::web_client_auth_guard::WebClientAuthFailureGuard;
 use crate::Result;
 
 #[async_trait]
@@ -48,6 +49,7 @@ pub trait WebClientPort: Send + Sync {
 pub struct WebClient {
     inner: Arc<dyn WebClientPort>,
     proxy_url: Option<String>,
+    auth_failure_guard: RwLock<Option<WebClientAuthFailureGuard>>,
 }
 
 impl WebClient {
@@ -56,7 +58,28 @@ impl WebClient {
         Self {
             inner: Arc::new(inner),
             proxy_url,
+            auth_failure_guard: RwLock::new(None),
         }
+    }
+
+    /// Arms the guard that turns proxied VRChat API 401s into
+    /// `runtimeVrchatAuthFailure` events. Attach it once the shared auth
+    /// scope and event bus exist; without it the client behaves as before.
+    pub fn attach_auth_failure_guard(&self, guard: WebClientAuthFailureGuard) {
+        match self.auth_failure_guard.write() {
+            Ok(mut slot) => *slot = Some(guard),
+            Err(error) => tracing::warn!(
+                error = %error,
+                "failed to attach the web client auth failure guard"
+            ),
+        }
+    }
+
+    fn auth_failure_guard(&self) -> Option<WebClientAuthFailureGuard> {
+        self.auth_failure_guard
+            .read()
+            .ok()
+            .and_then(|guard| guard.clone())
     }
 
     pub fn save_cookies(&self) {
@@ -115,7 +138,13 @@ impl WebClient {
         input: VrchatRequest,
         scope: VrchatScope,
     ) -> Result<VrchatResponse> {
-        self.inner.execute_api(input, scope).await
+        let guard = self.auth_failure_guard();
+        let expected = guard.as_ref().map(|guard| guard.expected_snapshot());
+        let response = self.inner.execute_api(input.clone(), scope).await?;
+        if let (Some(guard), Some(expected)) = (guard, expected) {
+            guard.report_auth_failure(&expected, &input, &response);
+        }
+        Ok(response)
     }
 
     pub fn vrchat_config_snapshot(&self, endpoint: &str) -> Option<VrchatResponse> {

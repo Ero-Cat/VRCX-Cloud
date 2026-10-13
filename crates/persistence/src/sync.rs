@@ -19,11 +19,14 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use serde_json::{Map, Value};
 use vrcx_0_contracts::{
-    register_sync_table_owned, sync_table_descriptor, SyncFieldSemantic, SyncHlc, SyncOpKind,
-    SyncOpRecord, SyncRowSemantic, SyncTableDescriptor, SYNC_EXCLUDED_CONFIG_KEYS,
+    register_sync_table_owned, sync_logical_fact_columns, sync_table_descriptor, SyncFieldSemantic,
+    SyncHlc, SyncOpKind, SyncOpRecord, SyncRowSemantic, SyncTableDescriptor,
+    SYNC_EXCLUDED_CONFIG_KEYS,
 };
 
+use crate::common::value_as_string;
 use crate::database::DatabaseService;
+use crate::realtime::logical_fact_duplicate_query;
 use crate::Error;
 
 pub const META_DEVICE_ID: &str = "sync.deviceId";
@@ -1505,6 +1508,47 @@ fn apply_set(
             )?;
         }
     } else {
+        // The same logical fact may already live here under a different row
+        // key: fact tables key on the producer's clock, so a fact first
+        // observed locally and then pulled from another device converges as
+        // two rows. Content equality within the window is the same fact.
+        if let Some(fact_columns) = sync_logical_fact_columns(table) {
+            let owned_values: Vec<(&str, String)> = fact_columns
+                .iter()
+                .map(|column| {
+                    (
+                        *column,
+                        payload
+                            .get(*column)
+                            .map(value_as_string)
+                            .unwrap_or_default(),
+                    )
+                })
+                .collect();
+            let values: Vec<(&str, &str)> = owned_values
+                .iter()
+                .map(|(column, value)| (*column, value.as_str()))
+                .collect();
+            let created_at = payload
+                .get("created_at")
+                .map(value_as_string)
+                .unwrap_or_default();
+            if let Some((sql, params)) =
+                logical_fact_duplicate_query(table, fact_columns, &values, &created_at)
+            {
+                let duplicate = tx.execute(&sql, &params)?;
+                if duplicate
+                    .first()
+                    .and_then(|row| row.first())
+                    .and_then(Value::as_i64)
+                    .unwrap_or(0)
+                    > 0
+                {
+                    set_row_version(tx, table, entity_text, &op.hlc, Some(payload))?;
+                    return Ok(ApplyOutcome::SkippedStale);
+                }
+            }
+        }
         let col_names = payload_columns
             .iter()
             .map(|c| format!("\"{c}\""))
@@ -2074,6 +2118,85 @@ mod tests {
             .and_then(Value::as_i64)
             .unwrap();
         assert_eq!(count, 1);
+    }
+
+    #[test]
+    fn pulled_bio_fact_converges_with_a_locally_observed_change() {
+        use vrcx_0_contracts::feed_live::FeedLiveEntry;
+
+        let db = test_db("pull-bio-fact-dedupe");
+        let handle = install_capture(&db).unwrap();
+        let device = handle.device_id().to_string();
+
+        // This device already observed the change through the realtime path.
+        crate::realtime::write_realtime_batch(
+            &db,
+            &vrcx_0_core::OwnerId::new("usr_self"),
+            &crate::realtime::RealtimePersistenceBatch {
+                feed_entries: vec![FeedLiveEntry::Bio {
+                    created_at: "2026-10-12T15:25:01Z".into(),
+                    user_id: "usr_friend".into(),
+                    display_name: "Friend".into(),
+                    bio: "new bio".into(),
+                    previous_bio: "old bio".into(),
+                    owner_user_id: String::new(),
+                }],
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        let pulled = |op_id: &str, created_at: &str, bio: &str| SyncOpRecord {
+            op_id: op_id.into(),
+            table: "usrself_feed_bio".into(),
+            entity_key: vec![
+                Value::String(created_at.into()),
+                Value::String("usr_friend".into()),
+                Value::String("old bio".into()),
+            ],
+            kind: SyncOpKind::Set,
+            payload: Some(Map::from_iter([
+                ("created_at".to_string(), Value::String(created_at.into())),
+                ("user_id".to_string(), Value::String("usr_friend".into())),
+                ("display_name".to_string(), Value::String("Friend".into())),
+                ("bio".to_string(), Value::String(bio.into())),
+                ("previous_bio".to_string(), Value::String("old bio".into())),
+            ])),
+            hlc: format!("{}-00000000-remote1", "00000000000001000"),
+            device: "remote1".into(),
+        };
+
+        // The same change stamped with the other device's clock is the same
+        // fact: skipped instead of converging as a second row.
+        let stats = apply_pulled_ops(
+            &db,
+            &device,
+            std::slice::from_ref(&pulled("bio1", "2026-10-12T15:25:47Z", "new bio")),
+            1,
+        )
+        .unwrap();
+        assert_eq!(stats.applied, 0);
+        assert_eq!(stats.skipped_stale, 1);
+
+        // A different change from the remote still applies.
+        let stats = apply_pulled_ops(
+            &db,
+            &device,
+            std::slice::from_ref(&pulled("bio2", "2026-10-12T16:00:00Z", "newer bio")),
+            2,
+        )
+        .unwrap();
+        assert_eq!(stats.applied, 1);
+
+        let rows = db
+            .execute(
+                "SELECT created_at FROM usrself_feed_bio ORDER BY created_at",
+                &Default::default(),
+            )
+            .unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[0][0], Value::String("2026-10-12T15:25:01Z".into()));
+        assert_eq!(rows[1][0], Value::String("2026-10-12T16:00:00Z".into()));
     }
 
     #[test]

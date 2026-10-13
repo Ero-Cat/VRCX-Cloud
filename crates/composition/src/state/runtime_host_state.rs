@@ -29,7 +29,7 @@ use vrcx_0_application_activity::ActivityWarmupRuntime;
 use vrcx_0_application_core::{
     BackendRuntime, BackendRuntimeStatusPublisher, BackgroundCapabilitySession, ImageCache,
     RuntimeTaskExecutor, TaskStopReport, TaskSupervisor, UnavailableLocalGameContextSource,
-    WebClient,
+    WebClient, WebClientAuthFailureGuard,
 };
 use vrcx_0_application_realtime::{
     FriendProjectionSink, RealtimeCurrentUserSnapshotSink, RealtimeHostRuntime,
@@ -339,6 +339,15 @@ impl RuntimeHostStateBuilder {
             Arc::clone(&web),
             Arc::clone(&image_cache),
             tasks,
+        ));
+        // A proxied VRChat API 401 (`Missing Credentials`) arrives as a
+        // successful command result; the guard routes it into the runtime
+        // auth failure recovery instead of leaving the stale session in
+        // place. The context owns the process-wide auth scope and event
+        // bus, so every facade sharing this web client is covered.
+        web.attach_auth_failure_guard(WebClientAuthFailureGuard::new(
+            runtime_context.auth_scope.clone(),
+            runtime_context.event_bus.clone(),
         ));
         let remote_sync_host = Arc::new(crate::state::remote_sync::RemoteSyncHost::new(
             Arc::clone(&db),

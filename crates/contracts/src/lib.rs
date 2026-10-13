@@ -71,12 +71,12 @@ pub use profile_backup::{
 pub use profile_config::{resolve_config_key, ConfigMutation, ConfigReadEntry, ConfigWriteEntry};
 pub use sync::{
     default_device_profile, is_config_key_syncable, looks_like_user_prefix, register_sync_table,
-    register_sync_table_owned, resolve_sync_table, sync_table_descriptor, SyncBootstrapProgress,
-    SyncConnectionFields, SyncConnectionInput, SyncConnectionTestResult, SyncDeviceRecord,
-    SyncFieldSemantic, SyncHlc, SyncOpKind, SyncOpRecord, SyncRowSemantic, SyncStatusSnapshot,
-    SyncTableDescriptor, SyncTableProgress, SyncTableRef, DEVICE_PROFILE_DESKTOP,
-    DEVICE_PROFILE_SERVER, SYNC_EXCLUDED_CONFIG_KEYS, SYNC_PROTOCOL_SCHEMA_VERSION,
-    SYNC_TABLE_CATALOG,
+    register_sync_table_owned, resolve_sync_table, sync_logical_fact_columns,
+    sync_table_descriptor, SyncBootstrapProgress, SyncConnectionFields, SyncConnectionInput,
+    SyncConnectionTestResult, SyncDeviceRecord, SyncFieldSemantic, SyncHlc, SyncOpKind,
+    SyncOpRecord, SyncRowSemantic, SyncStatusSnapshot, SyncTableDescriptor, SyncTableProgress,
+    SyncTableRef, DEVICE_PROFILE_DESKTOP, DEVICE_PROFILE_SERVER, SYNC_EXCLUDED_CONFIG_KEYS,
+    SYNC_FACT_DEDUPE_WINDOW_DAYS, SYNC_PROTOCOL_SCHEMA_VERSION, SYNC_TABLE_CATALOG,
 };
 pub use translation::TranslationProvider;
 pub use vrchat_api::{
